@@ -6,22 +6,13 @@
 # Codename: Foundation
 ###############################################################################
 
+#!/usr/bin/env bash
+
 set -euo pipefail
 
-readonly LAC_VERSION="0.1.0-alpha"
-readonly LAC_CODENAME="Foundation"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-main() {
-    clear
-
-    echo "========================================="
-    echo "      Linux Admin Center (LAC)"
-    echo "========================================="
-    echo
-    echo "Version : ${LAC_VERSION}"
-    echo "Codename: ${LAC_CODENAME}"
-    echo
-    echo "Project initialized successfully."
-}
+source "${SCRIPT_DIR}/core/common.sh"
+source "${SCRIPT_DIR}/core/ui.sh"
 
 main "$@"
