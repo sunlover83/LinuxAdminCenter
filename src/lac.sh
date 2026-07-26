@@ -14,5 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "${SCRIPT_DIR}/core/common.sh"
 source "${SCRIPT_DIR}/core/ui.sh"
+source "${SCRIPT_DIR}/modules/update/update.sh"
 
 main "$@"
