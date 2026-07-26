@@ -30,9 +30,7 @@ read_choice() {
              read -rp "Press Enter to continue..."
              ;;
         2)
-            echo
-            echo "System Information - coming soon..."
-            read -rp "Press Enter to continue..."
+            show_system_information
             ;;
         0)
             echo

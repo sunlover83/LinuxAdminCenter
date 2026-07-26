@@ -12,8 +12,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=core/common.sh
 source "${SCRIPT_DIR}/core/common.sh"
+
+# shellcheck source=core/ui.sh
 source "${SCRIPT_DIR}/core/ui.sh"
+
+# shellcheck source=modules/update/update.sh
 source "${SCRIPT_DIR}/modules/update/update.sh"
+
+# shellcheck source=modules/system_info/system_info.sh
+source "${SCRIPT_DIR}/modules/system_info/system_info.sh"
 
 main "$@"
