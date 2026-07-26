@@ -95,3 +95,7 @@ detect_distribution() {
             ;;
     esac
 }
+
+is_reboot_required() {
+    [[ -f /var/run/reboot-required ]]
+}

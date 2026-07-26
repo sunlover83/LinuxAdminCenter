@@ -13,5 +13,12 @@ show_system_information() {
     echo "Package manager: ${PKG_MANAGER}"
     echo
 
+    if is_reboot_required; then
+        log_warning "A system restart is required."
+    else
+        log_success "No system restart is required."
+    fi
+
+    echo
     read -rp "Press Enter to continue..."
 }
