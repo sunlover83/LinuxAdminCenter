@@ -15,6 +15,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=core/common.sh
 source "${SCRIPT_DIR}/core/common.sh"
 
+# shellcheck source=core/package_manager.sh
+source "${SCRIPT_DIR}/core/package_manager.sh"
+
 # shellcheck source=core/ui.sh
 source "${SCRIPT_DIR}/core/ui.sh"
 

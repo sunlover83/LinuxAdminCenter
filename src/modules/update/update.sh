@@ -19,7 +19,7 @@ check_for_updates() {
     log_info "Refreshing package information..."
     echo
 
-    if ! sudo apt-get update; then
+    if ! refresh_package_information; then
         echo
         log_error "Package information could not be refreshed."
         echo
@@ -28,7 +28,7 @@ check_for_updates() {
     fi
 
     mapfile -t available_updates < <(
-        apt list --upgradable 2>/dev/null | sed '1d'
+    list_available_updates
     )
 
     echo
@@ -63,7 +63,7 @@ install_updates() {
     log_info "Refreshing package information..."
     echo
 
-    if ! sudo apt-get update; then
+    if ! refresh_package_information; then
         echo
         log_error "Package information could not be refreshed."
         echo
@@ -72,7 +72,7 @@ install_updates() {
     fi
 
     mapfile -t available_updates < <(
-        apt list --upgradable 2>/dev/null | sed '1d'
+    list_available_updates
     )
 
     echo
@@ -104,9 +104,13 @@ install_updates() {
     log_info "Installing updates..."
     echo
 
-    if sudo apt-get upgrade --assume-yes; then
+    if install_available_updates; then
         echo
         log_success "Updates installed successfully."
+    if is_reboot_required; then
+        echo
+        log_warning "A system restart is required."
+    fi
     else
         echo
         log_error "Updates could not be installed completely."
