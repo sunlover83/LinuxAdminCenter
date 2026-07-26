@@ -6,10 +6,8 @@ check_for_updates() {
     clear_screen
     detect_distribution
 
-    echo "========================================="
-    echo "          Check for Updates"
-    echo "========================================="
-    echo
+    detect_distribution
+    draw_module_header "Check for Updates"
 
     if [[ "$PKG_MANAGER" != "apt" ]]; then
         log_warning "Package manager '${PKG_MANAGER}' is not supported yet."
@@ -54,10 +52,8 @@ show_update_menu() {
     while true; do
         clear_screen
 
-        echo "========================================="
-        echo "          System Updates"
-        echo "========================================="
-        echo
+        draw_module_header "System Updates"
+
         echo "1) Check for updates"
         echo "2) Install updates"
         echo

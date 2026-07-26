@@ -2,15 +2,11 @@
 
 show_system_information() {
     detect_distribution
-    clear_screen
+    draw_module_header "System Information"
 
     log_info "Reading system information..."
+    echo
 
-    echo
-    echo "========================================="
-    echo "          System Information"
-    echo "========================================="
-    echo
     echo "Distribution:    ${DISTRO_NAME}"
     echo "Distribution ID: ${DISTRO_ID}"
     echo "Version:         ${DISTRO_VERSION}"

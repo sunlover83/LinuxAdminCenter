@@ -19,6 +19,20 @@ clear_screen() {
     clear
 }
 
+draw_module_header() {
+    local title="$1"
+    local width=41
+    local title_width
+
+    title_width=$(( (width + ${#title}) / 2 ))
+
+    clear_screen
+
+    printf '%s\n' "========================================="
+    printf "%${title_width}s\n" "$title"
+    printf '%s\n\n' "========================================="
+}
+
 log_info() {
     printf "${COLOR_BLUE}[INFO]${COLOR_RESET} %s\n" "$1"
 }
