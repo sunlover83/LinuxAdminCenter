@@ -25,10 +25,8 @@ read_choice() {
 
     case "$choice" in
         1)
-             echo
-             echo "System Updates - coming soon..."
-             read -rp "Press Enter to continue..."
-             ;;
+            show_update_menu
+            ;;
         2)
             show_system_information
             ;;
