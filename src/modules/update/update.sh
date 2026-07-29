@@ -1,16 +1,50 @@
 #!/usr/bin/env bash
 
-check_for_updates() {
+check_for_updates_cli() {
     local -a available_updates=()
 
-    clear_screen
     detect_distribution
+
+    if ! is_package_manager_supported; then
+        printf "Error: Package manager '%s' is not supported or unavailable.\n" \
+            "$PKG_MANAGER" >&2
+        return 2
+    fi
+
+    printf '%s\n' "Refreshing package information..."
+
+    if ! refresh_package_information; then
+        printf '%s\n' \
+            "Error: Package information could not be refreshed." >&2
+        return 1
+    fi
+
+    mapfile -t available_updates < <(
+        list_available_updates
+    )
+
+    if (( ${#available_updates[@]} == 0 )); then
+        printf '%s\n' "System is up to date."
+        return 0
+    fi
+
+    printf '%s update(s) available.\n' \
+        "${#available_updates[@]}"
+
+    printf '%s\n' "${available_updates[@]}"
+
+    return 10
+}
+
+check_for_updates() {
+    local -a available_updates=()
 
     detect_distribution
     draw_module_header "Check for Updates"
 
-    if [[ "$PKG_MANAGER" != "apt" ]]; then
-        log_warning "Package manager '${PKG_MANAGER}' is not supported yet."
+    if ! is_package_manager_supported; then
+        log_warning \
+            "Package manager '${PKG_MANAGER}' is not supported or unavailable."
         echo
         read -rp "Press Enter to continue..."
         return
@@ -28,7 +62,7 @@ check_for_updates() {
     fi
 
     mapfile -t available_updates < <(
-    list_available_updates
+        list_available_updates
     )
 
     echo
@@ -38,7 +72,6 @@ check_for_updates() {
     else
         log_warning "${#available_updates[@]} update(s) available."
         echo
-
         printf '%s\n' "${available_updates[@]}"
     fi
 
@@ -53,8 +86,9 @@ install_updates() {
     detect_distribution
     draw_module_header "Install Updates"
 
-    if [[ "$PKG_MANAGER" != "apt" ]]; then
-        log_warning "Package manager '${PKG_MANAGER}' is not supported yet."
+    if ! is_package_manager_supported; then
+        log_warning \
+            "Package manager '${PKG_MANAGER}' is not supported or unavailable."
         echo
         read -rp "Press Enter to continue..."
         return
@@ -72,7 +106,7 @@ install_updates() {
     fi
 
     mapfile -t available_updates < <(
-    list_available_updates
+        list_available_updates
     )
 
     echo
@@ -107,10 +141,11 @@ install_updates() {
     if install_available_updates; then
         echo
         log_success "Updates installed successfully."
-    if is_reboot_required; then
-        echo
-        log_warning "A system restart is required."
-    fi
+
+        if is_reboot_required; then
+            echo
+            log_warning "A system restart is required."
+        fi
     else
         echo
         log_error "Updates could not be installed completely."
@@ -124,8 +159,6 @@ show_update_menu() {
     local choice
 
     while true; do
-        clear_screen
-
         draw_module_header "System Updates"
 
         echo "1) Check for updates"
