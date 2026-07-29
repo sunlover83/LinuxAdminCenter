@@ -15,6 +15,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=core/common.sh
 source "${SCRIPT_DIR}/core/common.sh"
 
+# shellcheck source=core/cli.sh
+source "${SCRIPT_DIR}/core/cli.sh"
+
 # shellcheck source=core/package_manager.sh
 source "${SCRIPT_DIR}/core/package_manager.sh"
 
@@ -27,4 +30,9 @@ source "${SCRIPT_DIR}/modules/update/update.sh"
 # shellcheck source=modules/system_info/system_info.sh
 source "${SCRIPT_DIR}/modules/system_info/system_info.sh"
 
-main "$@"
+if (( $# > 0 )); then
+    handle_cli_arguments "$@" || exit $?
+    exit 0
+fi
+
+main
