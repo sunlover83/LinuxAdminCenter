@@ -4,6 +4,7 @@ show_system_information() {
     detect_distribution
     draw_module_header "System Information"
 
+    log_debug "Distribution detection completed."
     log_info "Reading system information..."
     echo
 

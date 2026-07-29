@@ -37,6 +37,12 @@ log_info() {
     printf "${COLOR_BLUE}[INFO]${COLOR_RESET} %s\n" "$1"
 }
 
+log_debug() {
+    [[ "${LAC_DEBUG:-false}" == "true" ]] || return 0
+
+    printf "${COLOR_CYAN}[DEBUG]${COLOR_RESET} %s\n" "$1"
+}
+
 log_success() {
     printf "${COLOR_GREEN}[ OK ]${COLOR_RESET} %s\n" "$1"
 }

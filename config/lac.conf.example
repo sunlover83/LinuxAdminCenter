@@ -1,0 +1,5 @@
+# Linux Admin Center configuration
+
+# Enable additional diagnostic messages.
+# Allowed values: true, false
+DEBUG=false
