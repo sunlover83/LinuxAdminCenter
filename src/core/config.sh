@@ -55,10 +55,11 @@ validate_configuration() {
 }
 
 load_configuration() {
-    local system_config="/etc/lac/lac.conf"
+    local system_config
     local user_config
 
-    user_config="${XDG_CONFIG_HOME:-${HOME}/.config}/lac/lac.conf"
+    system_config="${LAC_SYSTEM_CONFIG:-/etc/lac/lac.conf}"
+    user_config="${LAC_USER_CONFIG:-${XDG_CONFIG_HOME:-${HOME}/.config}/lac/lac.conf}"
 
     read_config_file "$system_config"
     read_config_file "$user_config"
