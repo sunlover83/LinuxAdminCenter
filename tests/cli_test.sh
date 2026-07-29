@@ -84,6 +84,18 @@ assert_output_contains \
     -v
 
 assert_output_contains \
+    "Long system information option displays package manager" \
+    "Package manager:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_contains \
+    "Short system information option displays restart status" \
+    "Restart required:" \
+    "$LAC_SCRIPT" \
+    -i
+
+assert_output_contains \
     "Long help option displays usage information" \
     "Usage:" \
     "$LAC_SCRIPT" \

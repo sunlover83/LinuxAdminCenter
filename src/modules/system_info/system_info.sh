@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+print_system_information() {
+    printf 'Distribution:     %s\n' "$DISTRO_NAME"
+    printf 'Distribution ID:  %s\n' "$DISTRO_ID"
+    printf 'Version:          %s\n' "$DISTRO_VERSION"
+    printf 'Package manager:  %s\n' "$PKG_MANAGER"
+}
+
+print_reboot_status() {
+    if is_reboot_required; then
+        printf '%s\n' "Restart required: Yes"
+    else
+        printf '%s\n' "Restart required: No"
+    fi
+}
+
 show_system_information() {
     detect_distribution
     draw_module_header "System Information"
@@ -8,10 +23,7 @@ show_system_information() {
     log_info "Reading system information..."
     echo
 
-    echo "Distribution:    ${DISTRO_NAME}"
-    echo "Distribution ID: ${DISTRO_ID}"
-    echo "Version:         ${DISTRO_VERSION}"
-    echo "Package manager: ${PKG_MANAGER}"
+    print_system_information
     echo
 
     if is_reboot_required; then
