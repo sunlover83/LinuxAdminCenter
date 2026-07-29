@@ -1,23 +1,5 @@
 #!/usr/bin/env bash
 
-refresh_package_information() {
-    case "${PKG_MANAGER:-unknown}" in
-        apt)
-            sudo apt-get update
-            ;;
-        dnf)
-            sudo dnf makecache --refresh
-            ;;
-        pacman)
-            # checkupdates refreshes a separate temporary package database.
-            return 0
-            ;;
-        *)
-            return 2
-            ;;
-    esac
-}
-
 is_package_manager_supported() {
     case "${PKG_MANAGER:-unknown}" in
         apt)
@@ -30,8 +12,32 @@ is_package_manager_supported() {
             command -v pacman >/dev/null 2>&1 &&
                 command -v checkupdates >/dev/null 2>&1
             ;;
+        zypper)
+            command -v zypper >/dev/null 2>&1
+            ;;
         *)
             return 1
+            ;;
+    esac
+}
+
+refresh_package_information() {
+    case "${PKG_MANAGER:-unknown}" in
+        apt)
+            sudo apt-get update
+            ;;
+        dnf)
+            sudo dnf makecache --refresh
+            ;;
+        pacman)
+            # checkupdates refreshes a separate temporary package database.
+            return 0
+            ;;
+        zypper)
+            sudo zypper --non-interactive refresh
+            ;;
+        *)
+            return 2
             ;;
     esac
 }
@@ -67,6 +73,23 @@ list_available_updates() {
                     ;;
             esac
             ;;
+        zypper)
+            zypper --no-refresh --no-color list-updates 2>/dev/null |
+                awk -F '|' '
+                    $1 ~ /^[[:space:]]*v[[:space:]]*$/ {
+                        for (i = 2; i <= 6; i++) {
+                            gsub(
+                                /^[[:space:]]+|[[:space:]]+$/,
+                                "",
+                                $i
+                            )
+                        }
+
+                        printf "%s %s -> %s (%s)\n", \
+                            $3, $4, $5, $6
+                    }
+                '
+            ;;
         *)
             return 2
             ;;
@@ -83,6 +106,16 @@ install_available_updates() {
             ;;
         pacman)
             sudo pacman -Syu --noconfirm
+            ;;
+        zypper)
+            case "${DISTRO_ID:-unknown}" in
+                opensuse-tumbleweed)
+                    sudo zypper --non-interactive dist-upgrade
+                    ;;
+                *)
+                    sudo zypper --non-interactive update
+                    ;;
+            esac
             ;;
         *)
             return 2
