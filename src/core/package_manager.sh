@@ -78,11 +78,7 @@ list_available_updates() {
                 awk -F '|' '
                     $1 ~ /^[[:space:]]*v[[:space:]]*$/ {
                         for (i = 2; i <= 6; i++) {
-                            gsub(
-                                /^[[:space:]]+|[[:space:]]+$/,
-                                "",
-                                $i
-                            )
+                            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
                         }
 
                         printf "%s %s -> %s (%s)\n", \
