@@ -123,6 +123,18 @@ assert_status_and_output \
     "$LAC_SCRIPT" \
     --check-updates
 
+create_mock apt <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+
+assert_status_and_output \
+    "Update listing failures return status 1" \
+    1 \
+    "Available updates could not be determined." \
+    "$LAC_SCRIPT" \
+    --check-updates
+
 create_mock apt-get <<'EOF'
 #!/usr/bin/env bash
 exit 1
