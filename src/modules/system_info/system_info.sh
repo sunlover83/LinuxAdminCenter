@@ -45,16 +45,130 @@ get_system_uptime() {
         "$minutes"
 }
 
+format_kib() {
+    local kib="$1"
+
+    if [[ ! "$kib" =~ ^[0-9]+$ ]]; then
+        printf '%s' "unknown"
+        return
+    fi
+
+    awk -v kib="$kib" '
+        BEGIN {
+            if (kib >= 1048576) {
+                printf "%.1f GiB", kib / 1048576
+            } else {
+                printf "%.1f MiB", kib / 1024
+            }
+        }
+    '
+}
+
+get_memory_usage() {
+    local mem_total_kib=""
+    local mem_available_kib=""
+    local mem_used_kib
+    local usage_percentage
+    local key
+    local value
+
+    if [[ ! -r /proc/meminfo ]]; then
+        printf '%s\n' "unknown"
+        return
+    fi
+
+    while read -r key value _; do
+        case "$key" in
+            MemTotal:)
+                mem_total_kib="$value"
+                ;;
+            MemAvailable:)
+                mem_available_kib="$value"
+                ;;
+        esac
+
+        if [[ -n "$mem_total_kib" && -n "$mem_available_kib" ]]; then
+            break
+        fi
+    done < /proc/meminfo
+
+    if [[ ! "$mem_total_kib" =~ ^[0-9]+$ ]] ||
+        [[ ! "$mem_available_kib" =~ ^[0-9]+$ ]] ||
+        (( mem_total_kib == 0 )); then
+        printf '%s\n' "unknown"
+        return
+    fi
+
+    mem_used_kib=$((mem_total_kib - mem_available_kib))
+    usage_percentage=$((mem_used_kib * 100 / mem_total_kib))
+
+    printf '%s / %s (%s%%)\n' \
+        "$(format_kib "$mem_used_kib")" \
+        "$(format_kib "$mem_total_kib")" \
+        "$usage_percentage"
+}
+
+get_root_disk_usage() {
+    local total_kib
+    local used_kib
+    local percentage
+
+    if ! read -r total_kib used_kib percentage < <(
+        df -Pk / 2>/dev/null |
+            awk 'NR == 2 { print $2, $3, $5 }'
+    ); then
+        printf '%s\n' "unknown"
+        return
+    fi
+
+    if [[ ! "$total_kib" =~ ^[0-9]+$ ]] ||
+        [[ ! "$used_kib" =~ ^[0-9]+$ ]]; then
+        printf '%s\n' "unknown"
+        return
+    fi
+
+    printf '%s / %s (%s)\n' \
+        "$(format_kib "$used_kib")" \
+        "$(format_kib "$total_kib")" \
+        "$percentage"
+}
+
+get_load_average() {
+    local load_one
+    local load_five
+    local load_fifteen
+
+    if [[ ! -r /proc/loadavg ]]; then
+        printf '%s\n' "unknown"
+        return
+    fi
+
+    if read -r load_one load_five load_fifteen _ < /proc/loadavg; then
+        printf '%s %s %s\n' \
+            "$load_one" \
+            "$load_five" \
+            "$load_fifteen"
+    else
+        printf '%s\n' "unknown"
+    fi
+}
+
 print_system_information() {
     local hostname_value
     local kernel_version
     local architecture
     local uptime_value
+    local memory_usage
+    local root_disk_usage
+    local load_average
 
     hostname_value="$(get_system_hostname)"
     kernel_version="$(get_kernel_version)"
     architecture="$(get_system_architecture)"
     uptime_value="$(get_system_uptime)"
+    memory_usage="$(get_memory_usage)"
+    root_disk_usage="$(get_root_disk_usage)"
+    load_average="$(get_load_average)"
 
     printf 'Distribution:     %s\n' "$DISTRO_NAME"
     printf 'Distribution ID:  %s\n' "$DISTRO_ID"
@@ -64,6 +178,9 @@ print_system_information() {
     printf 'Kernel:           %s\n' "$kernel_version"
     printf 'Architecture:     %s\n' "$architecture"
     printf 'Uptime:           %s\n' "$uptime_value"
+    printf 'Memory:           %s\n' "$memory_usage"
+    printf 'Root disk:        %s\n' "$root_disk_usage"
+    printf 'Load average:     %s\n' "$load_average"
 }
 
 print_reboot_status() {

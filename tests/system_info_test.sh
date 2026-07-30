@@ -68,6 +68,24 @@ assert_output_contains \
     "$LAC_SCRIPT" \
     --system-info
 
+assert_output_contains \
+    "System information includes memory usage" \
+    "Memory:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_contains \
+    "System information includes root disk usage" \
+    "Root disk:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_contains \
+    "System information includes load averages" \
+    "Load average:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 
 if (( failed > 0 )); then
