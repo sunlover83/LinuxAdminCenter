@@ -20,6 +20,91 @@ get_system_architecture() {
     uname -m 2>/dev/null || printf '%s\n' "unknown"
 }
 
+get_cpu_model() {
+    local cpu_model=""
+
+    if command -v lscpu >/dev/null 2>&1; then
+        cpu_model="$(
+            LC_ALL=C lscpu 2>/dev/null |
+                awk -F ':' '
+                    /^Model name:/ {
+                        value = $2
+                        sub(/^[[:space:]]+/, "", value)
+                        sub(/[[:space:]]+$/, "", value)
+                        print value
+                        exit
+                    }
+                '
+        )"
+    fi
+
+    if [[ -z "$cpu_model" && -r /proc/cpuinfo ]]; then
+        cpu_model="$(
+            awk -F ':' '
+                /^(model name|Hardware|Processor)[[:space:]]*:/ {
+                    value = $2
+                    sub(/^[[:space:]]+/, "", value)
+                    sub(/[[:space:]]+$/, "", value)
+
+                    if (value != "") {
+                        print value
+                        exit
+                    }
+                }
+            ' /proc/cpuinfo 2>/dev/null
+        )"
+    fi
+
+    if [[ -n "$cpu_model" ]]; then
+        printf '%s\n' "$cpu_model"
+        return
+    fi
+
+    if cpu_model="$(uname -p 2>/dev/null)" &&
+        [[ -n "$cpu_model" && "$cpu_model" != "unknown" ]]; then
+        printf '%s\n' "$cpu_model"
+    else
+        printf '%s\n' "unknown"
+    fi
+}
+
+get_logical_cpu_count() {
+    local cpu_count=""
+
+    if command -v nproc >/dev/null 2>&1; then
+        cpu_count="$(nproc 2>/dev/null || true)"
+
+        if [[ "$cpu_count" =~ ^[0-9]+$ ]] &&
+            (( cpu_count > 0 )); then
+            printf '%s\n' "$cpu_count"
+            return
+        fi
+    fi
+
+    if [[ -r /proc/cpuinfo ]]; then
+        cpu_count="$(
+            awk -F ':' '
+                /^[[:space:]]*processor[[:space:]]*:/ {
+                    count++
+                }
+
+                END {
+                    if (count > 0) {
+                        print count
+                    }
+                }
+            ' /proc/cpuinfo
+        )"
+    fi
+
+    if [[ "$cpu_count" =~ ^[0-9]+$ ]] &&
+        (( cpu_count > 0 )); then
+        printf '%s\n' "$cpu_count"
+    else
+        printf '%s\n' "unknown"
+    fi
+}
+
 get_system_uptime() {
     local uptime_value
     local total_seconds
@@ -87,7 +172,8 @@ get_memory_usage() {
                 ;;
         esac
 
-        if [[ -n "$mem_total_kib" && -n "$mem_available_kib" ]]; then
+        if [[ -n "$mem_total_kib" &&
+            -n "$mem_available_kib" ]]; then
             break
         fi
     done < /proc/meminfo
@@ -157,6 +243,8 @@ print_system_information() {
     local hostname_value
     local kernel_version
     local architecture
+    local cpu_model
+    local logical_cpu_count
     local uptime_value
     local memory_usage
     local root_disk_usage
@@ -165,6 +253,8 @@ print_system_information() {
     hostname_value="$(get_system_hostname)"
     kernel_version="$(get_kernel_version)"
     architecture="$(get_system_architecture)"
+    cpu_model="$(get_cpu_model)"
+    logical_cpu_count="$(get_logical_cpu_count)"
     uptime_value="$(get_system_uptime)"
     memory_usage="$(get_memory_usage)"
     root_disk_usage="$(get_root_disk_usage)"
@@ -177,6 +267,8 @@ print_system_information() {
     printf 'Hostname:         %s\n' "$hostname_value"
     printf 'Kernel:           %s\n' "$kernel_version"
     printf 'Architecture:     %s\n' "$architecture"
+    printf 'CPU:              %s\n' "$cpu_model"
+    printf 'Logical CPUs:     %s\n' "$logical_cpu_count"
     printf 'Uptime:           %s\n' "$uptime_value"
     printf 'Memory:           %s\n' "$memory_usage"
     printf 'Root disk:        %s\n' "$root_disk_usage"

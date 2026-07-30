@@ -5,6 +5,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 LAC_SCRIPT="${PROJECT_ROOT}/src/lac.sh"
 
+TEST_TMP_DIR="$(mktemp -d)"
+MOCK_BIN="${TEST_TMP_DIR}/bin"
+
+mkdir -p "$MOCK_BIN"
+trap 'rm -rf "$TEST_TMP_DIR"' EXIT
+
+export PATH="${MOCK_BIN}:${PATH}"
+
 passed=0
 failed=0
 
@@ -32,7 +40,8 @@ assert_output_contains() {
         status=$?
     fi
 
-    if (( status == 0 )) && [[ "$output" == *"$expected"* ]]; then
+    if (( status == 0 )) &&
+        [[ "$output" == *"$expected"* ]]; then
         pass_test "$description"
     else
         fail_test "$description"
@@ -42,7 +51,41 @@ assert_output_contains() {
     fi
 }
 
+assert_equals() {
+    local description="$1"
+    local expected="$2"
+    local actual="$3"
+
+    if [[ "$actual" == "$expected" ]]; then
+        pass_test "$description"
+    else
+        fail_test "$description"
+        printf '       Expected: %s\n' "$expected"
+        printf '       Actual:   %s\n' "$actual"
+    fi
+}
+
+cat > "${MOCK_BIN}/lscpu" <<'EOF'
+#!/usr/bin/env bash
+
+cat <<'OUTPUT'
+Architecture:                         x86_64
+CPU(s):                               32
+Model name:                           Test Processor 9000
+OUTPUT
+EOF
+
+chmod +x "${MOCK_BIN}/lscpu"
+
+# shellcheck source=../src/modules/system_info/system_info.sh
+source "${PROJECT_ROOT}/src/modules/system_info/system_info.sh"
+
 printf '%s\n\n' "Running system information tests..."
+
+assert_equals \
+    "CPU model is read from lscpu" \
+    "Test Processor 9000" \
+    "$(get_cpu_model)"
 
 assert_output_contains \
     "System information includes the hostname" \
@@ -59,6 +102,18 @@ assert_output_contains \
 assert_output_contains \
     "System information includes the architecture" \
     "Architecture:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_contains \
+    "System information includes the CPU model" \
+    "CPU:              Test Processor 9000" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_contains \
+    "System information includes the logical CPU count" \
+    "Logical CPUs:" \
     "$LAC_SCRIPT" \
     --system-info
 
