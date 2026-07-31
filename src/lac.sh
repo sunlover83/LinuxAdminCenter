@@ -27,6 +27,9 @@ source "${SCRIPT_DIR}/core/ui.sh"
 # shellcheck source=modules/update/update.sh
 source "${SCRIPT_DIR}/modules/update/update.sh"
 
+# shellcheck source=modules/network_info/network_info.sh
+source "${SCRIPT_DIR}/modules/network_info/network_info.sh"
+
 # shellcheck source=modules/system_info/system_info.sh
 source "${SCRIPT_DIR}/modules/system_info/system_info.sh"
 

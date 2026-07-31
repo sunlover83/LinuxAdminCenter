@@ -11,10 +11,6 @@ print_system_information() {
     local memory_usage
     local root_disk_usage
     local load_average
-    local network_interfaces
-    local ipv4_addresses
-    local default_gateway
-    local dns_servers
 
     hostname_value="$(get_system_hostname)"
     kernel_version="$(get_kernel_version)"
@@ -26,10 +22,6 @@ print_system_information() {
     memory_usage="$(get_memory_usage)"
     root_disk_usage="$(get_root_disk_usage)"
     load_average="$(get_load_average)"
-    network_interfaces="$(get_active_network_interfaces)"
-    ipv4_addresses="$(get_ipv4_addresses)"
-    default_gateway="$(get_default_gateway)"
-    dns_servers="$(get_dns_servers)"
 
     printf 'Distribution:     %s\n' "$DISTRO_NAME"
     printf 'Distribution ID:  %s\n' "$DISTRO_ID"
@@ -45,10 +37,9 @@ print_system_information() {
     printf 'Memory:           %s\n' "$memory_usage"
     printf 'Root disk:        %s\n' "$root_disk_usage"
     printf 'Load average:     %s\n' "$load_average"
-    printf 'Interfaces:       %s\n' "$network_interfaces"
-    printf 'IPv4 addresses:   %s\n' "$ipv4_addresses"
-    printf 'Default gateway:  %s\n' "$default_gateway"
-    printf 'DNS servers:      %s\n' "$dns_servers"
+
+    echo
+    print_network_information
 }
 
 print_reboot_status() {

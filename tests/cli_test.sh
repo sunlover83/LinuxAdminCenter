@@ -32,7 +32,8 @@ assert_output_contains() {
         status=$?
     fi
 
-    if (( status == 0 )) && [[ "$output" == *"$expected"* ]]; then
+    if (( status == 0 )) &&
+        [[ "$output" == *"$expected"* ]]; then
         pass_test "$description"
     else
         fail_test "$description"
@@ -96,13 +97,25 @@ assert_output_contains \
     -i
 
 assert_output_contains \
+    "Long network information option displays IPv4 addresses" \
+    "IPv4 addresses:" \
+    "$LAC_SCRIPT" \
+    --network-info
+
+assert_output_contains \
+    "Short network information option displays DNS servers" \
+    "DNS servers:" \
+    "$LAC_SCRIPT" \
+    -n
+
+assert_output_contains \
     "Long help option displays usage information" \
     "Usage:" \
     "$LAC_SCRIPT" \
     --help
 
 assert_output_contains \
-    "Short help option displays usage information" \
+    "Short help option displays available options" \
     "Options:" \
     "$LAC_SCRIPT" \
     -h

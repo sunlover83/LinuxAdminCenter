@@ -15,12 +15,15 @@ draw_header() {
 draw_main_menu() {
     echo "1) System Updates"
     echo "2) System Information"
+    echo "3) Network Information"
     echo
     echo "0) Exit"
     echo
 }
 
 read_choice() {
+    local choice
+
     read -rp "Selection: " choice
 
     case "$choice" in
@@ -30,6 +33,9 @@ read_choice() {
         2)
             show_system_information
             ;;
+        3)
+            show_network_information
+            ;;
         0)
             echo
             echo "Goodbye!"
@@ -37,7 +43,7 @@ read_choice() {
             ;;
         *)
             echo
-            echo "Invalid selection."
+            log_warning "Invalid selection."
             sleep 1
             ;;
     esac

@@ -12,6 +12,7 @@ Options:
   -h, --help          Show this help message
   -v, --version       Show version information
   -i, --system-info   Show system information
+  -n, --network-info  Show network information
   -u, --check-updates Check for available updates
 
 Without an option, LAC starts in interactive mode.
@@ -29,6 +30,10 @@ show_cli_system_information() {
 
     print_system_information
     print_reboot_status
+}
+
+show_cli_network_information() {
+    print_network_information
 }
 
 show_cli_update_check() {
@@ -51,6 +56,9 @@ handle_cli_arguments() {
             ;;
         -i|--system-info)
             show_cli_system_information
+            ;;
+        -n|--network-info)
+            show_cli_network_information
             ;;
         -u|--check-updates)
             show_cli_update_check
