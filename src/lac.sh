@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-
-###############################################################################
-# Linux Admin Center (LAC)
-# Version : 0.1.0-alpha
-# Codename: Foundation
-###############################################################################
-
-#!/usr/bin/env bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,6 +8,12 @@ source "${SCRIPT_DIR}/core/common.sh"
 
 # shellcheck source=core/config.sh
 source "${SCRIPT_DIR}/core/config.sh"
+
+# shellcheck source=core/system_metrics.sh
+source "${SCRIPT_DIR}/core/system_metrics.sh"
+
+# shellcheck source=core/network_metrics.sh
+source "${SCRIPT_DIR}/core/network_metrics.sh"
 
 # shellcheck source=core/cli.sh
 source "${SCRIPT_DIR}/core/cli.sh"
