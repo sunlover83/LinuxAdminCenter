@@ -33,10 +33,19 @@ Optional für vollständigere Informationen:
 
 - `lscpu` für das CPU-Modell
 - `lspci` für Grafikkarten
-- `nvidia-smi` als zusätzliche NVIDIA-Erkennung
+- `lm-sensors` beziehungsweise `sensors` für CPU-Temperaturen
+- `nvidia-smi` für NVIDIA-GPU-Diagnosedaten
+- `smartmontools` beziehungsweise `smartctl` für SMART-Laufwerksprüfungen
+- `nvme-cli` beziehungsweise `nvme` für NVMe-Gesundheitsdaten
 - `resolvectl` für DNS-Informationen
 - `journalctl` für die Anzeige der Journalbelegung
 - ShellCheck für die Entwicklung
+
+Auf Debian, Ubuntu und Pop!_OS können die Diagnosewerkzeuge installiert werden mit:
+
+```bash
+sudo apt install lm-sensors smartmontools nvme-cli
+```
 
 Verfügbarkeit prüfen:
 
@@ -46,6 +55,11 @@ command -v git
 command -v ip
 command -v sudo
 command -v du
+command -v sensors
+command -v nvidia-smi
+command -v smartctl
+command -v nvme
+command -v lsblk
 ```
 
 Für die Entwicklung zusätzlich:
@@ -112,6 +126,12 @@ Schreibgeschützten Cleanup-Bericht anzeigen:
 ./src/lac.sh --cleanup-report
 ```
 
+Hardwarediagnose anzeigen:
+
+```bash
+./src/lac.sh --hardware-diagnostics
+```
+
 Interaktives Menü starten:
 
 ```bash
@@ -168,6 +188,7 @@ Danach erneut prüfen:
 bash tests/run_tests.sh
 shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ./src/lac.sh --cleanup-report
+./src/lac.sh --hardware-diagnostics
 ```
 
 ## Anwendung entfernen

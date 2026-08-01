@@ -54,6 +54,7 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 | `ui.sh` | Hauptmenü und Navigation im interaktiven Modus |
 | `package_manager.sh` | Abstraktion für Update- und Cleanup-Befehle von APT, DNF, Pacman und Zypper |
 | `system_metrics.sh` | Ermittlung von System-, Hardware- und Ressourcendaten |
+| `hardware_metrics.sh` | Ermittlung von Temperaturen, NVIDIA-GPU-Daten, Laufwerken sowie SMART- und NVMe-Gesundheitsstatus |
 | `network_metrics.sh` | Ermittlung von Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Servern |
 | `cleanup_metrics.sh` | Ermittlung von Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
@@ -67,6 +68,7 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `cleanup/` | Cleanup-Bericht, Paket-Cache-Bereinigung und bestätigte Paketentfernung |
 | `system_info/` | Allgemeine System- und Hardwareinformationen anzeigen |
 | `network_info/` | Netzwerkinformationen anzeigen |
+| `hardware_diagnostics/` | Schreibgeschützte Hardware- und Laufwerksdiagnose |
 
 Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen.
 
@@ -92,6 +94,19 @@ Für Tests kann `LAC_PACKAGE_CACHE_DIR` gesetzt werden, um den Paket-Cache-Pfad 
 ### Netzwerkinformationen
 
 `network_metrics.sh` liest die verfügbaren Netzwerkdaten. `network_info.sh` stellt sie unabhängig von der allgemeinen Systemübersicht dar.
+
+### Hardwarediagnose
+
+1. `hardware_metrics.sh` prüft die Verfügbarkeit der benötigten Diagnosewerkzeuge.
+2. `sensors` liefert eine CPU-Temperatur, sofern ein unterstützter CPU-Sensor erkannt wird.
+3. `nvidia-smi` liefert NVIDIA-GPU-Modell, Temperatur, Auslastung und Speichernutzung.
+4. `lsblk` liefert physische Blockgeräte und deren Modelle.
+5. Virtuelle ZRAM-Geräte, Partitionen, Loop-Geräte und Datenträger mit einer Größe von null Byte werden ausgeschlossen.
+6. `smartctl -H` liefert den SMART-Gesundheitsstatus kompatibler Laufwerke.
+7. `nvme smart-log` liefert den Gesundheitsstatus von NVMe-Laufwerken.
+8. `hardware_diagnostics.sh` kombiniert die Messwerte zu einer einheitlichen Ausgabe.
+
+Die CLI-Option `--hardware-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
 
 ### Updateverwaltung
 
@@ -125,6 +140,20 @@ Die erste Cleanup-Version ist absichtlich konservativ:
 - Pacman behält zwei Cache-Versionen pro Paket
 
 Diese Grenzen verhindern, dass ein allgemeiner Cleanup-Aufruf unerwartet wichtige Dateien oder Diagnoseinformationen entfernt.
+
+## Sicherheitsgrenzen der Hardwarediagnose
+
+Die Hardwarediagnose ist ausschließlich lesend:
+
+- keine SMART-Selbsttests
+- keine Laufwerksreparaturen
+- keine Firmwareaktionen
+- keine Änderungen an Sensor- oder Lüftereinstellungen
+- keine automatische Verwendung von `sudo`
+- keine Prüfung virtueller ZRAM-Geräte
+- keine Prüfung leerer Kartenleser oder anderer Datenträger mit null Byte
+
+Wenn Laufwerksinformationen administrative Rechte benötigen, wird `requires root` ausgegeben. Der Benutzer entscheidet selbst, ob LAC ausdrücklich mit `sudo` gestartet wird.
 
 ## Rückgabecodes im CLI-Modus
 

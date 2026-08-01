@@ -18,6 +18,9 @@ source "${SCRIPT_DIR}/core/network_metrics.sh"
 # shellcheck source=core/cleanup_metrics.sh
 source "${SCRIPT_DIR}/core/cleanup_metrics.sh"
 
+# shellcheck source=core/hardware_metrics.sh
+source "${SCRIPT_DIR}/core/hardware_metrics.sh"
+
 # shellcheck source=core/cli.sh
 source "${SCRIPT_DIR}/core/cli.sh"
 
@@ -38,6 +41,9 @@ source "${SCRIPT_DIR}/modules/network_info/network_info.sh"
 
 # shellcheck source=modules/system_info/system_info.sh
 source "${SCRIPT_DIR}/modules/system_info/system_info.sh"
+
+# shellcheck source=modules/hardware_diagnostics/hardware_diagnostics.sh
+source "${SCRIPT_DIR}/modules/hardware_diagnostics/hardware_diagnostics.sh"
 
 load_configuration
 

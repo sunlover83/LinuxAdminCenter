@@ -30,6 +30,7 @@ Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
 2) System Information
 3) Network Information
 4) System Cleanup
+5) Hardware Diagnostics
 0) Exit
 ```
 
@@ -85,6 +86,46 @@ Die Netzwerkübersicht zeigt:
 
 Falls ein benötigtes Systemprogramm oder eine Information nicht verfügbar ist, gibt LAC je nach Messwert `unknown` oder `none` aus.
 
+### Hardware Diagnostics
+
+Die Hardwarediagnose ist vollständig schreibgeschützt. Sie zeigt abhängig von den installierten Werkzeugen:
+
+- Verfügbarkeit der Diagnoseprogramme
+- CPU-Temperatur
+- NVIDIA-GPU-Modell
+- GPU-Temperatur
+- GPU-Auslastung
+- belegten und gesamten GPU-Speicher
+- erkannte physische Laufwerke und deren Modelle
+- SMART-Gesundheitsstatus von SATA- und kompatiblen Laufwerken
+- NVMe-Gesundheitsstatus
+
+Verwendete Programme:
+
+| Werkzeug | Aufgabe |
+|---|---|
+| `sensors` | CPU-Temperatur ermitteln |
+| `nvidia-smi` | NVIDIA-GPU-Daten ermitteln |
+| `lsblk` | physische Laufwerke erkennen |
+| `smartctl` | SMART-Gesundheitsstatus prüfen |
+| `nvme` | NVMe-Gesundheitsstatus prüfen |
+
+Fehlende Programme werden als `not installed` beziehungsweise Messwerte als `unavailable` angezeigt.
+
+Für den Zugriff auf SMART- und NVMe-Gesundheitsdaten sind häufig Root-Rechte erforderlich. LAC fordert diese Rechte nicht automatisch an. Ohne ausreichende Rechte erscheint:
+
+```text
+requires root
+```
+
+Die Diagnose kann bei Bedarf ausdrücklich mit Root-Rechten gestartet werden:
+
+```bash
+sudo ./src/lac.sh --hardware-diagnostics
+```
+
+Virtuelle ZRAM-Geräte und Laufwerke mit einer Größe von null Byte, beispielsweise leere Kartenleser, werden nicht geprüft.
+
 ### System Cleanup
 
 Das Cleanup-Menü enthält drei Funktionen:
@@ -135,12 +176,13 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 ## Kommandozeilenoptionen
 
 ```text
--h, --help           Hilfe anzeigen
--v, --version        Version und Codename anzeigen
--i, --system-info    Systeminformationen anzeigen
--n, --network-info   Netzwerkinformationen anzeigen
--u, --check-updates  Nach verfügbaren Updates suchen
--c, --cleanup-report Schreibgeschützten Cleanup-Bericht anzeigen
+-h, --help                  Hilfe anzeigen
+-v, --version               Version und Codename anzeigen
+-i, --system-info           Systeminformationen anzeigen
+-n, --network-info          Netzwerkinformationen anzeigen
+-d, --hardware-diagnostics Hardwarediagnose anzeigen
+-u, --check-updates         Nach verfügbaren Updates suchen
+-c, --cleanup-report        Schreibgeschützten Cleanup-Bericht anzeigen
 ```
 
 Beispiele:
@@ -149,6 +191,7 @@ Beispiele:
 ./src/lac.sh --version
 ./src/lac.sh --system-info
 ./src/lac.sh --network-info
+./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --check-updates
 ./src/lac.sh --cleanup-report
 ```
@@ -186,7 +229,7 @@ LAC lädt die Konfiguration in dieser Reihenfolge:
 1. `/etc/lac/lac.conf`
 2. `${XDG_CONFIG_HOME:-$HOME/.config}/lac/lac.conf`
 
-Die Benutzerkonfiguration überschreibt die Systemkonfiguration.
+Die Benutzerkonfiguration überschreibt die systemweite Konfiguration.
 
 Derzeit unterstützte Einstellung:
 
@@ -246,6 +289,25 @@ command -v ip
 ```
 
 Für die Hardwareerkennung sind unter anderem `lscpu`, `lspci` und bei NVIDIA-Systemen optional `nvidia-smi` hilfreich.
+
+### Laufwerksdiagnose zeigt `requires root`
+
+SMART- und NVMe-Gesundheitsdaten sind auf vielen Systemen nur mit administrativen Rechten zugänglich.
+
+Einzelne Laufwerke können direkt geprüft werden:
+
+```bash
+sudo smartctl -H /dev/sda
+sudo nvme smart-log /dev/nvme0n1
+```
+
+Oder die gesamte LAC-Hardwarediagnose:
+
+```bash
+sudo ./src/lac.sh --hardware-diagnostics
+```
+
+Die Hardwarediagnose führt keine Schreib-, Reparatur- oder Selbsttestbefehle aus.
 
 ### Debug-Ausgabe aktivieren
 

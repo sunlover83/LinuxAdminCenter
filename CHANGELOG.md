@@ -8,6 +8,35 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.4.0-alpha] - 2026-08-01
+
+### Added
+
+- Interactive hardware diagnostics module
+- Read-only hardware diagnostics through `-d` and `--hardware-diagnostics`
+- CPU temperature detection through `sensors`
+- NVIDIA GPU temperature, utilization and memory reporting through `nvidia-smi`
+- Physical storage-device detection including device models
+- SMART health checks for SATA and other supported block devices
+- NVMe health checks through `nvme smart-log`
+- Automated tests for hardware metrics, diagnostic output and menu integration
+
+### Changed
+
+- Version and codename updated to `0.4.0-alpha (Diagnostics)`
+- Main menu extended with hardware diagnostics
+- CLI help extended with the hardware diagnostics option
+- CPU temperatures are formatted to one decimal place
+- Virtual ZRAM devices and zero-size storage devices are excluded from storage diagnostics
+- Missing diagnostic tools and unavailable measurements are reported explicitly
+
+### Security
+
+- Hardware diagnostics are read-only
+- LAC does not request elevated privileges automatically for drive-health checks
+- Drive-health checks without sufficient privileges report `requires root`
+- Empty card readers and virtual ZRAM devices are not passed to drive-health tools
+
 ## [0.3.0-alpha] - 2026-08-01
 
 ### Added

@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.3.0-alpha (Cleanup)" \
+    "Linux Admin Center 0.4.0-alpha (Diagnostics)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.3.0-alpha (Cleanup)" \
+    "Linux Admin Center 0.4.0-alpha (Diagnostics)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -107,6 +107,18 @@ assert_output_contains \
     "DNS servers:" \
     "$LAC_SCRIPT" \
     -n
+
+assert_output_contains \
+    "Long hardware diagnostics option displays tool status" \
+    "Diagnostic tools:" \
+    "$LAC_SCRIPT" \
+    --hardware-diagnostics
+
+assert_output_contains \
+    "Short hardware diagnostics option displays temperatures" \
+    "Temperatures:" \
+    "$LAC_SCRIPT" \
+    -d
 
 assert_output_contains \
     "Long cleanup report option displays cache information" \
