@@ -19,9 +19,9 @@ collect_available_updates() {
     fi
 
     if [[ -n "$output" ]]; then
-    # target_ref is a nameref to the caller's array.
-    # shellcheck disable=SC2034
-    mapfile -t target_ref <<< "$output"
+        # target_ref is a nameref to the caller's array.
+        # shellcheck disable=SC2034
+        mapfile -t target_ref <<< "$output"
     fi
 }
 

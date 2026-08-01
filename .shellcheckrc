@@ -1,0 +1,5 @@
+# Resolve sourced files relative to the script being checked.
+source-path=SCRIPTDIR
+
+# Follow files referenced by source directives.
+external-sources=true

@@ -1,0 +1,21 @@
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Local environment and configuration
+.env
+.env.*
+!.env.example
+.vscode/*.local.json
+
+# Logs, coverage and temporary output
+*.log
+coverage/
+tmp/
+.cache/
+
+# Local LAC configuration used during development
+lac.conf

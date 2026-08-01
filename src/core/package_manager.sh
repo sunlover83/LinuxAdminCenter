@@ -3,7 +3,8 @@
 is_package_manager_supported() {
     case "${PKG_MANAGER:-unknown}" in
         apt)
-            command -v apt-get >/dev/null 2>&1
+            command -v apt-get >/dev/null 2>&1 &&
+                command -v apt >/dev/null 2>&1
             ;;
         dnf)
             command -v dnf >/dev/null 2>&1

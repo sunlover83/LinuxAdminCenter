@@ -13,7 +13,6 @@ readonly COLOR_GREEN="\033[32m"
 readonly COLOR_YELLOW="\033[33m"
 readonly COLOR_BLUE="\033[34m"
 readonly COLOR_CYAN="\033[36m"
-readonly COLOR_BOLD="\033[1m"
 
 clear_screen() {
     clear

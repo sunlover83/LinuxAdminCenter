@@ -2,68 +2,89 @@
 
 > **Powerful administration. Simple operation.**
 
-## Overview
+Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Linux Admin Center (LAC) is a modular administration toolkit for Linux desktop systems.
+## Current features
 
-The project focuses on making Linux administration easier while remaining transparent, secure and maintainable.
+- Interactive main menu
+- Update checks and update installation
+- Support for APT, DNF, Pacman and Zypper
+- System and hardware information
+- Network information
+- Restart-requirement detection
+- System-wide and user-specific configuration
+- Debug logging
+- Automated shell tests
 
----
+## Usage
 
-## Vision
+Start the interactive interface:
 
-Linux administration should not require remembering dozens of terminal commands.
+```bash
+./src/lac.sh
+```
 
-LAC provides a unified interface for common administrative tasks without hiding what happens in the background.
+Available command-line options:
 
-The goal is to make system administration easier—not less transparent.
+```text
+-h, --help          Show help
+-v, --version       Show version information
+-i, --system-info   Show system information
+-n, --network-info  Show network information
+-u, --check-updates Check for available updates
+```
 
----
+## Configuration
 
-## Design Principles
+LAC reads configuration from these locations in order:
 
-- Security before convenience
-- Modular architecture
-- Documentation as part of development
-- Every feature is tested before release
-- No hidden actions
-- Critical operations always require confirmation
+1. `/etc/lac/lac.conf`
+2. `${XDG_CONFIG_HOME:-$HOME/.config}/lac/lac.conf`
 
----
+User settings override system settings. Currently supported:
+
+```ini
+DEBUG=false
+```
+
+## Development
+
+Run all tests:
+
+```bash
+bash tests/run_tests.sh
+```
+
+Run ShellCheck:
+
+```bash
+shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+```
+
+## Project structure
+
+```text
+src/lac.sh                  Application entry point
+src/core/                   Shared CLI, configuration, metrics and UI code
+src/modules/update/         Update management
+src/modules/system_info/    System information view
+src/modules/network_info/   Network information view
+tests/                      Automated shell tests
+docs/                       Project documentation
+```
 
 ## Roadmap
 
-| Version | Codename | Goal |
-|----------|----------|------|
-| 0.1.0-alpha | Foundation | Project foundation |
-| 0.2.0-alpha | Update | Update management |
-| 0.3.0-alpha | Cleanup | Cleanup tools |
-| 0.4.0-alpha | Insight | System information |
-| 0.5.0-alpha | Health | Hardware diagnostics |
-| 0.6.0-alpha | Network | Network diagnostics |
-| 0.7.0-alpha | Gaming | Gaming tools |
-| 1.0.0 | Aurora | First stable release |
+The project is currently in the `0.1.0-alpha` development phase. Features are implemented incrementally and the version will be raised once the current foundation is consolidated.
 
----
+Planned areas include:
 
-## Project Status
-
-Current development stage:
-
-- ✅ Project structure created
-- ✅ Development environment configured
-- ✅ Initial application entry point implemented
-- ⏳ Core framework in development
-
-Current version: **0.1.0-alpha (Foundation)**
-
----
+- System cleanup tools
+- Hardware diagnostics
+- Extended network diagnostics
+- Gaming-related system tools
+- Installation and packaging workflow
 
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-**Linux Admin Center (LAC)**
-*Powerful administration. Simple operation.*
