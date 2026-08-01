@@ -1,0 +1,196 @@
+# Benutzerhandbuch
+
+## Überblick
+
+Linux Admin Center (LAC) bündelt grundlegende Administrationsaufgaben in einer Bash-Anwendung. Es kann über ein interaktives Menü oder mit einzelnen Kommandozeilenoptionen verwendet werden.
+
+Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper.
+
+## Anwendung starten
+
+Wechsle in das Projektverzeichnis und starte LAC:
+
+```bash
+cd ~/Projekte/LinuxAdminCenter
+./src/lac.sh
+```
+
+Falls die Datei noch nicht ausführbar ist:
+
+```bash
+chmod +x src/lac.sh
+```
+
+## Interaktives Hauptmenü
+
+Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
+
+```text
+1) System Updates
+2) System Information
+3) Network Information
+0) Exit
+```
+
+### System Updates
+
+Das Update-Menü bietet zwei Funktionen:
+
+1. verfügbare Updates suchen
+2. verfügbare Updates installieren
+
+Vor einer Installation zeigt LAC die gefundenen Pakete an und verlangt eine ausdrückliche Bestätigung. Ohne Bestätigung werden keine Updates installiert.
+
+Abhängig von Distribution und lokaler Konfiguration kann `sudo` nach einem Passwort fragen.
+
+Unterstützte Paketmanager:
+
+| Distributionen | Paketmanager |
+|---|---|
+| Debian, Ubuntu, Pop!_OS, Linux Mint | APT |
+| Fedora, RHEL, CentOS, Rocky Linux, AlmaLinux | DNF |
+| Arch Linux, Manjaro | Pacman und `checkupdates` |
+| openSUSE, SUSE Linux Enterprise | Zypper |
+
+Für openSUSE Tumbleweed verwendet LAC `zypper dist-upgrade`. Andere Zypper-Systeme werden mit `zypper update` aktualisiert.
+
+### System Information
+
+Die Systemübersicht zeigt:
+
+- Distribution und Versionsnummer
+- erkannten Paketmanager
+- Hostname
+- Kernelversion
+- Systemarchitektur
+- CPU-Modell und Anzahl logischer CPUs
+- erkannte Grafikkarte oder Grafikkarten
+- Laufzeit seit dem letzten Start
+- Arbeitsspeichernutzung
+- Belegung des Root-Dateisystems
+- Load Average für 1, 5 und 15 Minuten
+- erforderlichen Neustartstatus
+
+Netzwerkdaten werden bewusst nicht in dieser Übersicht wiederholt. Sie stehen im eigenen Bereich „Network Information“ zur Verfügung.
+
+### Network Information
+
+Die Netzwerkübersicht zeigt:
+
+- aktive Netzwerkschnittstellen ohne Loopback-Interface
+- globale IPv4-Adressen einschließlich Schnittstellenname
+- Standard-Gateway
+- erkannte DNS-Server
+
+Falls ein benötigtes Systemprogramm oder eine Information nicht verfügbar ist, gibt LAC je nach Messwert `unknown` oder `none` aus.
+
+## Kommandozeilenoptionen
+
+```text
+-h, --help          Hilfe anzeigen
+-v, --version       Version und Codename anzeigen
+-i, --system-info   Systeminformationen anzeigen
+-n, --network-info  Netzwerkinformationen anzeigen
+-u, --check-updates Nach verfügbaren Updates suchen
+```
+
+Beispiele:
+
+```bash
+./src/lac.sh --version
+./src/lac.sh --system-info
+./src/lac.sh --network-info
+./src/lac.sh --check-updates
+```
+
+Es darf jeweils genau eine Option übergeben werden.
+
+## Rückgabecodes
+
+Die Rückgabecodes sind besonders bei der Verwendung in Skripten hilfreich.
+
+| Code | Bedeutung |
+|---:|---|
+| `0` | erfolgreich ausgeführt oder keine Updates gefunden |
+| `1` | Laufzeitfehler, zum Beispiel fehlgeschlagene Paketaktualisierung |
+| `2` | ungültige Option oder nicht unterstützter Paketmanager |
+| `10` | verfügbare Updates wurden gefunden |
+
+Beispiel:
+
+```bash
+./src/lac.sh --check-updates
+status=$?
+
+case "$status" in
+    0)  echo "Keine Updates verfügbar." ;;
+    10) echo "Updates verfügbar." ;;
+    *)  echo "Updateprüfung fehlgeschlagen." ;;
+esac
+```
+
+## Konfiguration
+
+LAC lädt die Konfiguration in dieser Reihenfolge:
+
+1. `/etc/lac/lac.conf`
+2. `${XDG_CONFIG_HOME:-$HOME/.config}/lac/lac.conf`
+
+Die Benutzerkonfiguration überschreibt die Systemkonfiguration.
+
+Derzeit unterstützte Einstellung:
+
+```ini
+DEBUG=false
+```
+
+Mit aktivierter Debug-Ausgabe:
+
+```ini
+DEBUG=true
+```
+
+Beispiel für eine Benutzerkonfiguration:
+
+```bash
+mkdir -p ~/.config/lac
+printf '%s\n' 'DEBUG=true' > ~/.config/lac/lac.conf
+```
+
+## Fehlerbehebung
+
+### „Permission denied“ beim Start
+
+```bash
+chmod +x src/lac.sh
+```
+
+### Paketmanager wird nicht unterstützt
+
+Prüfe zunächst die Erkennung:
+
+```bash
+./src/lac.sh --system-info
+```
+
+Bei Arch-basierten Systemen muss zusätzlich zu Pacman das Programm `checkupdates` vorhanden sein.
+
+### Netzwerkdaten werden als `unknown` angezeigt
+
+Prüfe, ob der Befehl `ip` verfügbar ist:
+
+```bash
+command -v ip
+```
+
+Für die Hardwareerkennung sind unter anderem `lscpu`, `lspci` und bei NVIDIA-Systemen optional `nvidia-smi` hilfreich.
+
+### Debug-Ausgabe aktivieren
+
+Setze in der Benutzerkonfiguration:
+
+```ini
+DEBUG=true
+```
+
+Anschließend LAC neu starten.

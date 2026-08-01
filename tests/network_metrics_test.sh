@@ -137,28 +137,28 @@ assert_equals \
     "$(get_dns_servers)"
 
 assert_output_contains \
-    "System information includes active interfaces" \
+    "Network information includes active interfaces" \
     "Interfaces:       enp5s0; wlan0" \
     "$LAC_SCRIPT" \
-    --system-info
+    --network-info
 
 assert_output_contains \
-    "System information includes IPv4 addresses" \
+    "Network information includes IPv4 addresses" \
     "IPv4 addresses:   enp5s0: 192.168.1.50/24" \
     "$LAC_SCRIPT" \
-    --system-info
+    --network-info
 
 assert_output_contains \
-    "System information includes the default gateway" \
+    "Network information includes the default gateway" \
     "Default gateway:  192.168.1.1 via enp5s0" \
     "$LAC_SCRIPT" \
-    --system-info
+    --network-info
 
 assert_output_contains \
-    "System information includes DNS servers" \
+    "Network information includes DNS servers" \
     "DNS servers:      1.1.1.1; 192.168.1.1" \
     "$LAC_SCRIPT" \
-    --system-info
+    --network-info
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

@@ -37,9 +37,6 @@ print_system_information() {
     printf 'Memory:           %s\n' "$memory_usage"
     printf 'Root disk:        %s\n' "$root_disk_usage"
     printf 'Load average:     %s\n' "$load_average"
-
-    echo
-    print_network_information
 }
 
 print_reboot_status() {

@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.1.0-alpha (Foundation)" \
+    "Linux Admin Center 0.2.0-alpha (Consolidation)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.1.0-alpha (Foundation)" \
+    "Linux Admin Center 0.2.0-alpha (Consolidation)" \
     "$LAC_SCRIPT" \
     -v
 

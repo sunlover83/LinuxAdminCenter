@@ -51,6 +51,31 @@ assert_output_contains() {
     fi
 }
 
+assert_output_not_contains() {
+    local description="$1"
+    local unexpected="$2"
+    local output
+    local status
+
+    shift 2
+
+    if output=$("$@" 2>&1); then
+        status=0
+    else
+        status=$?
+    fi
+
+    if (( status == 0 )) &&
+        [[ "$output" != *"$unexpected"* ]]; then
+        pass_test "$description"
+    else
+        fail_test "$description"
+        printf '       Unexpected: %s\n' "$unexpected"
+        printf '       Output:     %s\n' "$output"
+        printf '       Status:     %s\n' "$status"
+    fi
+}
+
 assert_equals() {
     local description="$1"
     local expected="$2"
@@ -76,6 +101,9 @@ OUTPUT
 EOF
 
 chmod +x "${MOCK_BIN}/lscpu"
+
+# shellcheck source=../src/core/system_metrics.sh
+source "${PROJECT_ROOT}/src/core/system_metrics.sh"
 
 # shellcheck source=../src/modules/system_info/system_info.sh
 source "${PROJECT_ROOT}/src/modules/system_info/system_info.sh"
@@ -138,6 +166,12 @@ assert_output_contains \
 assert_output_contains \
     "System information includes load averages" \
     "Load average:" \
+    "$LAC_SCRIPT" \
+    --system-info
+
+assert_output_not_contains \
+    "System information does not duplicate network details" \
+    "IPv4 addresses:" \
     "$LAC_SCRIPT" \
     --system-info
 

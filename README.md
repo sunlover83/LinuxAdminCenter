@@ -4,17 +4,20 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
+Current version: **0.2.0-alpha (Consolidation)**
+
 ## Current features
 
 - Interactive main menu
 - Update checks and update installation
 - Support for APT, DNF, Pacman and Zypper
 - System and hardware information
-- Network information
+- Dedicated network information
 - Restart-requirement detection
 - System-wide and user-specific configuration
 - Debug logging
 - Automated shell tests
+- Automated GitHub Actions quality checks
 
 ## Usage
 
@@ -34,6 +37,8 @@ Available command-line options:
 -u, --check-updates Check for available updates
 ```
 
+The update check returns status `10` when updates are available. This allows scripts to distinguish available updates from execution errors.
+
 ## Configuration
 
 LAC reads configuration from these locations in order:
@@ -46,6 +51,16 @@ User settings override system settings. Currently supported:
 ```ini
 DEBUG=false
 ```
+
+## Documentation
+
+- [Installation](docs/Installation.md)
+- [User manual](docs/Benutzerhandbuch.md)
+- [Architecture](docs/Architektur.md)
+- [Developer guide](docs/Entwicklerhandbuch.md)
+- [Changelog](CHANGELOG.md)
+
+The detailed project documentation is currently maintained in German.
 
 ## Development
 
@@ -61,29 +76,34 @@ Run ShellCheck:
 shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
+GitHub Actions runs both checks automatically for pull requests and pushes to `main`.
+
 ## Project structure
 
 ```text
-src/lac.sh                  Application entry point
-src/core/                   Shared CLI, configuration, metrics and UI code
-src/modules/update/         Update management
-src/modules/system_info/    System information view
-src/modules/network_info/   Network information view
-tests/                      Automated shell tests
-docs/                       Project documentation
+.github/workflows/         Automated quality checks
+src/lac.sh                 Application entry point
+src/core/                  Shared CLI, configuration, metrics and UI code
+src/modules/update/        Update management
+src/modules/system_info/   System information view
+src/modules/network_info/  Network information view
+tests/                     Automated shell tests
+docs/                      Project documentation
 ```
 
 ## Roadmap
 
-The project is currently in the `0.1.0-alpha` development phase. Features are implemented incrementally and the version will be raised once the current foundation is consolidated.
+Version `0.2.0-alpha` consolidates the existing foundation with complete project documentation, separated system and network views, and automated quality checks.
 
-Planned areas include:
+Planned areas for later development include:
 
 - System cleanup tools
 - Hardware diagnostics
 - Extended network diagnostics
 - Gaming-related system tools
 - Installation and packaging workflow
+
+The next functional module will be planned separately after the consolidation phase.
 
 ## License
 
