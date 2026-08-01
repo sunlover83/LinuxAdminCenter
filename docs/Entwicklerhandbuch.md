@@ -19,7 +19,7 @@ Repository aktualisieren:
 ```bash
 cd ~/Projekte/LinuxAdminCenter
 git switch main
-git pull
+git pull --ff-only
 ```
 
 Für Änderungen wird ein eigener Branch verwendet:
@@ -52,7 +52,8 @@ Die detaillierte Zuordnung der Dateien ist in `Architektur.md` beschrieben.
 - Arrays werden verwendet, wenn mehrere getrennte Werte verarbeitet werden.
 - Befehle werden vor ihrer Verwendung bei Bedarf mit `command -v` geprüft.
 - Administrative Aktionen müssen sichtbar sein und dürfen nicht unerwartet ausgeführt werden.
-- Installationen oder andere verändernde Aktionen benötigen eine ausdrückliche Bestätigung.
+- Installationen, Löschungen oder andere verändernde Aktionen benötigen eine ausdrückliche Bestätigung.
+- Für schreibende Funktionen muss nach Möglichkeit zuerst eine schreibgeschützte Vorschau existieren.
 
 ### Strikte Fehlerbehandlung
 
@@ -81,6 +82,8 @@ Für den nicht interaktiven CLI-Modus werden normale `printf`-Ausgaben und aussa
 Globale Variablen sollen auf Werte beschränkt bleiben, die tatsächlich mehrere Dateien benötigen. Aktuell betrifft dies insbesondere Version, Konfiguration, Distribution und Paketmanager.
 
 Wenn ShellCheck eine absichtlich gemeinsam verwendete Variable nicht erkennen kann, muss die Ausnahme möglichst eng begrenzt und kommentiert werden.
+
+`LAC_PACKAGE_CACHE_DIR` ist eine optionale Test- und Diagnosevariable. Sie überschreibt den automatisch ermittelten Paket-Cache-Pfad und darf nicht als dauerhaft notwendige Benutzerkonfiguration vorausgesetzt werden.
 
 ## ShellCheck
 
@@ -115,6 +118,8 @@ Ein Testskript soll:
 5. verständliche PASS- und FAIL-Meldungen ausgeben
 6. mit Status `1` enden, falls mindestens ein Test fehlgeschlagen ist
 
+Verändernde Systembefehle werden in Tests immer gemockt. Tests dürfen weder Pakete installieren beziehungsweise entfernen noch echte System-Caches löschen.
+
 ### Benennung
 
 ```text
@@ -124,6 +129,7 @@ Ein Testskript soll:
 Beispiele:
 
 - `cli_test.sh`
+- `cleanup_test.sh`
 - `config_test.sh`
 - `network_metrics_test.sh`
 - `package_manager_test.sh`
@@ -142,7 +148,7 @@ Ein Funktionsmodul soll nicht direkt von einem anderen Funktionsmodul abhängen.
 
 ## Paketmanager erweitern
 
-Für einen zusätzlichen Paketmanager müssen mindestens diese Funktionen erweitert werden:
+Für einen zusätzlichen Paketmanager müssen mindestens diese Update-Funktionen geprüft werden:
 
 - `detect_distribution`
 - `is_package_manager_supported`
@@ -150,7 +156,40 @@ Für einen zusätzlichen Paketmanager müssen mindestens diese Funktionen erweit
 - `list_available_updates`
 - `install_available_updates`
 
-Die Ausgabe von `list_available_updates` muss eine Zeile pro Paket liefern. Besondere erfolgreiche Rückgabecodes eines Paketmanagers müssen explizit behandelt und getestet werden.
+Für die Cleanup-Unterstützung müssen zusätzlich geprüft werden:
+
+- `is_package_cache_cleanup_supported`
+- `list_unneeded_packages`
+- `clean_package_cache`
+- `remove_unneeded_packages`
+- `get_package_cache_directory`
+
+Die Ausgabe von `list_available_updates` und `list_unneeded_packages` muss jeweils eine Zeile pro Paket liefern. Besondere erfolgreiche Rückgabecodes eines Paketmanagers müssen explizit behandelt und getestet werden.
+
+## Cleanup-Funktionen entwickeln
+
+Cleanup-Code benötigt eine zusätzliche Sicherheitsprüfung.
+
+### Pflichtanforderungen
+
+- Zuerst muss eine schreibgeschützte Ermittlung der betroffenen Objekte möglich sein.
+- Der Nutzer muss die vollständige Liste oder den betroffenen Pfad vor der Aktion sehen.
+- Schreibende Aktionen dürfen nicht über den allgemeinen Analyse-CLI-Aufruf ausgelöst werden.
+- Die Bestätigung muss zur möglichen Auswirkung passen. Paketentfernungen verlangen derzeit das exakte Wort `REMOVE`.
+- Shell-Arrays müssen verwendet werden, wenn Paketnamen an einen Löschbefehl übergeben werden.
+- Ungeprüfte Wortaufteilung durch Konstruktionen wie `command $(other-command)` ist zu vermeiden.
+- Metadaten, Journale oder Benutzerdateien dürfen nur nach eigener Sicherheitsbewertung in einen späteren Cleanup-Umfang aufgenommen werden.
+
+### Aktuelle Paketmanager-Strategien
+
+| Paketmanager | Kandidaten ermitteln | Paket-Cache bereinigen | Kandidaten entfernen |
+|---|---|---|---|
+| APT | simuliertes `autoremove` | `apt-get clean` | `apt-get autoremove` |
+| DNF | `repoquery --unneeded` | `dnf clean packages` | `dnf autoremove` |
+| Pacman | `pacman -Qtdq` | `paccache -rk2` | `pacman -Rns` mit Array |
+| Zypper | `packages --unneeded` | standardmäßiges `zypper clean` | `zypper remove --clean-deps` mit Array |
+
+Neue oder geänderte Befehle müssen gegen die offizielle Dokumentation des jeweiligen Paketmanagers geprüft werden.
 
 ## Versionierung und Changelog
 
@@ -187,5 +226,6 @@ Der Pull Request sollte enthalten:
 - Auswirkungen auf Nutzer oder Entwickler
 - durchgeführte Tests
 - bekannte Einschränkungen
+- bei Cleanup-Änderungen die ausdrücklich geltenden Sicherheitsgrenzen
 
 GitHub Actions führt Tests und ShellCheck zusätzlich automatisch aus. Ein fehlgeschlagener Workflow muss vor dem Merge untersucht werden.

@@ -15,6 +15,9 @@ source "${SCRIPT_DIR}/core/system_metrics.sh"
 # shellcheck source=core/network_metrics.sh
 source "${SCRIPT_DIR}/core/network_metrics.sh"
 
+# shellcheck source=core/cleanup_metrics.sh
+source "${SCRIPT_DIR}/core/cleanup_metrics.sh"
+
 # shellcheck source=core/cli.sh
 source "${SCRIPT_DIR}/core/cli.sh"
 
@@ -26,6 +29,9 @@ source "${SCRIPT_DIR}/core/ui.sh"
 
 # shellcheck source=modules/update/update.sh
 source "${SCRIPT_DIR}/modules/update/update.sh"
+
+# shellcheck source=modules/cleanup/cleanup.sh
+source "${SCRIPT_DIR}/modules/cleanup/cleanup.sh"
 
 # shellcheck source=modules/network_info/network_info.sh
 source "${SCRIPT_DIR}/modules/network_info/network_info.sh"

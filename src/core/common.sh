@@ -3,8 +3,8 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="0.2.0-alpha"
-readonly LAC_CODENAME="Consolidation"
+readonly LAC_VERSION="0.3.0-alpha"
+readonly LAC_CODENAME="Cleanup"
 
 # ANSI colors
 readonly COLOR_RESET="\033[0m"

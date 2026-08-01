@@ -11,9 +11,9 @@ Erforderlich:
 - Linux-System
 - Bash ab Version 4.3
 - Git zum Klonen und Aktualisieren des Repositorys
-- Standardprogramme wie `awk`, `sed`, `uname`, `df` und `hostname`
+- Standardprogramme wie `awk`, `sed`, `uname`, `df`, `du` und `hostname`
 - `ip` für die Netzwerkinformationen
-- `sudo` für administrative Updatebefehle
+- `sudo` für administrative Update- und Cleanup-Befehle
 - ein unterstützter Paketmanager
 
 Unterstützte Paketmanager:
@@ -23,12 +23,19 @@ Unterstützte Paketmanager:
 - Pacman zusammen mit `checkupdates`
 - Zypper
 
+Für die vollständige Cleanup-Funktion auf Arch-basierten Systemen wird außerdem `paccache` benötigt. Es ist Bestandteil des Pakets `pacman-contrib`.
+
+```bash
+sudo pacman -S pacman-contrib
+```
+
 Optional für vollständigere Informationen:
 
 - `lscpu` für das CPU-Modell
 - `lspci` für Grafikkarten
 - `nvidia-smi` als zusätzliche NVIDIA-Erkennung
 - `resolvectl` für DNS-Informationen
+- `journalctl` für die Anzeige der Journalbelegung
 - ShellCheck für die Entwicklung
 
 Verfügbarkeit prüfen:
@@ -38,12 +45,20 @@ bash --version
 command -v git
 command -v ip
 command -v sudo
+command -v du
 ```
 
 Für die Entwicklung zusätzlich:
 
 ```bash
 command -v shellcheck
+```
+
+Auf Arch-basierten Systemen:
+
+```bash
+command -v checkupdates
+command -v paccache
 ```
 
 ## Repository klonen
@@ -89,6 +104,12 @@ Hilfe anzeigen:
 
 ```bash
 ./src/lac.sh --help
+```
+
+Schreibgeschützten Cleanup-Bericht anzeigen:
+
+```bash
+./src/lac.sh --cleanup-report
 ```
 
 Interaktives Menü starten:
@@ -138,7 +159,7 @@ shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```bash
 cd ~/Projekte/LinuxAdminCenter
 git switch main
-git pull
+git pull --ff-only
 ```
 
 Danach erneut prüfen:
@@ -146,6 +167,7 @@ Danach erneut prüfen:
 ```bash
 bash tests/run_tests.sh
 shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+./src/lac.sh --cleanup-report
 ```
 
 ## Anwendung entfernen

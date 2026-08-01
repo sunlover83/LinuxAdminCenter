@@ -16,6 +16,7 @@ draw_main_menu() {
     echo "1) System Updates"
     echo "2) System Information"
     echo "3) Network Information"
+    echo "4) System Cleanup"
     echo
     echo "0) Exit"
     echo
@@ -35,6 +36,9 @@ read_choice() {
             ;;
         3)
             show_network_information
+            ;;
+        4)
+            show_cleanup_menu
             ;;
         0)
             echo

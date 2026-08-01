@@ -4,7 +4,7 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.2.0-alpha (Consolidation)**
+Current version: **0.3.0-alpha (Cleanup)**
 
 ## Current features
 
@@ -13,6 +13,10 @@ Current version: **0.2.0-alpha (Consolidation)**
 - Support for APT, DNF, Pacman and Zypper
 - System and hardware information
 - Dedicated network information
+- Read-only cleanup report
+- Confirmed package-cache cleanup
+- Confirmed removal of packages classified as no longer required
+- System journal disk-usage reporting
 - Restart-requirement detection
 - System-wide and user-specific configuration
 - Debug logging
@@ -30,14 +34,29 @@ Start the interactive interface:
 Available command-line options:
 
 ```text
--h, --help          Show help
--v, --version       Show version information
--i, --system-info   Show system information
--n, --network-info  Show network information
--u, --check-updates Check for available updates
+-h, --help           Show help
+-v, --version        Show version information
+-i, --system-info    Show system information
+-n, --network-info   Show network information
+-u, --check-updates  Check for available updates
+-c, --cleanup-report Show a read-only cleanup report
 ```
 
 The update check returns status `10` when updates are available. This allows scripts to distinguish available updates from execution errors.
+
+The cleanup report never changes the system. Destructive cleanup actions are available only in the interactive menu and require explicit confirmation.
+
+## System cleanup safety
+
+The current cleanup module is intentionally limited:
+
+- package caches can be cleaned
+- automatically installed packages that the package manager classifies as no longer required can be reviewed and removed
+- journal disk usage is displayed, but journal files are not deleted
+- repository metadata is not removed
+- Pacman cache cleanup keeps the two newest cached package versions
+
+Users should review every proposed package removal before entering the required `REMOVE` confirmation.
 
 ## Configuration
 
@@ -81,29 +100,28 @@ GitHub Actions runs both checks automatically for pull requests and pushes to `m
 ## Project structure
 
 ```text
-.github/workflows/         Automated quality checks
-src/lac.sh                 Application entry point
-src/core/                  Shared CLI, configuration, metrics and UI code
-src/modules/update/        Update management
-src/modules/system_info/   System information view
-src/modules/network_info/  Network information view
-tests/                     Automated shell tests
-docs/                      Project documentation
+.github/workflows/          Automated quality checks
+src/lac.sh                  Application entry point
+src/core/                   Shared CLI, configuration and metrics code
+src/modules/update/         Update management
+src/modules/cleanup/        Safe system cleanup workflow
+src/modules/system_info/    System information view
+src/modules/network_info/   Network information view
+tests/                      Automated shell tests
+docs/                       Project documentation
 ```
 
 ## Roadmap
 
-Version `0.2.0-alpha` consolidates the existing foundation with complete project documentation, separated system and network views, and automated quality checks.
+Version `0.3.0-alpha` introduces the first deliberately conservative system-cleanup workflow.
 
 Planned areas for later development include:
 
-- System cleanup tools
 - Hardware diagnostics
 - Extended network diagnostics
 - Gaming-related system tools
 - Installation and packaging workflow
-
-The next functional module will be planned separately after the consolidation phase.
+- Additional cleanup categories after separate safety reviews
 
 ## License
 

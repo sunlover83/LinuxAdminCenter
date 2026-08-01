@@ -29,6 +29,7 @@ Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
 1) System Updates
 2) System Information
 3) Network Information
+4) System Cleanup
 0) Exit
 ```
 
@@ -84,14 +85,62 @@ Die Netzwerkübersicht zeigt:
 
 Falls ein benötigtes Systemprogramm oder eine Information nicht verfügbar ist, gibt LAC je nach Messwert `unknown` oder `none` aus.
 
+### System Cleanup
+
+Das Cleanup-Menü enthält drei Funktionen:
+
+1. Cleanup-Bericht anzeigen
+2. Paket-Cache bereinigen
+3. nicht mehr benötigte Pakete entfernen
+
+#### Cleanup-Bericht
+
+Der Bericht ist vollständig schreibgeschützt. Er zeigt:
+
+- erkannten Paketmanager
+- Pfad des Paket-Caches
+- derzeitige Größe des Paket-Caches
+- vom Systemjournal belegten Speicherplatz
+- Anzahl und Namen der Pakete, die der Paketmanager als nicht mehr benötigt einstuft
+
+Der Bericht löscht keine Dateien und entfernt keine Pakete.
+
+#### Paket-Cache bereinigen
+
+Vor der Bereinigung zeigt LAC den Cache-Pfad und seine aktuelle Größe an. Die Aktion startet erst nach einer Bestätigung mit `y` oder `Y`.
+
+Je nach Paketmanager wird ausgeführt:
+
+| Paketmanager | Verhalten |
+|---|---|
+| APT | heruntergeladene Paketdateien werden mit `apt-get clean` entfernt |
+| DNF | nur heruntergeladene Pakete werden mit `dnf clean packages` entfernt |
+| Pacman | `paccache` behält die zwei neuesten Versionen jedes Pakets |
+| Zypper | der heruntergeladene Paket-Cache wird bereinigt; Metadaten bleiben erhalten |
+
+Das Systemjournal wird lediglich analysiert. Die aktuelle Version löscht oder verkleinert keine Journaldateien.
+
+#### Nicht mehr benötigte Pakete entfernen
+
+LAC zeigt zuerst die vollständige Paketliste an. Die Entfernung beginnt nur, wenn anschließend exakt
+
+```text
+REMOVE
+```
+
+eingegeben wird.
+
+Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor der Bestätigung sorgfältig geprüft werden. Paketentfernungen verändern das System und können zusätzliche Abhängigkeiten betreffen.
+
 ## Kommandozeilenoptionen
 
 ```text
--h, --help          Hilfe anzeigen
--v, --version       Version und Codename anzeigen
--i, --system-info   Systeminformationen anzeigen
--n, --network-info  Netzwerkinformationen anzeigen
--u, --check-updates Nach verfügbaren Updates suchen
+-h, --help           Hilfe anzeigen
+-v, --version        Version und Codename anzeigen
+-i, --system-info    Systeminformationen anzeigen
+-n, --network-info   Netzwerkinformationen anzeigen
+-u, --check-updates  Nach verfügbaren Updates suchen
+-c, --cleanup-report Schreibgeschützten Cleanup-Bericht anzeigen
 ```
 
 Beispiele:
@@ -101,6 +150,7 @@ Beispiele:
 ./src/lac.sh --system-info
 ./src/lac.sh --network-info
 ./src/lac.sh --check-updates
+./src/lac.sh --cleanup-report
 ```
 
 Es darf jeweils genau eine Option übergeben werden.
@@ -112,7 +162,7 @@ Die Rückgabecodes sind besonders bei der Verwendung in Skripten hilfreich.
 | Code | Bedeutung |
 |---:|---|
 | `0` | erfolgreich ausgeführt oder keine Updates gefunden |
-| `1` | Laufzeitfehler, zum Beispiel fehlgeschlagene Paketaktualisierung |
+| `1` | Laufzeitfehler, zum Beispiel fehlgeschlagene Paketaktualisierung oder Analyse |
 | `2` | ungültige Option oder nicht unterstützter Paketmanager |
 | `10` | verfügbare Updates wurden gefunden |
 
@@ -174,6 +224,18 @@ Prüfe zunächst die Erkennung:
 ```
 
 Bei Arch-basierten Systemen muss zusätzlich zu Pacman das Programm `checkupdates` vorhanden sein.
+
+### Pacman-Cache kann nicht bereinigt werden
+
+Die sichere Pacman-Bereinigung verwendet `paccache`. Das Programm ist Bestandteil von `pacman-contrib`.
+
+```bash
+sudo pacman -S pacman-contrib
+```
+
+### Cleanup-Bericht zeigt `unavailable`
+
+Ein nicht vorhandenes Cache-Verzeichnis oder ein fehlender Befehl wie `journalctl` wird als `unavailable` angezeigt. Das ist kein Lösch- oder Paketfehler.
 
 ### Netzwerkdaten werden als `unknown` angezeigt
 

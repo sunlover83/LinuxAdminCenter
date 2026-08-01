@@ -8,6 +8,32 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.3.0-alpha] - 2026-08-01
+
+### Added
+
+- Interactive system cleanup menu
+- Read-only cleanup report through `-c` and `--cleanup-report`
+- Package-cache size detection
+- System journal disk-usage reporting
+- Review and removal workflow for packages classified as no longer required
+- Package-cache cleanup for APT, DNF, Pacman and Zypper
+- Cleanup tests covering all supported package managers
+
+### Changed
+
+- Version and codename updated to `0.3.0-alpha (Cleanup)`
+- Main menu extended with the system cleanup module
+- Package-manager abstraction extended with cleanup operations
+- Pacman cache cleanup retains the two newest cached versions
+
+### Security
+
+- Cleanup reports are read-only
+- Package-cache cleanup requires interactive confirmation
+- Package removal requires entering the exact word `REMOVE`
+- Journal files and package repository metadata are not deleted
+
 ## [0.2.0-alpha] - 2026-08-01
 
 ### Added

@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.2.0-alpha (Consolidation)" \
+    "Linux Admin Center 0.3.0-alpha (Cleanup)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.2.0-alpha (Consolidation)" \
+    "Linux Admin Center 0.3.0-alpha (Cleanup)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -107,6 +107,18 @@ assert_output_contains \
     "DNS servers:" \
     "$LAC_SCRIPT" \
     -n
+
+assert_output_contains \
+    "Long cleanup report option displays cache information" \
+    "Package cache size:" \
+    "$LAC_SCRIPT" \
+    --cleanup-report
+
+assert_output_contains \
+    "Short cleanup report option displays candidate count" \
+    "Unneeded packages:" \
+    "$LAC_SCRIPT" \
+    -c
 
 assert_output_contains \
     "Long help option displays usage information" \
