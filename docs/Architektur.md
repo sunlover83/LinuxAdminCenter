@@ -56,6 +56,7 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 | `system_metrics.sh` | Ermittlung von System-, Hardware- und Ressourcendaten |
 | `hardware_metrics.sh` | Ermittlung von Temperaturen, NVIDIA-GPU-Daten, Laufwerken sowie SMART- und NVMe-Gesundheitsstatus |
 | `network_metrics.sh` | Ermittlung von Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Servern |
+| `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie Ping-, DNS- und externe Verbindungstests |
 | `cleanup_metrics.sh` | Ermittlung von Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
 ## Funktionsmodule
@@ -68,6 +69,7 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `cleanup/` | Cleanup-Bericht, Paket-Cache-Bereinigung und bestätigte Paketentfernung |
 | `system_info/` | Allgemeine System- und Hardwareinformationen anzeigen |
 | `network_info/` | Netzwerkinformationen anzeigen |
+| `network_diagnostics/` | Schreibgeschützte aktive Netzwerkdiagnose und Gesamtbewertung |
 | `hardware_diagnostics/` | Schreibgeschützte Hardware- und Laufwerksdiagnose |
 
 Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen.
@@ -85,6 +87,13 @@ Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Nach 
 
 Für Tests kann `LAC_PACKAGE_CACHE_DIR` gesetzt werden, um den Paket-Cache-Pfad auf ein temporäres Verzeichnis umzuleiten. Im normalen Betrieb ist diese Variable nicht erforderlich.
 
+Die Netzwerkdiagnose unterstützt zwei optionale Umgebungsvariablen:
+
+- `LAC_DNS_TEST_HOST` überschreibt den Namen für den DNS-Auflösungstest
+- `LAC_INTERNET_TEST_TARGET` überschreibt die externe IP für den Erreichbarkeitstest
+
+Die Variablen verändern keine Systemkonfiguration und gelten nur für den jeweiligen Prozess.
+
 ## Datenfluss
 
 ### Systeminformationen
@@ -94,6 +103,25 @@ Für Tests kann `LAC_PACKAGE_CACHE_DIR` gesetzt werden, um den Paket-Cache-Pfad 
 ### Netzwerkinformationen
 
 `network_metrics.sh` liest die verfügbaren Netzwerkdaten. `network_info.sh` stellt sie unabhängig von der allgemeinen Systemübersicht dar.
+
+### Netzwerkdiagnose
+
+1. `network_diagnostics_metrics.sh` prüft die Verfügbarkeit von `ip`, `ping` und `getent`.
+2. Die IPv4-Standardroute wird aus der Ausgabe von `ip -4 route show default` ermittelt.
+3. Das Standard-Gateway wird mit einer begrenzten Zahl von Ping-Paketen geprüft.
+4. `getent ahosts` prüft die DNS-Auflösung eines konfigurierbaren Testnamens.
+5. Ein konfigurierbares externes IP-Ziel wird unabhängig von DNS geprüft.
+6. Ping-Ausgaben werden in Status, Paketverlust und durchschnittliche Latenz zerlegt.
+7. `network_diagnostics.sh` formatiert die Messwerte und erzeugt eine Gesamtbewertung.
+8. Nicht reagierende Ping-Ziele werden mit anderen Ergebnissen abgeglichen, da ICMP blockiert sein kann.
+
+Die Bewertung kennt die Zustände:
+
+- `healthy`: Gateway, DNS und externes Ping-Ziel waren erfolgreich
+- `warning`: mindestens ein Test ist unvollständig oder möglicherweise durch ICMP-Filterung beeinflusst
+- `failed`: es fehlt beispielsweise ein Standard-Gateway oder DNS und externe Erreichbarkeit sind gleichzeitig ausgefallen
+
+Die CLI-Option `--network-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
 
 ### Hardwarediagnose
 
@@ -154,6 +182,20 @@ Die Hardwarediagnose ist ausschließlich lesend:
 - keine Prüfung leerer Kartenleser oder anderer Datenträger mit null Byte
 
 Wenn Laufwerksinformationen administrative Rechte benötigen, wird `requires root` ausgegeben. Der Benutzer entscheidet selbst, ob LAC ausdrücklich mit `sudo` gestartet wird.
+
+## Sicherheitsgrenzen der Netzwerkdiagnose
+
+Die Netzwerkdiagnose ist ausschließlich lesend:
+
+- keine Aktivierung oder Deaktivierung von Netzwerkschnittstellen
+- keine Änderungen an IPv4- oder IPv6-Adressen
+- keine Änderungen an Routingtabellen oder Standard-Gateways
+- keine Änderungen an DNS-Servern oder Resolver-Konfigurationen
+- keine automatische Verwendung von `sudo`
+- eine begrenzte Zahl von Ping-Paketen mit Zeitüberschreitung
+- keine Einstufung eines einzelnen fehlgeschlagenen Ping-Tests als sicherer Internetausfall
+
+Die externe Diagnose erzeugt normalen ICMP-Netzwerkverkehr zu einem konfigurierbaren Testziel. DNS- und Ping-Ziele können über Umgebungsvariablen geändert werden.
 
 ## Rückgabecodes im CLI-Modus
 

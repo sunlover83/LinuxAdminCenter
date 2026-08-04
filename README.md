@@ -4,7 +4,7 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.4.0-alpha (Diagnostics)**
+Current version: **0.5.0-alpha (Connectivity)**
 
 ## Current features
 
@@ -13,6 +13,10 @@ Current version: **0.4.0-alpha (Diagnostics)**
 - Support for APT, DNF, Pacman and Zypper
 - System and hardware information
 - Dedicated network information
+- Read-only network diagnostics
+- Gateway, DNS and external connectivity checks
+- Packet-loss and average-latency reporting
+- Overall network assessment using `healthy`, `warning` and `failed`
 - Read-only hardware diagnostics
 - CPU temperature reporting through `sensors`
 - NVIDIA GPU temperature, utilization and memory reporting
@@ -38,13 +42,14 @@ Start the interactive interface:
 Available command-line options:
 
 ```text
--h, --help                  Show help
--v, --version               Show version information
--i, --system-info           Show system information
--n, --network-info          Show network information
--d, --hardware-diagnostics Show hardware diagnostics
--u, --check-updates         Check for available updates
--c, --cleanup-report        Show a read-only cleanup report
+-h, --help                   Show help
+-v, --version                Show version information
+-i, --system-info            Show system information
+-n, --network-info           Show network information
+-r, --network-diagnostics    Show network diagnostics
+-d, --hardware-diagnostics   Show hardware diagnostics
+-u, --check-updates          Check for available updates
+-c, --cleanup-report         Show a read-only cleanup report
 ```
 
 The update check returns status `10` when updates are available. This allows scripts to distinguish available updates from execution errors.
@@ -52,6 +57,16 @@ The update check returns status `10` when updates are available. This allows scr
 The cleanup report never changes the system. Destructive cleanup actions are available only in the interactive menu and require explicit confirmation.
 
 Hardware diagnostics are read-only. CPU, GPU and storage information is displayed only when the required tools are available. Drive-health checks may require root privileges; LAC does not request those privileges automatically.
+
+Network diagnostics are also read-only. LAC checks the IPv4 default gateway, DNS resolution and external IP reachability without modifying network interfaces, routes or DNS settings. Non-responsive ICMP targets are reported carefully because ping traffic may be blocked even when other network functions work.
+
+The default diagnostic targets can be overridden temporarily:
+
+```bash
+LAC_DNS_TEST_HOST=example.org \
+LAC_INTERNET_TEST_TARGET=9.9.9.9 \
+./src/lac.sh --network-diagnostics
+```
 
 ## System cleanup safety
 
@@ -114,6 +129,7 @@ src/modules/update/                 Update management
 src/modules/cleanup/                Safe system cleanup workflow
 src/modules/system_info/            System information view
 src/modules/network_info/           Network information view
+src/modules/network_diagnostics/    Network diagnostics view
 src/modules/hardware_diagnostics/   Hardware diagnostics view
 tests/                              Automated shell tests
 docs/                               Project documentation
@@ -121,11 +137,10 @@ docs/                               Project documentation
 
 ## Roadmap
 
-Version `0.4.0-alpha` introduces read-only hardware diagnostics for temperatures, NVIDIA GPUs and storage-device health.
+Version `0.5.0-alpha` introduces read-only network diagnostics for gateway reachability, DNS resolution, external connectivity, packet loss and latency.
 
 Planned areas for later development include:
 
-- Extended network diagnostics
 - Gaming-related system tools
 - Installation and packaging workflow
 - Additional cleanup categories after separate safety reviews

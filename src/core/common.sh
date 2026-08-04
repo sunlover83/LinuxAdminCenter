@@ -3,8 +3,8 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="0.4.0-alpha"
-readonly LAC_CODENAME="Diagnostics"
+readonly LAC_VERSION="0.5.0-alpha"
+readonly LAC_CODENAME="Connectivity"
 
 # ANSI colors
 readonly COLOR_RESET="\033[0m"

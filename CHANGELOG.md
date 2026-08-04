@@ -8,6 +8,39 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.5.0-alpha] - 2026-08-04
+
+### Added
+
+- Interactive network diagnostics module
+- Read-only network diagnostics through `-r` and `--network-diagnostics`
+- IPv4 default-gateway detection for connectivity tests
+- Gateway reachability checks
+- DNS resolution checks through `getent`
+- External IP reachability checks
+- Packet-loss and average-latency reporting
+- Availability reporting for `ip`, `ping` and `getent`
+- Overall network assessment using `healthy`, `warning` and `failed`
+- Explanatory assessment messages for common connectivity states
+- Automated tests for network diagnostic metrics, formatted output, CLI behavior and menu integration
+
+### Changed
+
+- Version and codename updated to `0.5.0-alpha (Connectivity)`
+- Main menu extended with network diagnostics
+- CLI help extended with the network diagnostics option
+- Network information and active connectivity tests are kept in separate modules
+- Non-responsive ICMP targets are treated as warnings when other connectivity checks succeed
+- DNS failures are distinguished from general IP connectivity failures
+
+### Security
+
+- Network diagnostics are read-only
+- LAC does not modify interfaces, routes, gateways or DNS configuration
+- LAC does not request elevated privileges for network diagnostics
+- External tests use a limited number of ICMP packets with explicit timeouts
+- Test targets can be overridden through environment variables without changing system configuration
+
 ## [0.4.0-alpha] - 2026-08-01
 
 ### Added

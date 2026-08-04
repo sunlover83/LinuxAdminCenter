@@ -52,11 +52,20 @@ show_hardware_diagnostics() {
     printf '%s\n' "hardware diagnostics selected"
 }
 
+show_network_diagnostics() {
+    printf '%s\n' "network diagnostics selected"
+}
+
 printf '%s\n\n' "Running UI tests..."
 
 assert_output_contains \
     "Main menu displays hardware diagnostics" \
     "5) Hardware Diagnostics" \
+    "$(draw_main_menu)"
+
+assert_output_contains \
+    "Main menu displays network diagnostics" \
+    "6) Network Diagnostics" \
     "$(draw_main_menu)"
 
 assert_output_contains \
@@ -68,6 +77,11 @@ assert_equals \
     "Menu option 5 starts hardware diagnostics" \
     "hardware diagnostics selected" \
     "$(read_choice <<< "5")"
+
+assert_equals \
+    "Menu option 6 starts network diagnostics" \
+    "network diagnostics selected" \
+    "$(read_choice <<< "6")"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

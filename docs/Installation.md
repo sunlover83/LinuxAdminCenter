@@ -12,7 +12,9 @@ Erforderlich:
 - Bash ab Version 4.3
 - Git zum Klonen und Aktualisieren des Repositorys
 - Standardprogramme wie `awk`, `sed`, `uname`, `df`, `du` und `hostname`
-- `ip` für die Netzwerkinformationen
+- `ip` für Netzwerkinformationen und Gateway-Erkennung
+- `ping` für Gateway- und Internet-Erreichbarkeitstests
+- `getent` für die DNS-Auflösungsprüfung
 - `sudo` für administrative Update- und Cleanup-Befehle
 - ein unterstützter Paketmanager
 
@@ -53,6 +55,8 @@ Verfügbarkeit prüfen:
 bash --version
 command -v git
 command -v ip
+command -v ping
+command -v getent
 command -v sudo
 command -v du
 command -v sensors
@@ -126,6 +130,12 @@ Schreibgeschützten Cleanup-Bericht anzeigen:
 ./src/lac.sh --cleanup-report
 ```
 
+Netzwerkdiagnose anzeigen:
+
+```bash
+./src/lac.sh --network-diagnostics
+```
+
 Hardwarediagnose anzeigen:
 
 ```bash
@@ -188,6 +198,7 @@ Danach erneut prüfen:
 bash tests/run_tests.sh
 shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ./src/lac.sh --cleanup-report
+./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ```
 

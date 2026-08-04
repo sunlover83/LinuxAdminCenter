@@ -9,13 +9,14 @@ Usage:
   lac.sh [OPTION]
 
 Options:
-  -h, --help                  Show this help message
-  -v, --version               Show version information
-  -i, --system-info           Show system information
-  -n, --network-info          Show network information
-  -d, --hardware-diagnostics Show hardware diagnostics
-  -u, --check-updates         Check for available updates
-  -c, --cleanup-report        Show a read-only cleanup report
+  -h, --help                   Show this help message
+  -v, --version                Show version information
+  -i, --system-info            Show system information
+  -n, --network-info           Show network information
+  -r, --network-diagnostics    Show network diagnostics
+  -d, --hardware-diagnostics   Show hardware diagnostics
+  -u, --check-updates          Check for available updates
+  -c, --cleanup-report         Show a read-only cleanup report
 
 Without an option, LAC starts in interactive mode.
 EOF
@@ -36,6 +37,10 @@ show_cli_system_information() {
 
 show_cli_network_information() {
     print_network_information
+}
+
+show_cli_network_diagnostics() {
+    print_network_diagnostics
 }
 
 show_cli_hardware_diagnostics() {
@@ -69,6 +74,9 @@ handle_cli_arguments() {
             ;;
         -n|--network-info)
             show_cli_network_information
+            ;;
+        -r|--network-diagnostics)
+            show_cli_network_diagnostics
             ;;
         -d|--hardware-diagnostics)
             show_cli_hardware_diagnostics

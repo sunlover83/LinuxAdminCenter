@@ -31,6 +31,7 @@ Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
 3) Network Information
 4) System Cleanup
 5) Hardware Diagnostics
+6) Network Diagnostics
 0) Exit
 ```
 
@@ -85,6 +86,39 @@ Die Netzwerkübersicht zeigt:
 - erkannte DNS-Server
 
 Falls ein benötigtes Systemprogramm oder eine Information nicht verfügbar ist, gibt LAC je nach Messwert `unknown` oder `none` aus.
+
+### Network Diagnostics
+
+Die Netzwerkdiagnose führt aktive, aber vollständig schreibgeschützte Verbindungstests durch. Sie zeigt:
+
+- Verfügbarkeit von `ip`, `ping` und `getent`
+- erkannte IPv4-Standard-Gateway-Adresse
+- Erreichbarkeit des Standard-Gateways
+- Paketverlust und durchschnittliche Latenz zum Gateway
+- DNS-Auflösung eines Testnamens
+- Erreichbarkeit eines externen IP-Testziels
+- Paketverlust und durchschnittliche Latenz zum externen Ziel
+- eine Gesamtbewertung als `healthy`, `warning` oder `failed`
+- eine erklärende Zusammenfassung des Ergebnisses
+
+Die Bewertung berücksichtigt, dass ICMP beziehungsweise Ping in einigen Netzwerken blockiert wird. Funktioniert beispielsweise die DNS-Auflösung, während das externe Ping-Ziel nicht antwortet, wird deshalb eine Warnung statt eines eindeutigen Internetausfalls ausgegeben.
+
+Die Diagnose verändert keine Netzwerkschnittstellen, Routen, Gateway- oder DNS-Einstellungen und benötigt keine Root-Rechte.
+
+Standardmäßig werden folgende Testziele verwendet:
+
+| Test | Standardziel |
+|---|---|
+| DNS-Auflösung | `example.com` |
+| externe IP-Erreichbarkeit | `1.1.1.1` |
+
+Die Ziele können für einen einzelnen Aufruf überschrieben werden:
+
+```bash
+LAC_DNS_TEST_HOST=example.org \
+LAC_INTERNET_TEST_TARGET=9.9.9.9 \
+./src/lac.sh --network-diagnostics
+```
 
 ### Hardware Diagnostics
 
@@ -176,13 +210,14 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 ## Kommandozeilenoptionen
 
 ```text
--h, --help                  Hilfe anzeigen
--v, --version               Version und Codename anzeigen
--i, --system-info           Systeminformationen anzeigen
--n, --network-info          Netzwerkinformationen anzeigen
--d, --hardware-diagnostics Hardwarediagnose anzeigen
--u, --check-updates         Nach verfügbaren Updates suchen
--c, --cleanup-report        Schreibgeschützten Cleanup-Bericht anzeigen
+-h, --help                   Hilfe anzeigen
+-v, --version                Version und Codename anzeigen
+-i, --system-info            Systeminformationen anzeigen
+-n, --network-info           Netzwerkinformationen anzeigen
+-r, --network-diagnostics    Netzwerkdiagnose anzeigen
+-d, --hardware-diagnostics   Hardwarediagnose anzeigen
+-u, --check-updates          Nach verfügbaren Updates suchen
+-c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
 ```
 
 Beispiele:
@@ -191,6 +226,7 @@ Beispiele:
 ./src/lac.sh --version
 ./src/lac.sh --system-info
 ./src/lac.sh --network-info
+./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --check-updates
 ./src/lac.sh --cleanup-report
@@ -289,6 +325,23 @@ command -v ip
 ```
 
 Für die Hardwareerkennung sind unter anderem `lscpu`, `lspci` und bei NVIDIA-Systemen optional `nvidia-smi` hilfreich.
+
+### Netzwerkdiagnose zeigt `warning`
+
+Eine Warnung bedeutet nicht zwingend, dass die Internetverbindung ausgefallen ist. Router oder externe Systeme können Ping-Anfragen blockieren.
+
+Prüfe zunächst die einzelnen Ergebnisse:
+
+```bash
+./src/lac.sh --network-diagnostics
+```
+
+Typische Fälle:
+
+- Gateway-Ping fehlgeschlagen, aber Internetziel erreichbar: Der Router beantwortet wahrscheinlich keine ICMP-Anfragen.
+- DNS funktioniert, aber das externe Ping-Ziel antwortet nicht: Das Ziel oder eine Firewall blockiert möglicherweise ICMP.
+- externe IP erreichbar, aber DNS fehlgeschlagen: Die IP-Verbindung funktioniert, die Namensauflösung jedoch nicht.
+- kein Standard-Gateway: Es ist keine verwendbare IPv4-Standardroute konfiguriert.
 
 ### Laufwerksdiagnose zeigt `requires root`
 

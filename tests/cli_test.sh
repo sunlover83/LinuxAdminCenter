@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.4.0-alpha (Diagnostics)" \
+    "Linux Admin Center 0.5.0-alpha (Connectivity)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.4.0-alpha (Diagnostics)" \
+    "Linux Admin Center 0.5.0-alpha (Connectivity)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -107,6 +107,18 @@ assert_output_contains \
     "DNS servers:" \
     "$LAC_SCRIPT" \
     -n
+
+assert_output_contains \
+    "Long network diagnostics option displays connectivity" \
+    "Network connectivity:" \
+    "$LAC_SCRIPT" \
+    --network-diagnostics
+
+assert_output_contains \
+    "Short network diagnostics option displays the gateway" \
+    "Default gateway:" \
+    "$LAC_SCRIPT" \
+    -r
 
 assert_output_contains \
     "Long hardware diagnostics option displays tool status" \
