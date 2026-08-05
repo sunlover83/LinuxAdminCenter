@@ -57,6 +57,7 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 | `hardware_metrics.sh` | Ermittlung von Temperaturen, NVIDIA-GPU-Daten, Laufwerken sowie SMART- und NVMe-Gesundheitsstatus |
 | `network_metrics.sh` | Ermittlung von Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Servern |
 | `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie Ping-, DNS- und externe Verbindungstests |
+| `gaming_metrics.sh` | Ermittlung von Sitzung, Desktop, Grafiktreibern, Vulkan, Steam, Proton-Werkzeugen und optionalen Gaming-Programmen |
 | `cleanup_metrics.sh` | Ermittlung von Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
 ## Funktionsmodule
@@ -71,6 +72,7 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `network_info/` | Netzwerkinformationen anzeigen |
 | `network_diagnostics/` | Schreibgeschützte aktive Netzwerkdiagnose und Gesamtbewertung |
 | `hardware_diagnostics/` | Schreibgeschützte Hardware- und Laufwerksdiagnose |
+| `gaming_readiness/` | Schreibgeschützte Gaming-Umgebungsanalyse und Gesamtbewertung |
 
 Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen.
 
@@ -86,6 +88,8 @@ Einige Variablen werden absichtlich zwischen den eingebundenen Dateien geteilt:
 Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Nach Möglichkeit sollen neue Funktionen ihre Werte als lokale Variablen führen und globale Variablen nur verwenden, wenn sie für mehrere Module benötigt werden.
 
 Für Tests kann `LAC_PACKAGE_CACHE_DIR` gesetzt werden, um den Paket-Cache-Pfad auf ein temporäres Verzeichnis umzuleiten. Im normalen Betrieb ist diese Variable nicht erforderlich.
+
+Für die Tests der Proton-Verzeichnissuche kann `LAC_HOME_DIR` gesetzt werden. Im normalen Betrieb verwendet LAC das aktuelle Benutzerverzeichnis aus `HOME`.
 
 Die Netzwerkdiagnose unterstützt zwei optionale Umgebungsvariablen:
 
@@ -135,6 +139,30 @@ Die CLI-Option `--network-diagnostics` und der interaktive Menüpunkt verwenden 
 8. `hardware_diagnostics.sh` kombiniert die Messwerte zu einer einheitlichen Ausgabe.
 
 Die CLI-Option `--hardware-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
+
+### Gaming Readiness
+
+1. `gaming_metrics.sh` ermittelt den Display-Server aus `XDG_SESSION_TYPE`, `WAYLAND_DISPLAY` oder `DISPLAY`.
+2. Die Desktop-Umgebung wird aus `XDG_CURRENT_DESKTOP` beziehungsweise `DESKTOP_SESSION` gelesen.
+3. `lspci -k` liefert die aktiven Kernel-Treiber erkannter Grafikcontroller.
+4. `nvidia-smi` liefert bei NVIDIA-Systemen die Treiberversion.
+5. `vulkaninfo --summary` bestätigt die Vulkan-Funktion, sofern das Werkzeug installiert ist.
+6. Steam wird als nativer Befehl oder als Flatpak-Anwendung erkannt.
+7. Bekannte native und Flatpak-Verzeichnisse werden nach benutzerdefinierten Proton-Kompatibilitätswerkzeugen durchsucht.
+8. GameMode, MangoHud und Gamescope werden als optionale Werkzeuge erfasst.
+9. `gaming_readiness.sh` formatiert die Werte und erzeugt die Gesamtbewertung.
+
+Die Bewertung kennt die Zustände:
+
+- `ready`: grafische Sitzung, Grafiktreiber, bestätigtes Vulkan und Steam sind verfügbar
+- `limited`: genau eine Kernvoraussetzung fehlt oder konnte nicht bestätigt werden
+- `incomplete`: mehrere Kernvoraussetzungen fehlen oder die grafische Basis konnte nicht ermittelt werden
+
+Fehlt `vulkaninfo`, wird Vulkan als `not verified` bezeichnet. Die Anwendung behauptet in diesem Fall nicht, dass die Vulkan-Laufzeit fehlt.
+
+Optionale Werkzeuge und separat installierte Proton-Versionen werden angezeigt, sind aber keine Voraussetzung für `ready`.
+
+Die CLI-Option `--gaming-readiness` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
 
 ### Updateverwaltung
 
@@ -196,6 +224,18 @@ Die Netzwerkdiagnose ist ausschließlich lesend:
 - keine Einstufung eines einzelnen fehlgeschlagenen Ping-Tests als sicherer Internetausfall
 
 Die externe Diagnose erzeugt normalen ICMP-Netzwerkverkehr zu einem konfigurierbaren Testziel. DNS- und Ping-Ziele können über Umgebungsvariablen geändert werden.
+
+## Sicherheitsgrenzen von Gaming Readiness
+
+Gaming Readiness ist ausschließlich lesend:
+
+- keine Installation oder Entfernung von Paketen
+- keine Änderungen an Grafiktreibern oder Vulkan-Konfigurationen
+- keine Änderungen an Steam oder Proton
+- keine automatische Aktivierung von GameMode, MangoHud oder Gamescope
+- keine Anpassung von Startoptionen oder Leistungsprofilen
+- keine automatische Verwendung von `sudo`
+- Verzeichnissuche nur in bekannten Steam-Pfaden unterhalb des Benutzerverzeichnisses
 
 ## Rückgabecodes im CLI-Modus
 

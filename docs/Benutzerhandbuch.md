@@ -32,6 +32,7 @@ Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
 4) System Cleanup
 5) Hardware Diagnostics
 6) Network Diagnostics
+7) Gaming Readiness
 0) Exit
 ```
 
@@ -160,6 +161,35 @@ sudo ./src/lac.sh --hardware-diagnostics
 
 Virtuelle ZRAM-Geräte und Laufwerke mit einer Größe von null Byte, beispielsweise leere Kartenleser, werden nicht geprüft.
 
+### Gaming Readiness
+
+Gaming Readiness erstellt einen vollständig schreibgeschützten Überblick über die grundlegende Linux-Gaming-Umgebung. Angezeigt werden:
+
+- verwendeter Display-Server (`wayland`, `x11` oder `unknown`)
+- erkannte Desktop-Umgebung
+- aktive Grafiktreiber
+- NVIDIA-Treiberversion, sofern `nvidia-smi` verfügbar ist
+- Vulkan-Status über `vulkaninfo --summary`
+- Steam als native oder Flatpak-Installation
+- benutzerdefinierte Proton-Kompatibilitätswerkzeuge
+- Verfügbarkeit von GameMode, MangoHud und Gamescope
+- Gesamtbewertung als `ready`, `limited` oder `incomplete`
+- erklärende Zusammenfassung des Ergebnisses
+
+Die Gesamtbewertung verwendet nur die Kernvoraussetzungen: grafische Sitzung, aktiver Grafiktreiber, Vulkan-Prüfung und Steam. Optionale Werkzeuge werden angezeigt, verschlechtern den Status aber nicht.
+
+| Status | Bedeutung |
+|---|---|
+| `ready` | grafische Sitzung, Treiber, Vulkan-Prüfung und Steam sind verfügbar |
+| `limited` | mindestens eine Kernvoraussetzung fehlt oder konnte nicht bestätigt werden |
+| `incomplete` | mehrere Kernvoraussetzungen fehlen oder die grafische Basis konnte nicht ermittelt werden |
+
+Fehlt `vulkaninfo`, erscheint `not verified`. Das bedeutet nur, dass LAC Vulkan nicht prüfen konnte. Es ist kein Beleg dafür, dass die Vulkan-Laufzeit oder Vulkan-Unterstützung tatsächlich fehlt.
+
+`Custom Proton tools: none` bedeutet, dass keine separat installierten Werkzeuge wie Proton-GE in den üblichen Steam-Verzeichnissen gefunden wurden. Die mit Steam ausgelieferten Proton-Versionen werden dadurch nicht als fehlend bewertet.
+
+Gaming Readiness installiert keine Pakete, verändert keine Grafik- oder Steam-Einstellungen und benötigt keine Root-Rechte.
+
 ### System Cleanup
 
 Das Cleanup-Menü enthält drei Funktionen:
@@ -216,6 +246,7 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -n, --network-info           Netzwerkinformationen anzeigen
 -r, --network-diagnostics    Netzwerkdiagnose anzeigen
 -d, --hardware-diagnostics   Hardwarediagnose anzeigen
+-g, --gaming-readiness       Gaming-Bereitschaft anzeigen
 -u, --check-updates          Nach verfügbaren Updates suchen
 -c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
 ```
@@ -228,6 +259,7 @@ Beispiele:
 ./src/lac.sh --network-info
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
+./src/lac.sh --gaming-readiness
 ./src/lac.sh --check-updates
 ./src/lac.sh --cleanup-report
 ```
@@ -342,6 +374,33 @@ Typische Fälle:
 - DNS funktioniert, aber das externe Ping-Ziel antwortet nicht: Das Ziel oder eine Firewall blockiert möglicherweise ICMP.
 - externe IP erreichbar, aber DNS fehlgeschlagen: Die IP-Verbindung funktioniert, die Namensauflösung jedoch nicht.
 - kein Standard-Gateway: Es ist keine verwendbare IPv4-Standardroute konfiguriert.
+
+### Gaming Readiness zeigt `limited`
+
+Prüfe zuerst die Detailmeldung:
+
+```bash
+./src/lac.sh --gaming-readiness
+```
+
+Typische Fälle:
+
+- `Vulkan: not verified`: Das Programm `vulkaninfo` ist nicht installiert; LAC kann Vulkan deshalb nicht bestätigen.
+- `Steam: not installed`: Weder eine native noch eine Flatpak-Steam-Installation wurde erkannt.
+- `Custom Proton tools: none`: Keine separat installierte Proton-Version wurde gefunden; Steams integrierte Proton-Versionen können trotzdem vorhanden sein.
+- GameMode, MangoHud oder Gamescope fehlen: Diese Werkzeuge sind optional und ändern die Kernbewertung nicht.
+
+Prüfe die verwendeten Programme mit:
+
+```bash
+command -v lspci
+command -v nvidia-smi
+command -v vulkaninfo
+command -v steam
+command -v gamemoderun
+command -v mangohud
+command -v gamescope
+```
 
 ### Laufwerksdiagnose zeigt `requires root`
 

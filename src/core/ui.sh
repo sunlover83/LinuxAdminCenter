@@ -19,6 +19,7 @@ draw_main_menu() {
     echo "4) System Cleanup"
     echo "5) Hardware Diagnostics"
     echo "6) Network Diagnostics"
+    echo "7) Gaming Readiness"
     echo
     echo "0) Exit"
     echo
@@ -47,6 +48,9 @@ read_choice() {
             ;;
         6)
             show_network_diagnostics
+            ;;
+        7)
+            show_gaming_readiness
             ;;
         0)
             echo

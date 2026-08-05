@@ -24,6 +24,9 @@ source "${SCRIPT_DIR}/core/cleanup_metrics.sh"
 # shellcheck source=core/hardware_metrics.sh
 source "${SCRIPT_DIR}/core/hardware_metrics.sh"
 
+# shellcheck source=core/gaming_metrics.sh
+source "${SCRIPT_DIR}/core/gaming_metrics.sh"
+
 # shellcheck source=core/cli.sh
 source "${SCRIPT_DIR}/core/cli.sh"
 
@@ -50,6 +53,9 @@ source "${SCRIPT_DIR}/modules/hardware_diagnostics/hardware_diagnostics.sh"
 
 # shellcheck source=modules/network_diagnostics/network_diagnostics.sh
 source "${SCRIPT_DIR}/modules/network_diagnostics/network_diagnostics.sh"
+
+# shellcheck source=modules/gaming_readiness/gaming_readiness.sh
+source "${SCRIPT_DIR}/modules/gaming_readiness/gaming_readiness.sh"
 
 load_configuration
 

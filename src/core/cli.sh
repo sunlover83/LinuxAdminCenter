@@ -15,6 +15,7 @@ Options:
   -n, --network-info           Show network information
   -r, --network-diagnostics    Show network diagnostics
   -d, --hardware-diagnostics   Show hardware diagnostics
+  -g, --gaming-readiness       Show gaming readiness
   -u, --check-updates          Check for available updates
   -c, --cleanup-report         Show a read-only cleanup report
 
@@ -45,6 +46,10 @@ show_cli_network_diagnostics() {
 
 show_cli_hardware_diagnostics() {
     print_hardware_diagnostics
+}
+
+show_cli_gaming_readiness() {
+    print_gaming_readiness
 }
 
 show_cli_update_check() {
@@ -80,6 +85,9 @@ handle_cli_arguments() {
             ;;
         -d|--hardware-diagnostics)
             show_cli_hardware_diagnostics
+            ;;
+        -g|--gaming-readiness)
+            show_cli_gaming_readiness
             ;;
         -u|--check-updates)
             show_cli_update_check

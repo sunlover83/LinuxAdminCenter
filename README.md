@@ -4,7 +4,7 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.5.0-alpha (Connectivity)**
+Current version: **0.6.0-alpha (Gaming)**
 
 ## Current features
 
@@ -21,6 +21,14 @@ Current version: **0.5.0-alpha (Connectivity)**
 - CPU temperature reporting through `sensors`
 - NVIDIA GPU temperature, utilization and memory reporting
 - SMART and NVMe drive-health checks
+- Read-only gaming readiness report
+- Display-server and desktop-environment detection
+- Active graphics-driver and NVIDIA driver-version reporting
+- Vulkan verification through `vulkaninfo`
+- Native and Flatpak Steam detection
+- Custom Proton compatibility-tool discovery
+- Availability reporting for GameMode, MangoHud and Gamescope
+- Overall gaming assessment using `ready`, `limited` and `incomplete`
 - Read-only cleanup report
 - Confirmed package-cache cleanup
 - Confirmed removal of packages classified as no longer required
@@ -48,6 +56,7 @@ Available command-line options:
 -n, --network-info           Show network information
 -r, --network-diagnostics    Show network diagnostics
 -d, --hardware-diagnostics   Show hardware diagnostics
+-g, --gaming-readiness       Show gaming readiness
 -u, --check-updates          Check for available updates
 -c, --cleanup-report         Show a read-only cleanup report
 ```
@@ -67,6 +76,8 @@ LAC_DNS_TEST_HOST=example.org \
 LAC_INTERNET_TEST_TARGET=9.9.9.9 \
 ./src/lac.sh --network-diagnostics
 ```
+
+Gaming readiness is read-only. It reports the current graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
 
 ## System cleanup safety
 
@@ -131,17 +142,18 @@ src/modules/system_info/            System information view
 src/modules/network_info/           Network information view
 src/modules/network_diagnostics/    Network diagnostics view
 src/modules/hardware_diagnostics/   Hardware diagnostics view
+src/modules/gaming_readiness/       Gaming readiness view
 tests/                              Automated shell tests
 docs/                               Project documentation
 ```
 
 ## Roadmap
 
-Version `0.5.0-alpha` introduces read-only network diagnostics for gateway reachability, DNS resolution, external connectivity, packet loss and latency.
+Version `0.6.0-alpha` introduces a read-only gaming readiness report for session type, graphics drivers, Vulkan verification, Steam, custom Proton tools and optional gaming utilities.
 
 Planned areas for later development include:
 
-- Gaming-related system tools
+- Deeper gaming diagnostics and launch-environment checks
 - Installation and packaging workflow
 - Additional cleanup categories after separate safety reviews
 

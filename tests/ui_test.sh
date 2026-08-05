@@ -56,6 +56,10 @@ show_network_diagnostics() {
     printf '%s\n' "network diagnostics selected"
 }
 
+show_gaming_readiness() {
+    printf '%s\n' "gaming readiness selected"
+}
+
 printf '%s\n\n' "Running UI tests..."
 
 assert_output_contains \
@@ -66,6 +70,11 @@ assert_output_contains \
 assert_output_contains \
     "Main menu displays network diagnostics" \
     "6) Network Diagnostics" \
+    "$(draw_main_menu)"
+
+assert_output_contains \
+    "Main menu displays gaming readiness" \
+    "7) Gaming Readiness" \
     "$(draw_main_menu)"
 
 assert_output_contains \
@@ -82,6 +91,11 @@ assert_equals \
     "Menu option 6 starts network diagnostics" \
     "network diagnostics selected" \
     "$(read_choice <<< "6")"
+
+assert_equals \
+    "Menu option 7 starts gaming readiness" \
+    "gaming readiness selected" \
+    "$(read_choice <<< "7")"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

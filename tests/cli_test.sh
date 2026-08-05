@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.5.0-alpha (Connectivity)" \
+    "Linux Admin Center 0.6.0-alpha (Gaming)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.5.0-alpha (Connectivity)" \
+    "Linux Admin Center 0.6.0-alpha (Gaming)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -131,6 +131,18 @@ assert_output_contains \
     "Temperatures:" \
     "$LAC_SCRIPT" \
     -d
+
+assert_output_contains \
+    "Long gaming readiness option displays the environment" \
+    "Gaming environment:" \
+    "$LAC_SCRIPT" \
+    --gaming-readiness
+
+assert_output_contains \
+    "Short gaming readiness option displays the assessment" \
+    "Overall assessment:" \
+    "$LAC_SCRIPT" \
+    -g
 
 assert_output_contains \
     "Long cleanup report option displays cache information" \

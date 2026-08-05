@@ -8,6 +8,40 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.6.0-alpha] - 2026-08-05
+
+### Added
+
+- Interactive Gaming Readiness module
+- Read-only gaming report through `-g` and `--gaming-readiness`
+- Wayland, X11 and desktop-environment detection
+- Active graphics-driver reporting through `lspci`
+- NVIDIA driver-version reporting through `nvidia-smi`
+- Vulkan verification through `vulkaninfo --summary`
+- Detection of native and Flatpak Steam installations
+- Discovery of custom Proton compatibility tools in native and Flatpak Steam directories
+- Availability reporting for GameMode, MangoHud and Gamescope
+- Overall gaming assessment using `ready`, `limited` and `incomplete`
+- Explanatory messages for missing or unverified core gaming requirements
+- Automated tests for gaming metrics, assessment logic, formatted output, CLI behavior and menu integration
+
+### Changed
+
+- Version and codename updated to `0.6.0-alpha (Gaming)`
+- Main menu extended with Gaming Readiness
+- CLI help extended with the gaming readiness option
+- Missing `vulkaninfo` is reported as `not verified` instead of claiming that Vulkan is not installed
+- Optional gaming tools are displayed but do not reduce the core readiness assessment
+- Existing CLI and UI tests now cover the gaming module
+
+### Security
+
+- Gaming readiness is completely read-only
+- LAC does not install packages or change Steam, Proton, graphics-driver or Vulkan settings
+- LAC does not enable GameMode, MangoHud or Gamescope automatically
+- LAC does not request elevated privileges for gaming checks
+- Compatibility-tool discovery is limited to known Steam directories beneath the current user's home directory
+
 ## [0.5.0-alpha] - 2026-08-04
 
 ### Added

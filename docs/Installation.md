@@ -31,19 +31,26 @@ Für die vollständige Cleanup-Funktion auf Arch-basierten Systemen wird außerd
 sudo pacman -S pacman-contrib
 ```
 
-Optional für vollständigere Informationen:
+Optional für vollständigere Informationen und Diagnosen:
 
 - `lscpu` für das CPU-Modell
-- `lspci` für Grafikkarten
+- `lspci` für Grafikkarten und aktive Grafiktreiber
 - `lm-sensors` beziehungsweise `sensors` für CPU-Temperaturen
-- `nvidia-smi` für NVIDIA-GPU-Diagnosedaten
+- `nvidia-smi` für NVIDIA-GPU-Diagnosedaten und die NVIDIA-Treiberversion
 - `smartmontools` beziehungsweise `smartctl` für SMART-Laufwerksprüfungen
 - `nvme-cli` beziehungsweise `nvme` für NVMe-Gesundheitsdaten
 - `resolvectl` für DNS-Informationen
 - `journalctl` für die Anzeige der Journalbelegung
+- `vulkaninfo` für die Vulkan-Prüfung im Gaming-Readiness-Modul
+- Steam als nativer Befehl oder Flatpak-Anwendung
+- `gamemoderun` für die GameMode-Erkennung
+- `mangohud` für die MangoHud-Erkennung
+- `gamescope` für die Gamescope-Erkennung
 - ShellCheck für die Entwicklung
 
-Auf Debian, Ubuntu und Pop!_OS können die Diagnosewerkzeuge installiert werden mit:
+Fehlt `vulkaninfo`, funktioniert Gaming Readiness weiterhin. Vulkan wird dann vorsichtig als `not verified` ausgegeben.
+
+Auf Debian, Ubuntu und Pop!_OS können die Hardwarediagnosewerkzeuge installiert werden mit:
 
 ```bash
 sudo apt install lm-sensors smartmontools nvme-cli
@@ -64,6 +71,13 @@ command -v nvidia-smi
 command -v smartctl
 command -v nvme
 command -v lsblk
+command -v lspci
+command -v vulkaninfo
+command -v steam
+command -v flatpak
+command -v gamemoderun
+command -v mangohud
+command -v gamescope
 ```
 
 Für die Entwicklung zusätzlich:
@@ -142,6 +156,12 @@ Hardwarediagnose anzeigen:
 ./src/lac.sh --hardware-diagnostics
 ```
 
+Gaming Readiness anzeigen:
+
+```bash
+./src/lac.sh --gaming-readiness
+```
+
 Interaktives Menü starten:
 
 ```bash
@@ -200,6 +220,7 @@ shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ./src/lac.sh --cleanup-report
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
+./src/lac.sh --gaming-readiness
 ```
 
 ## Anwendung entfernen
