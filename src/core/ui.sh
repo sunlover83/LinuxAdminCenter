@@ -20,6 +20,7 @@ draw_main_menu() {
     echo "5) Hardware Diagnostics"
     echo "6) Network Diagnostics"
     echo "7) Gaming Readiness"
+    echo "8) Service Health"
     echo
     echo "0) Exit"
     echo
@@ -51,6 +52,9 @@ read_choice() {
             ;;
         7)
             show_gaming_readiness
+            ;;
+        8)
+            show_service_health
             ;;
         0)
             echo

@@ -8,6 +8,39 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.7.0-alpha] - 2026-08-05
+
+### Added
+
+- Interactive Service Health module
+- Read-only service report through `-e` and `--service-health`
+- Init-system detection with explicit systemd support
+- Systemd system-state reporting
+- Active, inactive and failed service counts
+- Failed-service listing and detailed unit information
+- Total boot-time reporting through `systemd-analyze time`
+- Slowest-service reporting through `systemd-analyze blame`
+- Overall service assessment using `healthy`, `warning` and `failed`
+- Explanatory messages for healthy, degraded, failed and unsupported states
+- Automated tests for service metrics, assessment logic, formatted output, CLI behavior and menu integration
+
+### Changed
+
+- Version and codename updated to `0.7.0-alpha (Services)`
+- Main menu extended with Service Health
+- CLI help extended with the service health option
+- Existing CLI and UI tests now cover the service health module
+- README, installation guide, user manual and architecture documentation updated for Service Health
+
+### Security
+
+- Service Health is completely read-only
+- LAC does not start, stop, restart, enable, disable or mask services
+- LAC does not modify systemd unit files or boot targets
+- LAC does not request elevated privileges for service checks
+- Service names are validated before detailed information is requested
+- Service and boot diagnostics use non-interactive, pageless systemd commands
+
 ## [0.6.0-alpha] - 2026-08-05
 
 ### Added

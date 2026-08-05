@@ -2,9 +2,9 @@
 
 ## Überblick
 
-Linux Admin Center (LAC) bündelt grundlegende Administrationsaufgaben in einer Bash-Anwendung. Es kann über ein interaktives Menü oder mit einzelnen Kommandozeilenoptionen verwendet werden.
+Linux Admin Center (LAC) bündelt grundlegende Administrationsaufgaben in einer modularen Bash-Anwendung. Es kann über ein interaktives Menü oder mit einzelnen Kommandozeilenoptionen verwendet werden.
 
-Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper.
+Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper. Diagnosefunktionen sind grundsätzlich schreibgeschützt. Schreibende Update- und Cleanup-Aktionen werden nur nach einer ausdrücklichen Bestätigung ausgeführt.
 
 ## Anwendung starten
 
@@ -23,8 +23,6 @@ chmod +x src/lac.sh
 
 ## Interaktives Hauptmenü
 
-Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
-
 ```text
 1) System Updates
 2) System Information
@@ -33,6 +31,8 @@ Im Hauptmenü stehen derzeit folgende Bereiche zur Verfügung:
 5) Hardware Diagnostics
 6) Network Diagnostics
 7) Gaming Readiness
+8) Service Health
+
 0) Exit
 ```
 
@@ -43,9 +43,7 @@ Das Update-Menü bietet zwei Funktionen:
 1. verfügbare Updates suchen
 2. verfügbare Updates installieren
 
-Vor einer Installation zeigt LAC die gefundenen Pakete an und verlangt eine ausdrückliche Bestätigung. Ohne Bestätigung werden keine Updates installiert.
-
-Abhängig von Distribution und lokaler Konfiguration kann `sudo` nach einem Passwort fragen.
+Vor einer Installation zeigt LAC die gefundenen Pakete an und verlangt eine ausdrückliche Bestätigung. Ohne Bestätigung werden keine Updates installiert. Abhängig von Distribution und lokaler Konfiguration kann `sudo` nach einem Passwort fragen.
 
 Unterstützte Paketmanager:
 
@@ -75,7 +73,7 @@ Die Systemübersicht zeigt:
 - Load Average für 1, 5 und 15 Minuten
 - erforderlichen Neustartstatus
 
-Netzwerkdaten werden bewusst nicht in dieser Übersicht wiederholt. Sie stehen im eigenen Bereich „Network Information“ zur Verfügung.
+Netzwerkdaten werden bewusst nicht wiederholt. Sie stehen im Bereich „Network Information“ zur Verfügung.
 
 ### Network Information
 
@@ -99,8 +97,8 @@ Die Netzwerkdiagnose führt aktive, aber vollständig schreibgeschützte Verbind
 - DNS-Auflösung eines Testnamens
 - Erreichbarkeit eines externen IP-Testziels
 - Paketverlust und durchschnittliche Latenz zum externen Ziel
-- eine Gesamtbewertung als `healthy`, `warning` oder `failed`
-- eine erklärende Zusammenfassung des Ergebnisses
+- Gesamtbewertung als `healthy`, `warning` oder `failed`
+- erklärende Zusammenfassung des Ergebnisses
 
 Die Bewertung berücksichtigt, dass ICMP beziehungsweise Ping in einigen Netzwerken blockiert wird. Funktioniert beispielsweise die DNS-Auflösung, während das externe Ping-Ziel nicht antwortet, wird deshalb eine Warnung statt eines eindeutigen Internetausfalls ausgegeben.
 
@@ -147,7 +145,7 @@ Verwendete Programme:
 
 Fehlende Programme werden als `not installed` beziehungsweise Messwerte als `unavailable` angezeigt.
 
-Für den Zugriff auf SMART- und NVMe-Gesundheitsdaten sind häufig Root-Rechte erforderlich. LAC fordert diese Rechte nicht automatisch an. Ohne ausreichende Rechte erscheint:
+Für SMART- und NVMe-Gesundheitsdaten sind häufig Root-Rechte erforderlich. LAC fordert diese Rechte nicht automatisch an. Ohne ausreichende Rechte erscheint:
 
 ```text
 requires root
@@ -184,11 +182,37 @@ Die Gesamtbewertung verwendet nur die Kernvoraussetzungen: grafische Sitzung, ak
 | `limited` | mindestens eine Kernvoraussetzung fehlt oder konnte nicht bestätigt werden |
 | `incomplete` | mehrere Kernvoraussetzungen fehlen oder die grafische Basis konnte nicht ermittelt werden |
 
-Fehlt `vulkaninfo`, erscheint `not verified`. Das bedeutet nur, dass LAC Vulkan nicht prüfen konnte. Es ist kein Beleg dafür, dass die Vulkan-Laufzeit oder Vulkan-Unterstützung tatsächlich fehlt.
+Fehlt `vulkaninfo`, erscheint `not verified`. Das bedeutet nur, dass LAC Vulkan nicht prüfen konnte. Es ist kein Beleg dafür, dass die Vulkan-Laufzeit tatsächlich fehlt.
 
 `Custom Proton tools: none` bedeutet, dass keine separat installierten Werkzeuge wie Proton-GE in den üblichen Steam-Verzeichnissen gefunden wurden. Die mit Steam ausgelieferten Proton-Versionen werden dadurch nicht als fehlend bewertet.
 
 Gaming Readiness installiert keine Pakete, verändert keine Grafik- oder Steam-Einstellungen und benötigt keine Root-Rechte.
+
+### Service Health
+
+Service Health erstellt einen schreibgeschützten Überblick über Dienste und Systemstart auf systemd-Systemen. Angezeigt werden:
+
+- erkanntes Init-System
+- Verfügbarkeit von `systemctl` und `systemd-analyze`
+- systemd-Systemzustand
+- Anzahl aktiver, inaktiver und fehlgeschlagener Dienste
+- Namen und Zustände fehlgeschlagener Dienste
+- gesamte von systemd gemeldete Startzeit
+- fünf langsamste Dienste beim Systemstart
+- Gesamtbewertung als `healthy`, `warning` oder `failed`
+- erklärende Zusammenfassung des Ergebnisses
+
+| Status | Bedeutung |
+|---|---|
+| `healthy` | systemd läuft und es wurden keine fehlgeschlagenen Dienste erkannt |
+| `warning` | systemd ist noch im Start, meldet `degraded` oder es existieren fehlgeschlagene Dienste |
+| `failed` | die Auswertung ist nicht möglich oder systemd meldet einen kritischen Zustand wie `maintenance`, `offline` oder `stopping` |
+
+Inaktive Dienste sind nicht automatisch fehlerhaft. Viele Units werden nur bei Bedarf gestartet oder beenden sich nach erfolgreicher Ausführung.
+
+Die angezeigte Gesamtstartzeit stammt aus `systemd-analyze time`. Sie kann Firmware, Bootloader, Kernel und Userspace umfassen. Die Liste der langsamsten Dienste stammt aus `systemd-analyze blame` und ist ein Diagnosehinweis, aber kein automatischer Beleg für einen Fehler.
+
+Service Health startet, stoppt, aktiviert, deaktiviert oder verändert keine Dienste und benötigt keine Root-Rechte. Nicht-systemd-Systeme werden derzeit als nicht unterstützt gemeldet.
 
 ### System Cleanup
 
@@ -213,8 +237,6 @@ Der Bericht löscht keine Dateien und entfernt keine Pakete.
 #### Paket-Cache bereinigen
 
 Vor der Bereinigung zeigt LAC den Cache-Pfad und seine aktuelle Größe an. Die Aktion startet erst nach einer Bestätigung mit `y` oder `Y`.
-
-Je nach Paketmanager wird ausgeführt:
 
 | Paketmanager | Verhalten |
 |---|---|
@@ -247,6 +269,7 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -r, --network-diagnostics    Netzwerkdiagnose anzeigen
 -d, --hardware-diagnostics   Hardwarediagnose anzeigen
 -g, --gaming-readiness       Gaming-Bereitschaft anzeigen
+-e, --service-health         Dienst- und Startzustand anzeigen
 -u, --check-updates          Nach verfügbaren Updates suchen
 -c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
 ```
@@ -260,6 +283,7 @@ Beispiele:
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --gaming-readiness
+./src/lac.sh --service-health
 ./src/lac.sh --check-updates
 ./src/lac.sh --cleanup-report
 ```
@@ -267,8 +291,6 @@ Beispiele:
 Es darf jeweils genau eine Option übergeben werden.
 
 ## Rückgabecodes
-
-Die Rückgabecodes sind besonders bei der Verwendung in Skripten hilfreich.
 
 | Code | Bedeutung |
 |---:|---|
@@ -362,8 +384,6 @@ Für die Hardwareerkennung sind unter anderem `lscpu`, `lspci` und bei NVIDIA-Sy
 
 Eine Warnung bedeutet nicht zwingend, dass die Internetverbindung ausgefallen ist. Router oder externe Systeme können Ping-Anfragen blockieren.
 
-Prüfe zunächst die einzelnen Ergebnisse:
-
 ```bash
 ./src/lac.sh --network-diagnostics
 ```
@@ -377,17 +397,15 @@ Typische Fälle:
 
 ### Gaming Readiness zeigt `limited`
 
-Prüfe zuerst die Detailmeldung:
-
 ```bash
 ./src/lac.sh --gaming-readiness
 ```
 
 Typische Fälle:
 
-- `Vulkan: not verified`: Das Programm `vulkaninfo` ist nicht installiert; LAC kann Vulkan deshalb nicht bestätigen.
+- `Vulkan: not verified`: `vulkaninfo` ist nicht installiert; LAC kann Vulkan deshalb nicht bestätigen.
 - `Steam: not installed`: Weder eine native noch eine Flatpak-Steam-Installation wurde erkannt.
-- `Custom Proton tools: none`: Keine separat installierte Proton-Version wurde gefunden; Steams integrierte Proton-Versionen können trotzdem vorhanden sein.
+- `Custom Proton tools: none`: Keine separat installierte Proton-Version wurde gefunden; integrierte Proton-Versionen können trotzdem vorhanden sein.
 - GameMode, MangoHud oder Gamescope fehlen: Diese Werkzeuge sind optional und ändern die Kernbewertung nicht.
 
 Prüfe die verwendeten Programme mit:
@@ -402,11 +420,33 @@ command -v mangohud
 command -v gamescope
 ```
 
+### Service Health zeigt `warning`
+
+```bash
+./src/lac.sh --service-health
+```
+
+Typische Fälle:
+
+- `System state: degraded`: systemd kennt mindestens einen beeinträchtigten Zustand. Prüfe die angezeigten fehlgeschlagenen Dienste.
+- `Failed services` ist größer als null: Die betroffenen Units werden mit Beschreibung und Zustand aufgeführt.
+- `System state: starting` oder `initializing`: Der Systemstart ist noch nicht vollständig abgeschlossen.
+- ein Dienst erscheint unter den langsamsten Diensten: Das ist zunächst nur ein Zeitmesswert und nicht automatisch ein Fehler.
+
+Weitere Details können direkt gelesen werden:
+
+```bash
+systemctl --failed
+systemctl status NAME.service
+systemd-analyze time
+systemd-analyze blame
+```
+
+LAC führt diese Befehle nur lesend aus und verändert die Dienste nicht.
+
 ### Laufwerksdiagnose zeigt `requires root`
 
 SMART- und NVMe-Gesundheitsdaten sind auf vielen Systemen nur mit administrativen Rechten zugänglich.
-
-Einzelne Laufwerke können direkt geprüft werden:
 
 ```bash
 sudo smartctl -H /dev/sda

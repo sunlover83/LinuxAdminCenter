@@ -31,6 +31,13 @@ Für die vollständige Cleanup-Funktion auf Arch-basierten Systemen wird außerd
 sudo pacman -S pacman-contrib
 ```
 
+Service Health benötigt für die vollständige Auswertung ein systemd-System mit:
+
+- `systemctl` für Systemzustand, Dienstlisten und Unit-Details
+- `systemd-analyze` für Startzeit und langsame Dienste
+
+Auf nicht-systemd-basierten Systemen startet LAC weiterhin, meldet Service Health jedoch als nicht unterstützt.
+
 Optional für vollständigere Informationen und Diagnosen:
 
 - `lscpu` für das CPU-Modell
@@ -78,6 +85,8 @@ command -v flatpak
 command -v gamemoderun
 command -v mangohud
 command -v gamescope
+command -v systemctl
+command -v systemd-analyze
 ```
 
 Für die Entwicklung zusätzlich:
@@ -162,6 +171,12 @@ Gaming Readiness anzeigen:
 ./src/lac.sh --gaming-readiness
 ```
 
+Service Health anzeigen:
+
+```bash
+./src/lac.sh --service-health
+```
+
 Interaktives Menü starten:
 
 ```bash
@@ -204,6 +219,24 @@ ShellCheck ausführen:
 shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
+Neue Diagnosefunktionen einzeln prüfen:
+
+```bash
+./src/lac.sh --network-diagnostics
+./src/lac.sh --hardware-diagnostics
+./src/lac.sh --gaming-readiness
+./src/lac.sh --service-health
+```
+
+Service Health verwendet ausschließlich lesende systemd-Befehle. Die zugrunde liegenden Informationen können unabhängig geprüft werden:
+
+```bash
+systemctl is-system-running
+systemctl --failed
+systemd-analyze time
+systemd-analyze blame
+```
+
 ## Anwendung aktualisieren
 
 ```bash
@@ -221,6 +254,7 @@ shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --gaming-readiness
+./src/lac.sh --service-health
 ```
 
 ## Anwendung entfernen

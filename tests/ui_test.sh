@@ -60,6 +60,10 @@ show_gaming_readiness() {
     printf '%s\n' "gaming readiness selected"
 }
 
+show_service_health() {
+    printf '%s\n' "service health selected"
+}
+
 printf '%s\n\n' "Running UI tests..."
 
 assert_output_contains \
@@ -75,6 +79,11 @@ assert_output_contains \
 assert_output_contains \
     "Main menu displays gaming readiness" \
     "7) Gaming Readiness" \
+    "$(draw_main_menu)"
+
+assert_output_contains \
+    "Main menu displays service health" \
+    "8) Service Health" \
     "$(draw_main_menu)"
 
 assert_output_contains \
@@ -96,6 +105,11 @@ assert_equals \
     "Menu option 7 starts gaming readiness" \
     "gaming readiness selected" \
     "$(read_choice <<< "7")"
+
+assert_equals \
+    "Menu option 8 starts service health" \
+    "service health selected" \
+    "$(read_choice <<< "8")"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

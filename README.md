@@ -4,7 +4,7 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.6.0-alpha (Gaming)**
+Current version: **0.7.0-alpha (Services)**
 
 ## Current features
 
@@ -29,6 +29,12 @@ Current version: **0.6.0-alpha (Gaming)**
 - Custom Proton compatibility-tool discovery
 - Availability reporting for GameMode, MangoHud and Gamescope
 - Overall gaming assessment using `ready`, `limited` and `incomplete`
+- Read-only service health report for systemd systems
+- Init-system and systemd-state detection
+- Active, inactive and failed service counts
+- Failed-service details through `systemctl show`
+- Total boot-time and slowest-service reporting through `systemd-analyze`
+- Overall service assessment using `healthy`, `warning` and `failed`
 - Read-only cleanup report
 - Confirmed package-cache cleanup
 - Confirmed removal of packages classified as no longer required
@@ -57,6 +63,7 @@ Available command-line options:
 -r, --network-diagnostics    Show network diagnostics
 -d, --hardware-diagnostics   Show hardware diagnostics
 -g, --gaming-readiness       Show gaming readiness
+-e, --service-health         Show service health
 -u, --check-updates          Check for available updates
 -c, --cleanup-report         Show a read-only cleanup report
 ```
@@ -78,6 +85,8 @@ LAC_INTERNET_TEST_TARGET=9.9.9.9 \
 ```
 
 Gaming readiness is read-only. It reports the current graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
+
+Service Health is read-only and currently targets systemd systems. It reports the system state, service counts, failed-service details, total boot time and the slowest services. LAC does not start, stop, enable, disable or restart services and does not request elevated privileges for these checks.
 
 ## System cleanup safety
 
@@ -143,13 +152,14 @@ src/modules/network_info/           Network information view
 src/modules/network_diagnostics/    Network diagnostics view
 src/modules/hardware_diagnostics/   Hardware diagnostics view
 src/modules/gaming_readiness/       Gaming readiness view
+src/modules/service_health/         Service health view
 tests/                              Automated shell tests
 docs/                               Project documentation
 ```
 
 ## Roadmap
 
-Version `0.6.0-alpha` introduces a read-only gaming readiness report for session type, graphics drivers, Vulkan verification, Steam, custom Proton tools and optional gaming utilities.
+Version `0.7.0-alpha` introduces read-only service and boot diagnostics for systemd systems, including failed-service details and an overall health assessment.
 
 Planned areas for later development include:
 

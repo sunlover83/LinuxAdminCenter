@@ -11,6 +11,7 @@ Die Architektur verfolgt folgende Grundsätze:
 - Funktionen zur Datenermittlung sind von der Darstellung getrennt
 - neue Funktionsbereiche werden als eigenständige Module ergänzt
 - schreibende Aktionen benötigen eine bewusste Benutzerbestätigung
+- Diagnosemodule bleiben grundsätzlich schreibgeschützt
 - Änderungen werden durch ShellCheck und automatisierte Tests abgesichert
 
 ## Verzeichnisstruktur
@@ -23,7 +24,7 @@ LinuxAdminCenter/
 ├── src/
 │   ├── lac.sh                  Einstiegspunkt
 │   ├── core/                   Gemeinsame Kernfunktionen
-│   └── modules/                Funktionsmodule
+│   └── modules/                Sichtbare Funktionsmodule
 └── tests/                      Automatisierte Shell-Tests
 ```
 
@@ -54,11 +55,12 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 | `ui.sh` | Hauptmenü und Navigation im interaktiven Modus |
 | `package_manager.sh` | Abstraktion für Update- und Cleanup-Befehle von APT, DNF, Pacman und Zypper |
 | `system_metrics.sh` | Ermittlung von System-, Hardware- und Ressourcendaten |
-| `hardware_metrics.sh` | Ermittlung von Temperaturen, NVIDIA-GPU-Daten, Laufwerken sowie SMART- und NVMe-Gesundheitsstatus |
-| `network_metrics.sh` | Ermittlung von Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Servern |
+| `hardware_metrics.sh` | Temperaturen, NVIDIA-GPU-Daten, Laufwerke sowie SMART- und NVMe-Gesundheitsstatus |
+| `network_metrics.sh` | Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Server |
 | `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie Ping-, DNS- und externe Verbindungstests |
-| `gaming_metrics.sh` | Ermittlung von Sitzung, Desktop, Grafiktreibern, Vulkan, Steam, Proton-Werkzeugen und optionalen Gaming-Programmen |
-| `cleanup_metrics.sh` | Ermittlung von Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
+| `gaming_metrics.sh` | Sitzung, Desktop, Grafiktreiber, Vulkan, Steam, Proton-Werkzeuge und optionale Gaming-Programme |
+| `service_metrics.sh` | Init-System, systemd-Zustand, Dienstzahlen, fehlgeschlagene Units und Bootzeiten |
+| `cleanup_metrics.sh` | Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
 ## Funktionsmodule
 
@@ -73,6 +75,7 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `network_diagnostics/` | Schreibgeschützte aktive Netzwerkdiagnose und Gesamtbewertung |
 | `hardware_diagnostics/` | Schreibgeschützte Hardware- und Laufwerksdiagnose |
 | `gaming_readiness/` | Schreibgeschützte Gaming-Umgebungsanalyse und Gesamtbewertung |
+| `service_health/` | Schreibgeschützte systemd-Dienst- und Bootdiagnose mit Gesamtbewertung |
 
 Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen.
 
@@ -85,18 +88,20 @@ Einige Variablen werden absichtlich zwischen den eingebundenen Dateien geteilt:
 - `DISTRO_ID`, `DISTRO_NAME` und `DISTRO_VERSION`
 - `PKG_MANAGER`
 
-Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Nach Möglichkeit sollen neue Funktionen ihre Werte als lokale Variablen führen und globale Variablen nur verwenden, wenn sie für mehrere Module benötigt werden.
+Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Neue Funktionen sollen ihre Werte nach Möglichkeit als lokale Variablen führen.
 
-Für Tests kann `LAC_PACKAGE_CACHE_DIR` gesetzt werden, um den Paket-Cache-Pfad auf ein temporäres Verzeichnis umzuleiten. Im normalen Betrieb ist diese Variable nicht erforderlich.
+Für Tests können einzelne Pfade umgeleitet werden:
 
-Für die Tests der Proton-Verzeichnissuche kann `LAC_HOME_DIR` gesetzt werden. Im normalen Betrieb verwendet LAC das aktuelle Benutzerverzeichnis aus `HOME`.
+- `LAC_PACKAGE_CACHE_DIR` für temporäre Paket-Cache-Verzeichnisse
+- `LAC_HOME_DIR` für Proton-Verzeichnistests
+- `LAC_PROC_ROOT` für die Init-System-Erkennung ohne Zugriff auf das echte `/proc`
 
-Die Netzwerkdiagnose unterstützt zwei optionale Umgebungsvariablen:
+Die Netzwerkdiagnose unterstützt:
 
-- `LAC_DNS_TEST_HOST` überschreibt den Namen für den DNS-Auflösungstest
-- `LAC_INTERNET_TEST_TARGET` überschreibt die externe IP für den Erreichbarkeitstest
+- `LAC_DNS_TEST_HOST` für den DNS-Auflösungstest
+- `LAC_INTERNET_TEST_TARGET` für den externen Erreichbarkeitstest
 
-Die Variablen verändern keine Systemkonfiguration und gelten nur für den jeweiligen Prozess.
+Diese Variablen verändern keine Systemkonfiguration und gelten nur für den jeweiligen Prozess.
 
 ## Datenfluss
 
@@ -111,7 +116,7 @@ Die Variablen verändern keine Systemkonfiguration und gelten nur für den jewei
 ### Netzwerkdiagnose
 
 1. `network_diagnostics_metrics.sh` prüft die Verfügbarkeit von `ip`, `ping` und `getent`.
-2. Die IPv4-Standardroute wird aus der Ausgabe von `ip -4 route show default` ermittelt.
+2. Die IPv4-Standardroute wird aus `ip -4 route show default` ermittelt.
 3. Das Standard-Gateway wird mit einer begrenzten Zahl von Ping-Paketen geprüft.
 4. `getent ahosts` prüft die DNS-Auflösung eines konfigurierbaren Testnamens.
 5. Ein konfigurierbares externes IP-Ziel wird unabhängig von DNS geprüft.
@@ -125,20 +130,16 @@ Die Bewertung kennt die Zustände:
 - `warning`: mindestens ein Test ist unvollständig oder möglicherweise durch ICMP-Filterung beeinflusst
 - `failed`: es fehlt beispielsweise ein Standard-Gateway oder DNS und externe Erreichbarkeit sind gleichzeitig ausgefallen
 
-Die CLI-Option `--network-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
-
 ### Hardwarediagnose
 
 1. `hardware_metrics.sh` prüft die Verfügbarkeit der benötigten Diagnosewerkzeuge.
-2. `sensors` liefert eine CPU-Temperatur, sofern ein unterstützter CPU-Sensor erkannt wird.
+2. `sensors` liefert eine CPU-Temperatur, sofern ein unterstützter Sensor erkannt wird.
 3. `nvidia-smi` liefert NVIDIA-GPU-Modell, Temperatur, Auslastung und Speichernutzung.
 4. `lsblk` liefert physische Blockgeräte und deren Modelle.
-5. Virtuelle ZRAM-Geräte, Partitionen, Loop-Geräte und Datenträger mit einer Größe von null Byte werden ausgeschlossen.
+5. Virtuelle ZRAM-Geräte, Partitionen, Loop-Geräte und Datenträger mit null Byte werden ausgeschlossen.
 6. `smartctl -H` liefert den SMART-Gesundheitsstatus kompatibler Laufwerke.
 7. `nvme smart-log` liefert den Gesundheitsstatus von NVMe-Laufwerken.
 8. `hardware_diagnostics.sh` kombiniert die Messwerte zu einer einheitlichen Ausgabe.
-
-Die CLI-Option `--hardware-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
 
 ### Gaming Readiness
 
@@ -147,22 +148,36 @@ Die CLI-Option `--hardware-diagnostics` und der interaktive Menüpunkt verwenden
 3. `lspci -k` liefert die aktiven Kernel-Treiber erkannter Grafikcontroller.
 4. `nvidia-smi` liefert bei NVIDIA-Systemen die Treiberversion.
 5. `vulkaninfo --summary` bestätigt die Vulkan-Funktion, sofern das Werkzeug installiert ist.
-6. Steam wird als nativer Befehl oder als Flatpak-Anwendung erkannt.
-7. Bekannte native und Flatpak-Verzeichnisse werden nach benutzerdefinierten Proton-Kompatibilitätswerkzeugen durchsucht.
+6. Steam wird als nativer Befehl oder Flatpak-Anwendung erkannt.
+7. Bekannte native und Flatpak-Verzeichnisse werden nach benutzerdefinierten Proton-Werkzeugen durchsucht.
 8. GameMode, MangoHud und Gamescope werden als optionale Werkzeuge erfasst.
 9. `gaming_readiness.sh` formatiert die Werte und erzeugt die Gesamtbewertung.
 
+Die Bewertung kennt `ready`, `limited` und `incomplete`. Fehlt `vulkaninfo`, wird Vulkan als `not verified` bezeichnet und nicht fälschlich als nicht installiert eingestuft.
+
+### Service Health
+
+1. `service_metrics.sh` ermittelt Prozess 1 über `ps` und verwendet für Tests beziehungsweise als Fallback `${LAC_PROC_ROOT:-/proc}/1/comm`.
+2. Das Init-System wird als `systemd`, `sysvinit`, `openrc`, `runit`, `s6` oder `unknown` klassifiziert.
+3. Service Health wertet aktuell ausschließlich systemd-Systeme vollständig aus.
+4. `systemctl is-system-running` liefert den systemweiten Zustand.
+5. `systemctl list-units --type=service --all` liefert aktive, inaktive und fehlgeschlagene Dienstzahlen.
+6. Eine getrennte Abfrage listet fehlgeschlagene Services.
+7. Dienstnamen werden vor `systemctl show` validiert.
+8. `systemctl show` liefert Beschreibung sowie Load-, Active- und Sub-State einer fehlgeschlagenen Unit.
+9. `systemd-analyze time` liefert die gesamte Startzeit.
+10. `systemd-analyze blame` liefert die langsamsten Service-Units.
+11. `service_health.sh` formatiert alle Werte und erzeugt eine Gesamtbewertung.
+
 Die Bewertung kennt die Zustände:
 
-- `ready`: grafische Sitzung, Grafiktreiber, bestätigtes Vulkan und Steam sind verfügbar
-- `limited`: genau eine Kernvoraussetzung fehlt oder konnte nicht bestätigt werden
-- `incomplete`: mehrere Kernvoraussetzungen fehlen oder die grafische Basis konnte nicht ermittelt werden
+- `healthy`: systemd meldet `running` und es wurden keine fehlgeschlagenen Dienste erkannt
+- `warning`: systemd meldet `initializing`, `starting` oder `degraded`, oder mindestens ein Dienst ist fehlgeschlagen
+- `failed`: systemd meldet `maintenance`, `offline` oder `stopping`, wichtige Messwerte fehlen oder das Init-System wird nicht unterstützt
 
-Fehlt `vulkaninfo`, wird Vulkan als `not verified` bezeichnet. Die Anwendung behauptet in diesem Fall nicht, dass die Vulkan-Laufzeit fehlt.
+Inaktive Dienste werden nicht als Fehler bewertet. Die Bootzeit und die Liste langsamer Dienste dienen als Diagnosehinweise und lösen allein keine Warnung aus.
 
-Optionale Werkzeuge und separat installierte Proton-Versionen werden angezeigt, sind aber keine Voraussetzung für `ready`.
-
-Die CLI-Option `--gaming-readiness` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
+Die CLI-Option `--service-health` und der interaktive Menüpunkt verwenden dieselben Mess- und Bewertungsfunktionen.
 
 ### Updateverwaltung
 
@@ -177,15 +192,15 @@ Die CLI-Option `--gaming-readiness` und der interaktive Menüpunkt verwenden die
 1. `cleanup_metrics.sh` ermittelt Cache-Pfad, Cache-Größe und Journalbelegung.
 2. `list_unneeded_packages` vereinheitlicht die paketmanagerspezifische Erkennung nicht mehr benötigter Abhängigkeiten.
 3. `print_cleanup_report` kombiniert diese Informationen zu einem schreibgeschützten Bericht.
-4. `clean_package_cache` entfernt ausschließlich heruntergeladene Paketdateien. Repository-Metadaten bleiben erhalten.
+4. `clean_package_cache` entfernt ausschließlich heruntergeladene Paketdateien.
 5. `remove_unneeded_packages` entfernt nur die zuvor vom Paketmanager ermittelten Kandidaten.
 6. Das Cleanup-Modul fordert vor schreibenden Aktionen eine Benutzerbestätigung an.
 
 Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten Bericht auf. Lösch- und Entfernungsvorgänge sind nicht als direkte CLI-Option verfügbar.
 
-## Sicherheitsgrenzen des Cleanup-Moduls
+## Sicherheitsgrenzen
 
-Die erste Cleanup-Version ist absichtlich konservativ:
+### Cleanup
 
 - keine automatische Ausführung beim Programmstart
 - keine Journalbereinigung
@@ -195,47 +210,40 @@ Die erste Cleanup-Version ist absichtlich konservativ:
 - Paketentfernung erst nach Eingabe des exakten Wortes `REMOVE`
 - Pacman behält zwei Cache-Versionen pro Paket
 
-Diese Grenzen verhindern, dass ein allgemeiner Cleanup-Aufruf unerwartet wichtige Dateien oder Diagnoseinformationen entfernt.
-
-## Sicherheitsgrenzen der Hardwarediagnose
-
-Die Hardwarediagnose ist ausschließlich lesend:
+### Hardwarediagnose
 
 - keine SMART-Selbsttests
 - keine Laufwerksreparaturen
 - keine Firmwareaktionen
 - keine Änderungen an Sensor- oder Lüftereinstellungen
 - keine automatische Verwendung von `sudo`
-- keine Prüfung virtueller ZRAM-Geräte
-- keine Prüfung leerer Kartenleser oder anderer Datenträger mit null Byte
+- keine Prüfung virtueller ZRAM-Geräte oder leerer Kartenleser
 
-Wenn Laufwerksinformationen administrative Rechte benötigen, wird `requires root` ausgegeben. Der Benutzer entscheidet selbst, ob LAC ausdrücklich mit `sudo` gestartet wird.
-
-## Sicherheitsgrenzen der Netzwerkdiagnose
-
-Die Netzwerkdiagnose ist ausschließlich lesend:
+### Netzwerkdiagnose
 
 - keine Aktivierung oder Deaktivierung von Netzwerkschnittstellen
-- keine Änderungen an IPv4- oder IPv6-Adressen
-- keine Änderungen an Routingtabellen oder Standard-Gateways
-- keine Änderungen an DNS-Servern oder Resolver-Konfigurationen
+- keine Änderungen an Adressen, Routingtabellen, Gateways oder DNS
 - keine automatische Verwendung von `sudo`
-- eine begrenzte Zahl von Ping-Paketen mit Zeitüberschreitung
-- keine Einstufung eines einzelnen fehlgeschlagenen Ping-Tests als sicherer Internetausfall
+- begrenzte Zahl von Ping-Paketen mit Zeitüberschreitung
+- kein einzelner fehlgeschlagener Ping-Test wird als sicherer Internetausfall eingestuft
 
-Die externe Diagnose erzeugt normalen ICMP-Netzwerkverkehr zu einem konfigurierbaren Testziel. DNS- und Ping-Ziele können über Umgebungsvariablen geändert werden.
-
-## Sicherheitsgrenzen von Gaming Readiness
-
-Gaming Readiness ist ausschließlich lesend:
+### Gaming Readiness
 
 - keine Installation oder Entfernung von Paketen
-- keine Änderungen an Grafiktreibern oder Vulkan-Konfigurationen
-- keine Änderungen an Steam oder Proton
-- keine automatische Aktivierung von GameMode, MangoHud oder Gamescope
+- keine Änderungen an Grafiktreibern, Vulkan, Steam oder Proton
+- keine automatische Aktivierung optionaler Gaming-Werkzeuge
 - keine Anpassung von Startoptionen oder Leistungsprofilen
 - keine automatische Verwendung von `sudo`
 - Verzeichnissuche nur in bekannten Steam-Pfaden unterhalb des Benutzerverzeichnisses
+
+### Service Health
+
+- keine Start-, Stopp-, Neustart-, Enable-, Disable- oder Mask-Aktionen
+- keine Änderungen an Unit-Dateien oder Boot-Zielen
+- keine automatische Verwendung von `sudo`
+- ausschließlich lesende `systemctl`- und `systemd-analyze`-Aufrufe
+- validierte Service-Namen vor Detailabfragen
+- nicht-systemd-Systeme werden ausdrücklich als nicht unterstützt gemeldet
 
 ## Rückgabecodes im CLI-Modus
 
@@ -260,4 +268,4 @@ Ein neuer Funktionsbereich sollte grundsätzlich aus folgenden Bestandteilen bes
 6. passende Tests unter `tests/`
 7. Aktualisierung von README, Dokumentation und Changelog
 
-Neue Cleanup-Kategorien benötigen zusätzlich eine separate Sicherheitsbewertung, eine Vorschau der betroffenen Objekte und eine ausdrückliche Bestätigung vor jeder Veränderung.
+Neue schreibende Funktionen benötigen zusätzlich eine separate Sicherheitsbewertung, eine Vorschau der betroffenen Objekte und eine ausdrückliche Bestätigung vor jeder Veränderung.

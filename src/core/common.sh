@@ -3,8 +3,8 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="0.6.0-alpha"
-readonly LAC_CODENAME="Gaming"
+readonly LAC_VERSION="0.7.0-alpha"
+readonly LAC_CODENAME="Services"
 
 # ANSI colors
 readonly COLOR_RESET="\033[0m"
