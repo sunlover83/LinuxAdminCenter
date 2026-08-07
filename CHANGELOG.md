@@ -8,6 +8,46 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.8.0-alpha] - 2026-08-07
+
+### Added
+
+- Interactive Gaming Diagnostics module alongside the existing Gaming Readiness quick check
+- Read-only detailed gaming diagnostics through `-G` and `--gaming-diagnostics`
+- Vulkan instance-version reporting through `vulkaninfo --summary`
+- Vulkan device, driver and API-version reporting
+- Conservative verification of common native 32-bit Vulkan loader locations
+- Flatpak-aware 32-bit graphics-support reporting
+- Native Steam executable and Flatpak Steam launch-target reporting
+- Steam library discovery from known locations and `libraryfolders.vdf`
+- Detection of bundled Proton runtimes in Steam libraries
+- Reuse of custom Proton compatibility-tool discovery
+- Unique Steam compatibility-prefix counting across libraries
+- Availability reporting for GameMode, MangoHud, MangoApp and Gamescope
+- Gamescope version reporting through `gamescope --version`
+- Overall gaming-diagnostics assessment using `healthy`, `warning` and `incomplete`
+- Automated tests for diagnostic metrics, Flatpak handling, formatted output, CLI behavior and menu integration
+
+### Changed
+
+- Version and codename updated to `0.8.0-alpha (Compatibility)`
+- Main menu extended with Gaming Diagnostics
+- CLI help extended with the gaming diagnostics option
+- Gaming Readiness remains a separate fast prerequisite check while Gaming Diagnostics provides deeper compatibility information
+- Equivalent native Steam roots are canonicalized before library results are deduplicated
+- Flatpak Steam no longer receives a warning merely because host 32-bit Vulkan loader files cannot be found
+- README, installation guide, user manual and architecture documentation updated for Gaming Diagnostics
+
+### Security
+
+- Gaming Diagnostics is completely read-only
+- LAC does not launch games or compatibility tools during diagnostics
+- LAC does not change Steam, Proton, Vulkan, driver or performance settings
+- LAC does not execute active GameMode performance tests such as `gamemoded -t`
+- LAC does not request elevated privileges for gaming diagnostics
+- Steam filesystem discovery is limited to known Steam roots and library paths explicitly listed by Steam
+- Gamescope is queried only for version information
+
 ## [0.7.0-alpha] - 2026-08-05
 
 ### Added

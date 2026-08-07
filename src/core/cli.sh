@@ -16,6 +16,7 @@ Options:
   -r, --network-diagnostics    Show network diagnostics
   -d, --hardware-diagnostics   Show hardware diagnostics
   -g, --gaming-readiness       Show gaming readiness
+  -G, --gaming-diagnostics     Show detailed gaming diagnostics
   -e, --service-health         Show service health
   -u, --check-updates          Check for available updates
   -c, --cleanup-report         Show a read-only cleanup report
@@ -51,6 +52,10 @@ show_cli_hardware_diagnostics() {
 
 show_cli_gaming_readiness() {
     print_gaming_readiness
+}
+
+show_cli_gaming_diagnostics() {
+    print_gaming_diagnostics
 }
 
 show_cli_service_health() {
@@ -93,6 +98,9 @@ handle_cli_arguments() {
             ;;
         -g|--gaming-readiness)
             show_cli_gaming_readiness
+            ;;
+        -G|--gaming-diagnostics)
+            show_cli_gaming_diagnostics
             ;;
         -e|--service-health)
             show_cli_service_health

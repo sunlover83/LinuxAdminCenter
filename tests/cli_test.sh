@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.7.0-alpha (Services)" \
+    "Linux Admin Center 0.8.0-alpha (Compatibility)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.7.0-alpha (Services)" \
+    "Linux Admin Center 0.8.0-alpha (Compatibility)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -143,6 +143,18 @@ assert_output_contains \
     "Overall assessment:" \
     "$LAC_SCRIPT" \
     -g
+
+assert_output_contains \
+    "Long gaming diagnostics option displays Vulkan diagnostics" \
+    "Vulkan diagnostics:" \
+    "$LAC_SCRIPT" \
+    --gaming-diagnostics
+
+assert_output_contains \
+    "Short gaming diagnostics option displays overall diagnostics" \
+    "Overall diagnostics:" \
+    "$LAC_SCRIPT" \
+    -G
 
 assert_output_contains \
     "Long service health option displays the environment" \

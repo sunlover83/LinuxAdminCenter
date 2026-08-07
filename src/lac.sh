@@ -27,6 +27,9 @@ source "${SCRIPT_DIR}/core/hardware_metrics.sh"
 # shellcheck source=core/gaming_metrics.sh
 source "${SCRIPT_DIR}/core/gaming_metrics.sh"
 
+# shellcheck source=core/gaming_diagnostics_metrics.sh
+source "${SCRIPT_DIR}/core/gaming_diagnostics_metrics.sh"
+
 # shellcheck source=core/service_metrics.sh
 source "${SCRIPT_DIR}/core/service_metrics.sh"
 
@@ -59,6 +62,9 @@ source "${SCRIPT_DIR}/modules/network_diagnostics/network_diagnostics.sh"
 
 # shellcheck source=modules/gaming_readiness/gaming_readiness.sh
 source "${SCRIPT_DIR}/modules/gaming_readiness/gaming_readiness.sh"
+
+# shellcheck source=modules/gaming_diagnostics/gaming_diagnostics.sh
+source "${SCRIPT_DIR}/modules/gaming_diagnostics/gaming_diagnostics.sh"
 
 # shellcheck source=modules/service_health/service_health.sh
 source "${SCRIPT_DIR}/modules/service_health/service_health.sh"

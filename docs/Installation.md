@@ -48,14 +48,17 @@ Optional für vollständigere Informationen und Diagnosen:
 - `nvme-cli` beziehungsweise `nvme` für NVMe-Gesundheitsdaten
 - `resolvectl` für DNS-Informationen
 - `journalctl` für die Anzeige der Journalbelegung
-- `vulkaninfo` für die Vulkan-Prüfung im Gaming-Readiness-Modul
+- `vulkaninfo` für Vulkan-Prüfung und detaillierte Vulkan-Diagnosen
 - Steam als nativer Befehl oder Flatpak-Anwendung
 - `gamemoderun` für die GameMode-Erkennung
 - `mangohud` für die MangoHud-Erkennung
-- `gamescope` für die Gamescope-Erkennung
+- `mangoapp` für die MangoApp-Erkennung bei Gamescope-Setups
+- `gamescope` für Gamescope-Erkennung und Versionsabfrage
 - ShellCheck für die Entwicklung
 
-Fehlt `vulkaninfo`, funktioniert Gaming Readiness weiterhin. Vulkan wird dann vorsichtig als `not verified` ausgegeben.
+Fehlt `vulkaninfo`, funktionieren Gaming Readiness und Gaming Diagnostics weiterhin. Vulkan wird dann vorsichtig als `not verified` ausgegeben. Gaming Diagnostics kann in diesem Fall keine Vulkan-Geräte- oder API-Details anzeigen.
+
+Bei nativer Steam-Installation prüft Gaming Diagnostics typische Pfade auf einen 32-Bit-Vulkan-Loader. Ein Ergebnis `not verified` bedeutet nur, dass LAC an diesen bekannten Orten keinen Loader gefunden hat. Bei Flatpak-Steam wird die 32-Bit-Grafikunterstützung als von Flatpak verwaltet ausgewiesen, statt Host-i386-Pfade zu bewerten.
 
 Auf Debian, Ubuntu und Pop!_OS können die Hardwarediagnosewerkzeuge installiert werden mit:
 
@@ -84,6 +87,7 @@ command -v steam
 command -v flatpak
 command -v gamemoderun
 command -v mangohud
+command -v mangoapp
 command -v gamescope
 command -v systemctl
 command -v systemd-analyze
@@ -171,6 +175,12 @@ Gaming Readiness anzeigen:
 ./src/lac.sh --gaming-readiness
 ```
 
+Detaillierte Gaming-Diagnose anzeigen:
+
+```bash
+./src/lac.sh --gaming-diagnostics
+```
+
 Service Health anzeigen:
 
 ```bash
@@ -225,8 +235,18 @@ Neue Diagnosefunktionen einzeln prüfen:
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --gaming-readiness
+./src/lac.sh --gaming-diagnostics
 ./src/lac.sh --service-health
 ```
+
+Gaming Diagnostics ist vollständig lesend. Zur unabhängigen Kontrolle können einige der zugrunde liegenden Daten betrachtet werden:
+
+```bash
+vulkaninfo --summary
+gamescope --version
+```
+
+Steam-Bibliotheken werden aus den bekannten Steam-Verzeichnissen und aus `steamapps/libraryfolders.vdf` gelesen. LAC startet dabei weder Steam noch Proton und verändert keine Bibliotheks- oder Kompatibilitätseinstellungen.
 
 Service Health verwendet ausschließlich lesende systemd-Befehle. Die zugrunde liegenden Informationen können unabhängig geprüft werden:
 
@@ -254,6 +274,7 @@ shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --gaming-readiness
+./src/lac.sh --gaming-diagnostics
 ./src/lac.sh --service-health
 ```
 

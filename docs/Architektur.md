@@ -12,6 +12,7 @@ Die Architektur verfolgt folgende Grundsätze:
 - neue Funktionsbereiche werden als eigenständige Module ergänzt
 - schreibende Aktionen benötigen eine bewusste Benutzerbestätigung
 - Diagnosemodule bleiben grundsätzlich schreibgeschützt
+- fehlende Werkzeuge werden als Zustand behandelt und nicht durch automatische Installationen ersetzt
 - Änderungen werden durch ShellCheck und automatisierte Tests abgesichert
 
 ## Verzeichnisstruktur
@@ -58,7 +59,8 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 | `hardware_metrics.sh` | Temperaturen, NVIDIA-GPU-Daten, Laufwerke sowie SMART- und NVMe-Gesundheitsstatus |
 | `network_metrics.sh` | Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Server |
 | `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie Ping-, DNS- und externe Verbindungstests |
-| `gaming_metrics.sh` | Sitzung, Desktop, Grafiktreiber, Vulkan, Steam, Proton-Werkzeuge und optionale Gaming-Programme |
+| `gaming_metrics.sh` | Sitzung, Desktop, Grafiktreiber, Vulkan-Grundstatus, Steam, benutzerdefinierte Proton-Werkzeuge und optionale Gaming-Programme |
+| `gaming_diagnostics_metrics.sh` | Vulkan-Details, 32-Bit-Vulkan-Prüfung, Steam-Bibliotheken, Proton-Runtimes, Kompatibilitätspräfixe und Gamescope-Version |
 | `service_metrics.sh` | Init-System, systemd-Zustand, Dienstzahlen, fehlgeschlagene Units und Bootzeiten |
 | `cleanup_metrics.sh` | Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
@@ -74,10 +76,11 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `network_info/` | Netzwerkinformationen anzeigen |
 | `network_diagnostics/` | Schreibgeschützte aktive Netzwerkdiagnose und Gesamtbewertung |
 | `hardware_diagnostics/` | Schreibgeschützte Hardware- und Laufwerksdiagnose |
-| `gaming_readiness/` | Schreibgeschützte Gaming-Umgebungsanalyse und Gesamtbewertung |
+| `gaming_readiness/` | Schnelle schreibgeschützte Gaming-Grundprüfung und Gesamtbewertung |
+| `gaming_diagnostics/` | Detaillierte schreibgeschützte Vulkan-, Steam- und Proton-Kompatibilitätsdiagnose |
 | `service_health/` | Schreibgeschützte systemd-Dienst- und Bootdiagnose mit Gesamtbewertung |
 
-Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen.
+Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen. Gemeinsam benötigte Ermittlung gehört in die Core-Schicht.
 
 ## Gemeinsamer Zustand
 
@@ -93,8 +96,9 @@ Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Neue 
 Für Tests können einzelne Pfade umgeleitet werden:
 
 - `LAC_PACKAGE_CACHE_DIR` für temporäre Paket-Cache-Verzeichnisse
-- `LAC_HOME_DIR` für Proton-Verzeichnistests
+- `LAC_HOME_DIR` für Steam- und Proton-Verzeichnistests
 - `LAC_PROC_ROOT` für die Init-System-Erkennung ohne Zugriff auf das echte `/proc`
+- `LAC_ROOT_DIR` für Tests der bekannten 32-Bit-Vulkan-Bibliothekspfade ohne Zugriff auf das echte Root-Dateisystem
 
 Die Netzwerkdiagnose unterstützt:
 
@@ -130,6 +134,8 @@ Die Bewertung kennt die Zustände:
 - `warning`: mindestens ein Test ist unvollständig oder möglicherweise durch ICMP-Filterung beeinflusst
 - `failed`: es fehlt beispielsweise ein Standard-Gateway oder DNS und externe Erreichbarkeit sind gleichzeitig ausgefallen
 
+Die CLI-Option `--network-diagnostics` und der interaktive Menüpunkt verwenden dieselben Mess- und Bewertungsfunktionen.
+
 ### Hardwarediagnose
 
 1. `hardware_metrics.sh` prüft die Verfügbarkeit der benötigten Diagnosewerkzeuge.
@@ -141,7 +147,11 @@ Die Bewertung kennt die Zustände:
 7. `nvme smart-log` liefert den Gesundheitsstatus von NVMe-Laufwerken.
 8. `hardware_diagnostics.sh` kombiniert die Messwerte zu einer einheitlichen Ausgabe.
 
+Die CLI-Option `--hardware-diagnostics` und der interaktive Menüpunkt verwenden dieselben schreibgeschützten Messfunktionen.
+
 ### Gaming Readiness
+
+Gaming Readiness ist absichtlich eine schnelle Grundprüfung und bleibt von der detaillierten Diagnose getrennt.
 
 1. `gaming_metrics.sh` ermittelt den Display-Server aus `XDG_SESSION_TYPE`, `WAYLAND_DISPLAY` oder `DISPLAY`.
 2. Die Desktop-Umgebung wird aus `XDG_CURRENT_DESKTOP` beziehungsweise `DESKTOP_SESSION` gelesen.
@@ -153,7 +163,44 @@ Die Bewertung kennt die Zustände:
 8. GameMode, MangoHud und Gamescope werden als optionale Werkzeuge erfasst.
 9. `gaming_readiness.sh` formatiert die Werte und erzeugt die Gesamtbewertung.
 
-Die Bewertung kennt `ready`, `limited` und `incomplete`. Fehlt `vulkaninfo`, wird Vulkan als `not verified` bezeichnet und nicht fälschlich als nicht installiert eingestuft.
+Die Bewertung kennt:
+
+- `ready`: grafische Sitzung, Grafiktreiber, bestätigtes Vulkan und Steam sind verfügbar
+- `limited`: eine Kernvoraussetzung fehlt oder konnte nicht bestätigt werden
+- `incomplete`: mehrere Kernvoraussetzungen fehlen oder die grafische Basis konnte nicht ermittelt werden
+
+Fehlt `vulkaninfo`, wird Vulkan als `not verified` bezeichnet und nicht fälschlich als nicht installiert eingestuft.
+
+Die CLI-Option `--gaming-readiness` und der interaktive Menüpunkt verwenden dieselben Funktionen.
+
+### Gaming Diagnostics
+
+Gaming Diagnostics baut auf den Grundfunktionen aus `gaming_metrics.sh` auf, führt aber eine tiefere Kompatibilitätsanalyse durch.
+
+1. `get_vulkan_status` prüft weiterhin, ob `vulkaninfo --summary` erfolgreich ausgeführt werden kann.
+2. `gaming_diagnostics_metrics.sh` liest zusätzlich die Vulkan-Instance-Version aus der Summary.
+3. GPU-Blöcke der Summary werden in strukturierte Datensätze mit Gerätename, Treibername und Vulkan-API-Version zerlegt.
+4. Für native Steam-Installationen werden bekannte Pfade auf einen 32-Bit-Vulkan-Loader geprüft.
+5. Bei Flatpak-Steam wird die 32-Bit-Grafikunterstützung als `managed by Flatpak` behandelt, da die Runtime und Grafik-Erweiterungen nicht sinnvoll über Host-i386-Pfade bewertet werden können.
+6. `get_steam_launch_target` unterscheidet native Steam-Ausführung und Flatpak-Anwendung.
+7. Bekannte Steam-Wurzeln werden gesucht und über `pwd -P` kanonisiert, damit symbolische Links auf dieselbe Installation nicht doppelt erscheinen.
+8. `steamapps/libraryfolders.vdf` liefert zusätzliche vom Benutzer konfigurierte Steam-Bibliotheken; auch diese Pfade werden kanonisiert und dedupliziert.
+9. In `steamapps/common` werden Verzeichnisse `Proton*` nur dann als gebündelte Proton-Runtime gewertet, wenn darin eine `proton`-Datei vorhanden ist.
+10. Benutzerdefinierte Kompatibilitätswerkzeuge aus `compatibilitytools.d` werden als `custom` ergänzt.
+11. Numerische Verzeichnisse unter `steamapps/compatdata` werden bibliotheksübergreifend als eindeutige Kompatibilitätspräfixe gezählt.
+12. GameMode, MangoHud, MangoApp und Gamescope werden als Integrationswerkzeuge erfasst.
+13. `gamescope --version` liefert ausschließlich Versionsinformationen und startet keine Sitzung.
+14. `gaming_diagnostics.sh` formatiert die Daten und erzeugt die Gesamtbewertung.
+
+Die Bewertung kennt:
+
+- `healthy`: Vulkan und Steam sind verfügbar, 32-Bit-Grafikunterstützung ist bestätigt beziehungsweise wird von Flatpak verwaltet und mindestens eine Proton-Runtime wurde erkannt
+- `warning`: Vulkan und Steam sind verfügbar, aber 32-Bit-Vulkan-Unterstützung oder Proton-Runtimes konnten nicht bestätigt werden
+- `incomplete`: Vulkan oder Steam stehen für die Detaildiagnose nicht zur Verfügung
+
+Die Bewertung von `not verified` ist bewusst konservativ. Der Zustand ist kein Nachweis dafür, dass eine Funktion tatsächlich fehlt.
+
+Die CLI-Option `--gaming-diagnostics` und Menüpunkt 9 verwenden dieselben Ermittlungs- und Bewertungsfunktionen.
 
 ### Service Health
 
@@ -192,7 +239,7 @@ Die CLI-Option `--service-health` und der interaktive Menüpunkt verwenden diese
 1. `cleanup_metrics.sh` ermittelt Cache-Pfad, Cache-Größe und Journalbelegung.
 2. `list_unneeded_packages` vereinheitlicht die paketmanagerspezifische Erkennung nicht mehr benötigter Abhängigkeiten.
 3. `print_cleanup_report` kombiniert diese Informationen zu einem schreibgeschützten Bericht.
-4. `clean_package_cache` entfernt ausschließlich heruntergeladene Paketdateien.
+4. `clean_package_cache` entfernt ausschließlich heruntergeladene Paketdateien. Repository-Metadaten bleiben erhalten.
 5. `remove_unneeded_packages` entfernt nur die zuvor vom Paketmanager ermittelten Kandidaten.
 6. Das Cleanup-Modul fordert vor schreibenden Aktionen eine Benutzerbestätigung an.
 
@@ -236,6 +283,19 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 - keine automatische Verwendung von `sudo`
 - Verzeichnissuche nur in bekannten Steam-Pfaden unterhalb des Benutzerverzeichnisses
 
+### Gaming Diagnostics
+
+- keine Installation, Entfernung oder Aktualisierung von Steam, Proton oder Grafikkomponenten
+- keine Änderungen an Steam-Bibliotheken, Kompatibilitätsoptionen oder Proton-Präfixen
+- keine Änderungen an Vulkan-Loadern, ICD-Dateien oder Grafiktreibern
+- keine Spiele, Proton-Runtimes oder Steam-Clients werden zu Testzwecken gestartet
+- keine aktiven GameMode-Leistungstests wie `gamemoded -t`
+- Gamescope wird ausschließlich mit `--version` abgefragt
+- keine automatische Verwendung von `sudo`
+- Dateisystemsuche beschränkt sich auf bekannte Steam-Wurzeln und von Steam in `libraryfolders.vdf` konfigurierte Bibliotheken
+- 32-Bit-Vulkan-Erkennung ist bei nativer Steam-Installation bewusst heuristisch und wird bei Unsicherheit als `not verified` ausgegeben
+- Flatpak-Steam wird nicht anhand der Host-i386-Bibliotheken bewertet
+
 ### Service Health
 
 - keine Start-, Stopp-, Neustart-, Enable-, Disable- oder Mask-Aktionen
@@ -256,6 +316,25 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 
 Der Rückgabecode `10` erlaubt die Verwendung der Updateprüfung in weiteren Skripten, ohne eine gefundene Aktualisierung als technischen Fehler zu behandeln.
 
+## Tests und Qualitätssicherung
+
+Die Tests unter `tests/` verwenden für Systembefehle nach Möglichkeit Mocks und temporäre Verzeichnisse. Dadurch können Parser und Bewertungslogik reproduzierbar geprüft werden, ohne den Testrechner zu verändern.
+
+Für Gaming Diagnostics werden unter anderem geprüft:
+
+- Parsing von Vulkan-Instance- und GPU-Daten
+- konservative Behandlung fehlender Werkzeuge
+- native 32-Bit-Vulkan-Pfade
+- Flatpak-spezifische 32-Bit-Grafikbewertung
+- Kanonisierung äquivalenter Steam-Wurzeln
+- zusätzliche Steam-Bibliotheken
+- gebündelte und benutzerdefinierte Proton-Runtimes
+- eindeutige Compatdata-Zählung
+- Gamescope-Versionsausgabe
+- CLI- und Menüintegration
+
+Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft Einstiegspunkt, Core-Schicht, Module und Tests. GitHub Actions führt beide Prüfungen für Pull Requests und Änderungen an `main` aus.
+
 ## Erweiterung der Anwendung
 
 Ein neuer Funktionsbereich sollte grundsätzlich aus folgenden Bestandteilen bestehen:
@@ -268,4 +347,4 @@ Ein neuer Funktionsbereich sollte grundsätzlich aus folgenden Bestandteilen bes
 6. passende Tests unter `tests/`
 7. Aktualisierung von README, Dokumentation und Changelog
 
-Neue schreibende Funktionen benötigen zusätzlich eine separate Sicherheitsbewertung, eine Vorschau der betroffenen Objekte und eine ausdrückliche Bestätigung vor jeder Veränderung.
+Neue Cleanup-Kategorien benötigen zusätzlich eine separate Sicherheitsbewertung, eine Vorschau der betroffenen Objekte und eine ausdrückliche Bestätigung vor jeder Veränderung. Neue Diagnosemodule sollen ohne Root-Rechte arbeiten, sofern der zugrunde liegende Messwert das zulässt, und dürfen fehlende Informationen nicht durch schreibende oder zustandsverändernde Tests erzwingen.

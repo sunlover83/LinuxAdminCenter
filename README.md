@@ -4,7 +4,7 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.7.0-alpha (Services)**
+Current version: **0.8.0-alpha (Compatibility)**
 
 ## Current features
 
@@ -21,14 +21,23 @@ Current version: **0.7.0-alpha (Services)**
 - CPU temperature reporting through `sensors`
 - NVIDIA GPU temperature, utilization and memory reporting
 - SMART and NVMe drive-health checks
-- Read-only gaming readiness report
+- Read-only Gaming Readiness report
 - Display-server and desktop-environment detection
 - Active graphics-driver and NVIDIA driver-version reporting
 - Vulkan verification through `vulkaninfo`
 - Native and Flatpak Steam detection
 - Custom Proton compatibility-tool discovery
 - Availability reporting for GameMode, MangoHud and Gamescope
-- Overall gaming assessment using `ready`, `limited` and `incomplete`
+- Overall gaming-readiness assessment using `ready`, `limited` and `incomplete`
+- Read-only Gaming Diagnostics report
+- Vulkan instance-version, device, driver and API-version reporting
+- Conservative 32-bit Vulkan support verification with Flatpak-aware handling
+- Steam launch-target and Steam-library discovery
+- Bundled and custom Proton-runtime discovery
+- Steam compatibility-prefix counting across libraries
+- GameMode, MangoHud, MangoApp and Gamescope integration reporting
+- Gamescope version reporting
+- Overall gaming-diagnostics assessment using `healthy`, `warning` and `incomplete`
 - Read-only service health report for systemd systems
 - Init-system and systemd-state detection
 - Active, inactive and failed service counts
@@ -63,6 +72,7 @@ Available command-line options:
 -r, --network-diagnostics    Show network diagnostics
 -d, --hardware-diagnostics   Show hardware diagnostics
 -g, --gaming-readiness       Show gaming readiness
+-G, --gaming-diagnostics     Show detailed gaming diagnostics
 -e, --service-health         Show service health
 -u, --check-updates          Check for available updates
 -c, --cleanup-report         Show a read-only cleanup report
@@ -84,7 +94,9 @@ LAC_INTERNET_TEST_TARGET=9.9.9.9 \
 ./src/lac.sh --network-diagnostics
 ```
 
-Gaming readiness is read-only. It reports the current graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
+Gaming Readiness is the fast compatibility overview. It reports the graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
+
+Gaming Diagnostics provides a deeper, still read-only compatibility analysis. It reports Vulkan runtime details, detected Vulkan devices and drivers, 32-bit Vulkan support, Steam library roots, installed Proton runtimes, compatibility-prefix counts and gaming integration tools. Native Steam uses conservative host-library checks for 32-bit Vulkan; Flatpak Steam reports this support as managed by Flatpak instead of evaluating host i386 library paths.
 
 Service Health is read-only and currently targets systemd systems. It reports the system state, service counts, failed-service details, total boot time and the slowest services. LAC does not start, stop, enable, disable or restart services and does not request elevated privileges for these checks.
 
@@ -152,6 +164,7 @@ src/modules/network_info/           Network information view
 src/modules/network_diagnostics/    Network diagnostics view
 src/modules/hardware_diagnostics/   Hardware diagnostics view
 src/modules/gaming_readiness/       Gaming readiness view
+src/modules/gaming_diagnostics/     Detailed gaming compatibility diagnostics
 src/modules/service_health/         Service health view
 tests/                              Automated shell tests
 docs/                               Project documentation
@@ -159,13 +172,13 @@ docs/                               Project documentation
 
 ## Roadmap
 
-Version `0.7.0-alpha` introduces read-only service and boot diagnostics for systemd systems, including failed-service details and an overall health assessment.
+Version `0.8.0-alpha` introduces deeper read-only gaming compatibility diagnostics for Vulkan, Steam libraries, Proton runtimes and related gaming integrations while keeping the existing Gaming Readiness quick check separate.
 
 Planned areas for later development include:
 
-- Deeper gaming diagnostics and launch-environment checks
 - Installation and packaging workflow
 - Additional cleanup categories after separate safety reviews
+- Further diagnostic modules where they provide clear administrative value
 
 ## License
 

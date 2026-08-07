@@ -32,9 +32,12 @@ chmod +x src/lac.sh
 6) Network Diagnostics
 7) Gaming Readiness
 8) Service Health
+9) Gaming Diagnostics
 
 0) Exit
 ```
+
+## Funktionsbereiche
 
 ### System Updates
 
@@ -161,13 +164,13 @@ Virtuelle ZRAM-Geräte und Laufwerke mit einer Größe von null Byte, beispielsw
 
 ### Gaming Readiness
 
-Gaming Readiness erstellt einen vollständig schreibgeschützten Überblick über die grundlegende Linux-Gaming-Umgebung. Angezeigt werden:
+Gaming Readiness ist der schnelle schreibgeschützte Überblick über die grundlegende Linux-Gaming-Umgebung. Angezeigt werden:
 
 - verwendeter Display-Server (`wayland`, `x11` oder `unknown`)
 - erkannte Desktop-Umgebung
 - aktive Grafiktreiber
 - NVIDIA-Treiberversion, sofern `nvidia-smi` verfügbar ist
-- Vulkan-Status über `vulkaninfo --summary`
+- Vulkan-Grundstatus über `vulkaninfo --summary`
 - Steam als native oder Flatpak-Installation
 - benutzerdefinierte Proton-Kompatibilitätswerkzeuge
 - Verfügbarkeit von GameMode, MangoHud und Gamescope
@@ -187,6 +190,87 @@ Fehlt `vulkaninfo`, erscheint `not verified`. Das bedeutet nur, dass LAC Vulkan 
 `Custom Proton tools: none` bedeutet, dass keine separat installierten Werkzeuge wie Proton-GE in den üblichen Steam-Verzeichnissen gefunden wurden. Die mit Steam ausgelieferten Proton-Versionen werden dadurch nicht als fehlend bewertet.
 
 Gaming Readiness installiert keine Pakete, verändert keine Grafik- oder Steam-Einstellungen und benötigt keine Root-Rechte.
+
+### Gaming Diagnostics
+
+Gaming Diagnostics ergänzt Gaming Readiness um eine detaillierte Kompatibilitätsanalyse. Der Bereich bleibt vollständig schreibgeschützt und startet weder Steam noch Spiele oder Proton.
+
+Angezeigt werden:
+
+- Vulkan-Runtime-Status
+- Vulkan-Instance-Version
+- erkannte Vulkan-Geräte
+- Vulkan-Treibername je Gerät
+- gemeldete Vulkan-API-Version je Gerät
+- Status der 32-Bit-Vulkan-Unterstützung
+- erkannte Steam-Installationsart
+- nativer Steam-Startpfad oder Flatpak-Anwendungskennung
+- erkannte Steam-Bibliothekswurzeln
+- Anzahl eindeutiger Steam-Kompatibilitätspräfixe aus `compatdata`
+- mit Steam ausgelieferte Proton-Runtimes
+- benutzerdefinierte Proton-Werkzeuge wie Proton-GE
+- Verfügbarkeit von GameMode, MangoHud, MangoApp und Gamescope
+- Gamescope-Version, sofern verfügbar
+- Gesamtbewertung als `healthy`, `warning` oder `incomplete`
+
+Gaming Readiness und Gaming Diagnostics haben unterschiedliche Aufgaben:
+
+| Bereich | Zweck |
+|---|---|
+| Gaming Readiness | schnelle Prüfung, ob die grundlegende Gaming-Umgebung vorhanden ist |
+| Gaming Diagnostics | detaillierte Prüfung von Vulkan-, Steam- und Proton-Kompatibilitätsdaten |
+
+Die Gaming-Diagnostics-Bewertung verwendet folgende Zustände:
+
+| Status | Bedeutung |
+|---|---|
+| `healthy` | Vulkan und Steam sind verfügbar, 32-Bit-Grafikunterstützung ist bestätigt beziehungsweise wird von Flatpak verwaltet und mindestens eine Proton-Runtime wurde erkannt |
+| `warning` | Vulkan und Steam sind verfügbar, aber 32-Bit-Vulkan-Unterstützung oder Proton-Runtimes konnten nicht bestätigt werden |
+| `incomplete` | Vulkan oder Steam stehen für die Detaildiagnose nicht zur Verfügung |
+
+#### 32-Bit-Vulkan-Unterstützung
+
+Bei einer nativen Steam-Installation sucht LAC an üblichen distributionsabhängigen Pfaden nach einem 32-Bit-Vulkan-Loader. Das Ergebnis ist bewusst konservativ:
+
+```text
+available
+```
+
+bedeutet, dass ein bekannter Loader-Pfad gefunden wurde.
+
+```text
+not verified
+```
+
+bedeutet nur, dass LAC an den geprüften Standardpfaden keinen Loader gefunden hat. Es ist kein sicherer Nachweis dafür, dass 32-Bit-Vulkan tatsächlich nicht funktioniert.
+
+Bei Flatpak-Steam erscheint:
+
+```text
+managed by Flatpak
+```
+
+Flatpak stellt seine Grafik-Runtime über eigene Runtime- und Treibererweiterungen bereit. Deshalb bewertet LAC in diesem Fall nicht die 32-Bit-Bibliotheken des Host-Systems.
+
+#### Steam-Bibliotheken
+
+LAC berücksichtigt bekannte Steam-Verzeichnisse sowie zusätzliche Bibliotheken aus:
+
+```text
+steamapps/libraryfolders.vdf
+```
+
+Symbolische Links auf dieselbe physische Steam-Installation werden kanonisiert und nicht doppelt angezeigt.
+
+#### Proton-Runtimes
+
+Gebündelte Proton-Runtimes werden in `steamapps/common` gesucht. Ein Verzeichnis wird nur dann als Proton-Runtime gewertet, wenn eine passende `proton`-Datei vorhanden ist.
+
+Benutzerdefinierte Kompatibilitätswerkzeuge werden weiterhin aus den bekannten `compatibilitytools.d`-Verzeichnissen gelesen und als `custom` ausgegeben.
+
+Die Zahl `Compatibility prefixes` entspricht der Anzahl eindeutiger numerischer App-ID-Verzeichnisse unter `steamapps/compatdata` über alle erkannten Bibliotheken. Sie ist keine Aussage darüber, ob jedes zugehörige Spiel derzeit installiert ist oder fehlerfrei funktioniert.
+
+Gaming Diagnostics verändert keine Steam-Bibliotheken, Proton-Präfixe, Vulkan-Konfigurationen, Treiber oder Leistungsprofile. Aktive GameMode-Tests wie `gamemoded -t` werden bewusst nicht ausgeführt.
 
 ### Service Health
 
@@ -269,6 +353,7 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -r, --network-diagnostics    Netzwerkdiagnose anzeigen
 -d, --hardware-diagnostics   Hardwarediagnose anzeigen
 -g, --gaming-readiness       Gaming-Bereitschaft anzeigen
+-G, --gaming-diagnostics     Detaillierte Gaming-Diagnose anzeigen
 -e, --service-health         Dienst- und Startzustand anzeigen
 -u, --check-updates          Nach verfügbaren Updates suchen
 -c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
@@ -283,6 +368,7 @@ Beispiele:
 ./src/lac.sh --network-diagnostics
 ./src/lac.sh --hardware-diagnostics
 ./src/lac.sh --gaming-readiness
+./src/lac.sh --gaming-diagnostics
 ./src/lac.sh --service-health
 ./src/lac.sh --check-updates
 ./src/lac.sh --cleanup-report
@@ -405,7 +491,7 @@ Typische Fälle:
 
 - `Vulkan: not verified`: `vulkaninfo` ist nicht installiert; LAC kann Vulkan deshalb nicht bestätigen.
 - `Steam: not installed`: Weder eine native noch eine Flatpak-Steam-Installation wurde erkannt.
-- `Custom Proton tools: none`: Keine separat installierte Proton-Version wurde gefunden; integrierte Proton-Versionen können trotzdem vorhanden sein.
+- `Custom Proton tools: none`: Keine separat installierte Proton-Version wurde gefunden; Steams integrierte Proton-Versionen können trotzdem vorhanden sein.
 - GameMode, MangoHud oder Gamescope fehlen: Diese Werkzeuge sind optional und ändern die Kernbewertung nicht.
 
 Prüfe die verwendeten Programme mit:
@@ -415,10 +501,37 @@ command -v lspci
 command -v nvidia-smi
 command -v vulkaninfo
 command -v steam
+command -v flatpak
 command -v gamemoderun
 command -v mangohud
 command -v gamescope
 ```
+
+### Gaming Diagnostics zeigt `warning`
+
+```bash
+./src/lac.sh --gaming-diagnostics
+```
+
+Typische Ursachen:
+
+- `32-bit Vulkan support: not verified`: Bei nativer Steam-Installation wurde an den bekannten Host-Pfaden kein 32-Bit-Vulkan-Loader gefunden.
+- `Proton runtimes: none`: In den erkannten Steam-Bibliotheken wurde keine gebündelte oder benutzerdefinierte Proton-Runtime gefunden.
+- einzelne Integrationstools wie MangoApp oder Gamescope fehlen. Diese Werkzeuge werden angezeigt, sind für den Gesamtstatus aber nicht zwingend erforderlich.
+
+Bei Flatpak-Steam ist `32-bit Vulkan support: managed by Flatpak` ein normaler Zustand und keine Warnung.
+
+### Gaming Diagnostics zeigt `incomplete`
+
+Der Status `incomplete` bedeutet, dass die Detailanalyse ihre Kernvoraussetzungen nicht vollständig vorfindet. Prüfe insbesondere:
+
+```bash
+command -v vulkaninfo
+command -v steam
+command -v flatpak
+```
+
+Gaming Diagnostics versucht nicht, fehlende Pakete automatisch zu installieren.
 
 ### Service Health zeigt `warning`
 
@@ -426,27 +539,26 @@ command -v gamescope
 ./src/lac.sh --service-health
 ```
 
-Typische Fälle:
+Eine Warnung kann entstehen, wenn systemd den Zustand `degraded` meldet oder mindestens ein Dienst fehlgeschlagen ist. Die betroffenen Service-Namen und Details werden direkt im Bericht angezeigt.
 
-- `System state: degraded`: systemd kennt mindestens einen beeinträchtigten Zustand. Prüfe die angezeigten fehlgeschlagenen Dienste.
-- `Failed services` ist größer als null: Die betroffenen Units werden mit Beschreibung und Zustand aufgeführt.
-- `System state: starting` oder `initializing`: Der Systemstart ist noch nicht vollständig abgeschlossen.
-- ein Dienst erscheint unter den langsamsten Diensten: Das ist zunächst nur ein Zeitmesswert und nicht automatisch ein Fehler.
+Die langsamsten Dienste beim Systemstart verursachen allein keine Warnung. `systemd-analyze blame` dient nur als Diagnosehinweis.
 
-Weitere Details können direkt gelesen werden:
+### Service Health zeigt `failed`
+
+Prüfe zunächst:
 
 ```bash
+systemctl is-system-running
 systemctl --failed
-systemctl status NAME.service
-systemd-analyze time
-systemd-analyze blame
 ```
 
-LAC führt diese Befehle nur lesend aus und verändert die Dienste nicht.
+Nicht-systemd-Systeme werden derzeit nicht vollständig unterstützt und deshalb nicht als gesund bewertet.
 
 ### Laufwerksdiagnose zeigt `requires root`
 
 SMART- und NVMe-Gesundheitsdaten sind auf vielen Systemen nur mit administrativen Rechten zugänglich.
+
+Einzelne Laufwerke können direkt geprüft werden:
 
 ```bash
 sudo smartctl -H /dev/sda
