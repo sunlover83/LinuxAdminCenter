@@ -204,7 +204,7 @@ get_steam_library_roots() {
     if [[ -n "$roots" ]]; then
         printf '%s' "$roots" |
             awk 'NF && !seen[$0]++' |
-            sort
+            LC_ALL=C sort
     else
         printf '%s\n' "none"
     fi
