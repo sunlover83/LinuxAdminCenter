@@ -4,22 +4,55 @@
 
 Linux Admin Center (LAC) bündelt grundlegende Administrationsaufgaben in einer modularen Bash-Anwendung. Es kann über ein interaktives Menü oder mit einzelnen Kommandozeilenoptionen verwendet werden.
 
-Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper. Diagnosefunktionen sind grundsätzlich schreibgeschützt. Schreibende Update- und Cleanup-Aktionen werden nur nach einer ausdrücklichen Bestätigung ausgeführt.
+Ab Version `0.9.0-alpha` kann LAC systemweit installiert werden. Danach steht der Befehl `lac` unabhängig vom Repository-Pfad zur Verfügung. Diagnosefunktionen sind grundsätzlich schreibgeschützt. Schreibende Update- und Cleanup-Aktionen werden nur nach einer ausdrücklichen Bestätigung ausgeführt.
 
-## Anwendung starten
+Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper.
 
-Wechsle in das Projektverzeichnis und starte LAC:
+## Installation und Programmstart
+
+Die Standardinstallation aus dem geklonten Repository erfolgt mit:
 
 ```bash
 cd ~/Projekte/LinuxAdminCenter
+sudo bash install.sh
+```
+
+Danach kann LAC aus jedem Verzeichnis gestartet werden:
+
+```bash
+lac
+```
+
+Version prüfen:
+
+```bash
+lac --version
+```
+
+Für Entwicklung und Tests ist weiterhin der direkte Start aus dem Repository möglich:
+
+```bash
 ./src/lac.sh
 ```
 
-Falls die Datei noch nicht ausführbar ist:
+Eine bestehende Installation wird nach einem Repository-Update durch erneutes Ausführen des Installers aktualisiert:
 
 ```bash
-chmod +x src/lac.sh
+cd ~/Projekte/LinuxAdminCenter
+git switch main
+git pull --ff-only
+sudo bash install.sh
 ```
+
+Die Anwendung kann systemweit entfernt werden mit:
+
+```bash
+sudo lac-uninstall
+```
+
+Der Uninstaller entfernt die installierten LAC-Dateien, lässt aber `/etc/lac` und Benutzerkonfigurationen unter `$HOME/.config/lac` unangetastet.
+
+Weitere Installationsdetails, benutzerdefinierte Präfixe und `DESTDIR` sind in [Installation.md](Installation.md) beschrieben.
 
 ## Interaktives Hauptmenü
 
@@ -119,7 +152,7 @@ Die Ziele können für einen einzelnen Aufruf überschrieben werden:
 ```bash
 LAC_DNS_TEST_HOST=example.org \
 LAC_INTERNET_TEST_TARGET=9.9.9.9 \
-./src/lac.sh --network-diagnostics
+lac --network-diagnostics
 ```
 
 ### Hardware Diagnostics
@@ -157,7 +190,7 @@ requires root
 Die Diagnose kann bei Bedarf ausdrücklich mit Root-Rechten gestartet werden:
 
 ```bash
-sudo ./src/lac.sh --hardware-diagnostics
+sudo lac --hardware-diagnostics
 ```
 
 Virtuelle ZRAM-Geräte und Laufwerke mit einer Größe von null Byte, beispielsweise leere Kartenleser, werden nicht geprüft.
@@ -359,19 +392,19 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
 ```
 
-Beispiele:
+Beispiele mit einer installierten LAC-Version:
 
 ```bash
-./src/lac.sh --version
-./src/lac.sh --system-info
-./src/lac.sh --network-info
-./src/lac.sh --network-diagnostics
-./src/lac.sh --hardware-diagnostics
-./src/lac.sh --gaming-readiness
-./src/lac.sh --gaming-diagnostics
-./src/lac.sh --service-health
-./src/lac.sh --check-updates
-./src/lac.sh --cleanup-report
+lac --version
+lac --system-info
+lac --network-info
+lac --network-diagnostics
+lac --hardware-diagnostics
+lac --gaming-readiness
+lac --gaming-diagnostics
+lac --service-health
+lac --check-updates
+lac --cleanup-report
 ```
 
 Es darf jeweils genau eine Option übergeben werden.
@@ -388,7 +421,7 @@ Es darf jeweils genau eine Option übergeben werden.
 Beispiel:
 
 ```bash
-./src/lac.sh --check-updates
+lac --check-updates
 status=$?
 
 case "$status" in
@@ -426,12 +459,44 @@ mkdir -p ~/.config/lac
 printf '%s\n' 'DEBUG=true' > ~/.config/lac/lac.conf
 ```
 
+Bei Standardinstallation liegt eine Beispielkonfiguration unter:
+
+```text
+/usr/local/share/linux-admin-center/lac.conf.example
+```
+
+Installer und Uninstaller überschreiben oder löschen aktive Konfigurationsdateien nicht.
+
 ## Fehlerbehebung
 
-### „Permission denied“ beim Start
+### `lac: command not found`
+
+Prüfe zunächst, ob LAC installiert wurde:
+
+```bash
+ls -l /usr/local/bin/lac
+```
+
+Falls die Datei fehlt, im Repository erneut installieren:
+
+```bash
+sudo bash install.sh
+```
+
+Bei einem benutzerdefinierten Präfix muss dessen `bin`-Verzeichnis in `PATH` enthalten sein.
+
+### Direkter Entwicklungsstart meldet `Permission denied`
+
+Beim direkten Start aus dem Repository kann das Ausführungsrecht gesetzt werden:
 
 ```bash
 chmod +x src/lac.sh
+```
+
+Alternativ funktioniert immer:
+
+```bash
+bash src/lac.sh
 ```
 
 ### Paketmanager wird nicht unterstützt
@@ -439,7 +504,7 @@ chmod +x src/lac.sh
 Prüfe zunächst die Erkennung:
 
 ```bash
-./src/lac.sh --system-info
+lac --system-info
 ```
 
 Bei Arch-basierten Systemen muss zusätzlich zu Pacman das Programm `checkupdates` vorhanden sein.
@@ -471,7 +536,7 @@ Für die Hardwareerkennung sind unter anderem `lscpu`, `lspci` und bei NVIDIA-Sy
 Eine Warnung bedeutet nicht zwingend, dass die Internetverbindung ausgefallen ist. Router oder externe Systeme können Ping-Anfragen blockieren.
 
 ```bash
-./src/lac.sh --network-diagnostics
+lac --network-diagnostics
 ```
 
 Typische Fälle:
@@ -484,7 +549,7 @@ Typische Fälle:
 ### Gaming Readiness zeigt `limited`
 
 ```bash
-./src/lac.sh --gaming-readiness
+lac --gaming-readiness
 ```
 
 Typische Fälle:
@@ -510,7 +575,7 @@ command -v gamescope
 ### Gaming Diagnostics zeigt `warning`
 
 ```bash
-./src/lac.sh --gaming-diagnostics
+lac --gaming-diagnostics
 ```
 
 Typische Ursachen:
@@ -536,7 +601,7 @@ Gaming Diagnostics versucht nicht, fehlende Pakete automatisch zu installieren.
 ### Service Health zeigt `warning`
 
 ```bash
-./src/lac.sh --service-health
+lac --service-health
 ```
 
 Eine Warnung kann entstehen, wenn systemd den Zustand `degraded` meldet oder mindestens ein Dienst fehlgeschlagen ist. Die betroffenen Service-Namen und Details werden direkt im Bericht angezeigt.
@@ -568,10 +633,37 @@ sudo nvme smart-log /dev/nvme0n1
 Oder die gesamte LAC-Hardwarediagnose:
 
 ```bash
-sudo ./src/lac.sh --hardware-diagnostics
+sudo lac --hardware-diagnostics
 ```
 
 Die Hardwarediagnose führt keine Schreib-, Reparatur- oder Selbsttestbefehle aus.
+
+### Installation aktualisieren
+
+Nach einem Update des Repositorys muss der Installer erneut ausgeführt werden:
+
+```bash
+cd ~/Projekte/LinuxAdminCenter
+git switch main
+git pull --ff-only
+sudo bash install.sh
+```
+
+Der Installer ersetzt die Laufzeitdateien, lässt aber Konfigurationen erhalten.
+
+### Deinstallation meldet „not installed“
+
+Ein wiederholter Aufruf ist erlaubt:
+
+```bash
+sudo lac-uninstall
+```
+
+Ist LAC bereits entfernt oder unter einem anderen Präfix installiert, erfolgt nur eine entsprechende Meldung. Bei einem benutzerdefinierten Präfix kann aus dem Repository gezielt deinstalliert werden:
+
+```bash
+sudo bash uninstall.sh --prefix /opt/lac
+```
 
 ### Debug-Ausgabe aktivieren
 

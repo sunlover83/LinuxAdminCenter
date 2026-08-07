@@ -30,4 +30,4 @@ jobs:
         run: bash tests/run_tests.sh
 
       - name: Run ShellCheck
-        run: shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+        run: shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh

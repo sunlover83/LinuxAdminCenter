@@ -8,6 +8,39 @@ The format is based on Keep a Changelog. The project currently follows an early 
 
 No changes yet.
 
+## [0.9.0-alpha] - 2026-08-07
+
+### Added
+
+- System-wide installation through `install.sh`
+- Safe removal through `uninstall.sh`
+- Installed `lac` launcher for normal application use
+- Installed `lac-uninstall` launcher so the repository is not required for removal
+- Standard installation layout under `/usr/local/bin`, `/usr/local/lib` and `/usr/local/share`
+- Configurable absolute installation prefix through `--prefix`
+- Conventional `DESTDIR` staging support for tests and future package creation
+- Installation of the example configuration and project documentation
+- Automated installation, reinstallation and uninstallation tests
+- Verification that the installed launcher executes the installed runtime
+
+### Changed
+
+- Version and codename updated to `0.9.0-alpha (Deployment)`
+- Reinstalling LAC now replaces the previous runtime tree so removed source files cannot remain stale
+- Installer and uninstaller are now included in ShellCheck quality checks
+- README and installation documentation now describe the installed `lac` command as the normal usage path
+- Project documentation now distinguishes system installation from future distribution-specific package formats
+
+### Security
+
+- Real system installation and removal require explicit root execution; the scripts never invoke `sudo` automatically
+- `PREFIX` and `DESTDIR` must be absolute paths
+- `PREFIX=/` is rejected to prevent unsafe installation or removal targets
+- Recursive removal is guarded by expected LAC-specific path suffixes
+- Uninstallation removes only LAC launchers, runtime files, shared files and installed documentation
+- `/etc/lac` and user configuration under `$HOME/.config/lac` are deliberately preserved
+- The installer does not create or overwrite active configuration files
+
 ## [0.8.0-alpha] - 2026-08-07
 
 ### Added

@@ -4,10 +4,16 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.8.0-alpha (Compatibility)**
+Current version: **0.9.0-alpha (Deployment)**
 
 ## Current features
 
+- System-wide installer and uninstaller
+- Standard `/usr/local` installation layout
+- Installed `lac` and `lac-uninstall` commands
+- Configurable installation prefix and `DESTDIR` staging support
+- Safe reinstall workflow that replaces stale runtime files
+- Configuration preservation during uninstall
 - Interactive main menu
 - Update checks and update installation
 - Support for APT, DNF, Pacman and Zypper
@@ -54,9 +60,72 @@ Current version: **0.8.0-alpha (Compatibility)**
 - Automated shell tests
 - Automated GitHub Actions quality checks
 
+## Installation
+
+Clone the repository and install LAC system-wide:
+
+```bash
+git clone git@github.com:sunlover83/LinuxAdminCenter.git
+cd LinuxAdminCenter
+sudo bash install.sh
+```
+
+The default installation creates:
+
+```text
+/usr/local/bin/lac
+/usr/local/bin/lac-uninstall
+/usr/local/lib/linux-admin-center/
+/usr/local/share/linux-admin-center/
+/usr/local/share/doc/linux-admin-center/
+```
+
+After installation, LAC can be started from anywhere:
+
+```bash
+lac
+lac --version
+```
+
+Update an installed copy by updating the repository and running the installer again:
+
+```bash
+git switch main
+git pull --ff-only
+sudo bash install.sh
+```
+
+Remove the installed application with:
+
+```bash
+sudo lac-uninstall
+```
+
+The uninstaller deliberately preserves `/etc/lac` and user configuration under `$HOME/.config/lac`.
+
+The installer supports a custom absolute prefix:
+
+```bash
+sudo bash install.sh --prefix /opt/lac
+```
+
+For packaging and staged installations, the conventional `DESTDIR` variable is supported:
+
+```bash
+DESTDIR=/tmp/lac-package-root bash install.sh --prefix /usr
+```
+
+Version 0.9 does not yet provide distribution-specific `.deb`, `.rpm` or similar package files. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
+
 ## Usage
 
-Start the interactive interface:
+Start an installed LAC:
+
+```bash
+lac
+```
+
+During development, LAC can still be started directly from the repository:
 
 ```bash
 ./src/lac.sh
@@ -91,7 +160,7 @@ The default diagnostic targets can be overridden temporarily:
 ```bash
 LAC_DNS_TEST_HOST=example.org \
 LAC_INTERNET_TEST_TARGET=9.9.9.9 \
-./src/lac.sh --network-diagnostics
+lac --network-diagnostics
 ```
 
 Gaming Readiness is the fast compatibility overview. It reports the graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
@@ -125,6 +194,14 @@ User settings override system settings. Currently supported:
 DEBUG=false
 ```
 
+The installer does not create or overwrite either configuration file. An example is installed at:
+
+```text
+/usr/local/share/linux-admin-center/lac.conf.example
+```
+
+when the default prefix is used.
+
 ## Documentation
 
 - [Installation](docs/Installation.md)
@@ -146,7 +223,7 @@ bash tests/run_tests.sh
 Run ShellCheck:
 
 ```bash
-shellcheck src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
 GitHub Actions runs both checks automatically for pull requests and pushes to `main`.
@@ -155,6 +232,8 @@ GitHub Actions runs both checks automatically for pull requests and pushes to `m
 
 ```text
 .github/workflows/                  Automated quality checks
+install.sh                          System installation and staged packaging
+uninstall.sh                        Safe system removal workflow
 src/lac.sh                          Application entry point
 src/core/                           Shared CLI, configuration and metrics code
 src/modules/update/                 Update management
@@ -172,11 +251,11 @@ docs/                               Project documentation
 
 ## Roadmap
 
-Version `0.8.0-alpha` introduces deeper read-only gaming compatibility diagnostics for Vulkan, Steam libraries, Proton runtimes and related gaming integrations while keeping the existing Gaming Readiness quick check separate.
+Version `0.9.0-alpha` introduces a reproducible installation, update and removal workflow with standard Linux filesystem locations and `DESTDIR` support for future packaging.
 
 Planned areas for later development include:
 
-- Installation and packaging workflow
+- Distribution-specific package formats and release automation
 - Additional cleanup categories after separate safety reviews
 - Further diagnostic modules where they provide clear administrative value
 

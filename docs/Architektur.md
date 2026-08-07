@@ -13,6 +13,7 @@ Die Architektur verfolgt folgende Grundsätze:
 - schreibende Aktionen benötigen eine bewusste Benutzerbestätigung
 - Diagnosemodule bleiben grundsätzlich schreibgeschützt
 - fehlende Werkzeuge werden als Zustand behandelt und nicht durch automatische Installationen ersetzt
+- Installation und Deinstallation verwenden klar begrenzte, reproduzierbare Zielpfade
 - Änderungen werden durch ShellCheck und automatisierte Tests abgesichert
 
 ## Verzeichnisstruktur
@@ -21,7 +22,10 @@ Die Architektur verfolgt folgende Grundsätze:
 LinuxAdminCenter/
 ├── .github/workflows/          GitHub-Actions-Workflows
 ├── .vscode/                    Editor-Empfehlungen und Einstellungen
+├── config/                     Beispielkonfiguration
 ├── docs/                       Projektdokumentation
+├── install.sh                  Systeminstallation und DESTDIR-Staging
+├── uninstall.sh                Kontrollierte Deinstallation
 ├── src/
 │   ├── lac.sh                  Einstiegspunkt
 │   ├── core/                   Gemeinsame Kernfunktionen
@@ -29,9 +33,76 @@ LinuxAdminCenter/
 └── tests/                      Automatisierte Shell-Tests
 ```
 
+## Installations- und Deployment-Schicht
+
+Ab Version `0.9.0-alpha` kann LAC systemweit installiert werden. Die Deployment-Schicht besteht aus den beiden eigenständigen Root-Skripten `install.sh` und `uninstall.sh`. Sie ist bewusst von der Laufzeitlogik unter `src/` getrennt.
+
+### Standardlayout
+
+Bei einer Standardinstallation mit `PREFIX=/usr/local` werden folgende Ziele verwendet:
+
+| Ziel | Inhalt |
+|---|---|
+| `/usr/local/bin/lac` | kleiner Launcher für die installierte Anwendung |
+| `/usr/local/bin/lac-uninstall` | Launcher für den installierten Uninstaller |
+| `/usr/local/lib/linux-admin-center/` | vollständiger Laufzeitbaum aus `src/` |
+| `/usr/local/share/linux-admin-center/` | Beispielkonfiguration und installierter Uninstaller |
+| `/usr/local/share/doc/linux-admin-center/` | README, Changelog und Markdown-Dokumentation |
+
+Der installierte Befehl `lac` enthält keine Kopie der Programmlogik. Er bestimmt sein eigenes `bin`-Verzeichnis, leitet daraus das Installationspräfix ab und startet anschließend:
+
+```text
+<PREFIX>/lib/linux-admin-center/lac.sh
+```
+
+Dadurch funktioniert dasselbe Launcher-Prinzip sowohl unter `/usr/local` als auch unter einem benutzerdefinierten Präfix wie `/opt/lac`.
+
+`lac-uninstall` verwendet dieselbe Präfixableitung und startet den unterhalb des Präfixes installierten Uninstaller. Das Quell-Repository wird für eine spätere Deinstallation deshalb nicht benötigt.
+
+### PREFIX und DESTDIR
+
+`PREFIX` beschreibt den späteren Laufzeitpfad der Installation. Standard ist:
+
+```text
+/usr/local
+```
+
+Der Installer akzeptiert zusätzlich `--prefix` und lässt ausschließlich absolute Präfixe zu. `PREFIX=/` wird ausdrücklich abgelehnt.
+
+`DESTDIR` ist ein vorgeschaltetes Staging-Verzeichnis. Es verändert nicht die späteren Laufzeitpfade, sondern legt die Dateien unter einem temporären Root ab. Beispiel:
+
+```text
+DESTDIR=/tmp/pkg-root
+PREFIX=/usr
+```
+
+führt beim Paketbau zu:
+
+```text
+/tmp/pkg-root/usr/bin/lac
+/tmp/pkg-root/usr/lib/linux-admin-center/
+```
+
+Diese Trennung entspricht dem üblichen Modell vieler Linux-Paketsysteme und bildet die Grundlage für spätere `.deb`-, `.rpm`- oder andere distributionsspezifische Pakete.
+
+Ist `DESTDIR` gesetzt, kann die Installation ohne Root-Rechte getestet werden. Ohne `DESTDIR` verlangt die Deployment-Schicht explizite Root-Ausführung, ruft `sudo` aber niemals selbst auf.
+
+### Reinstallation und veraltete Dateien
+
+Eine Installation aus einer neueren LAC-Version ersetzt die verwalteten Runtime-, Shared- und Dokumentationsbäume vollständig. Dadurch können Dateien, die in einer neuen Version aus dem Projekt entfernt oder umbenannt wurden, nicht als veraltete Reste in der Installation verbleiben.
+
+Aktive Konfigurationen liegen bewusst außerhalb dieser verwalteten Bäume:
+
+```text
+/etc/lac/lac.conf
+$HOME/.config/lac/lac.conf
+```
+
+Sie werden durch Installation, Reinstallation und Deinstallation nicht erstellt, überschrieben oder entfernt.
+
 ## Programmstart
 
-Der Einstiegspunkt ist `src/lac.sh`.
+Der eigentliche Anwendungseinstiegspunkt ist `src/lac.sh`. Bei einer installierten Version befindet sich derselbe Laufzeitbaum unter `<PREFIX>/lib/linux-admin-center/` und wird über den `lac`-Launcher gestartet.
 
 Beim Start geschieht Folgendes:
 
@@ -100,14 +171,40 @@ Für Tests können einzelne Pfade umgeleitet werden:
 - `LAC_PROC_ROOT` für die Init-System-Erkennung ohne Zugriff auf das echte `/proc`
 - `LAC_ROOT_DIR` für Tests der bekannten 32-Bit-Vulkan-Bibliothekspfade ohne Zugriff auf das echte Root-Dateisystem
 
+Für Installation und Paketbau existieren zusätzlich:
+
+- `PREFIX` für das logische Installationspräfix
+- `DESTDIR` als vorgeschaltetes Staging-Root
+
 Die Netzwerkdiagnose unterstützt:
 
 - `LAC_DNS_TEST_HOST` für den DNS-Auflösungstest
 - `LAC_INTERNET_TEST_TARGET` für den externen Erreichbarkeitstest
 
-Diese Variablen verändern keine Systemkonfiguration und gelten nur für den jeweiligen Prozess.
+Diese Variablen verändern keine dauerhafte Systemkonfiguration und gelten nur für den jeweiligen Prozess beziehungsweise Installationsvorgang.
 
 ## Datenfluss
+
+### Installation und Reinstallation
+
+1. `install.sh` bestimmt das Quell-Repository relativ zu seinem eigenen Pfad.
+2. Argumente und Umgebungsvariablen für `PREFIX` und `DESTDIR` werden geprüft.
+3. Bei einer echten Systeminstallation ohne `DESTDIR` werden Root-Rechte vorausgesetzt.
+4. Bestehende verwaltete LAC-Bäume werden ausschließlich an den erwarteten LAC-spezifischen Zielpfaden entfernt.
+5. Der gesamte Inhalt von `src/` wird als Laufzeitbaum installiert.
+6. Dateirechte werden vereinheitlicht; nur `lac.sh` wird im Runtime-Baum ausführbar gesetzt.
+7. Beispielkonfiguration, Uninstaller und Dokumentation werden in die Shared-Pfade kopiert.
+8. Die Launcher `lac` und `lac-uninstall` werden erzeugt und ausführbar gesetzt.
+9. Aktive System- und Benutzerkonfigurationen werden nicht berührt.
+
+### Deinstallation
+
+1. `uninstall.sh` validiert `PREFIX` und optional `DESTDIR` mit denselben Regeln wie der Installer.
+2. Bei echter Systemdeinstallation werden Root-Rechte vorausgesetzt.
+3. Die beiden Launcher werden entfernt, falls sie vorhanden sind.
+4. Runtime-, Shared- und Dokumentationsbäume werden nur entfernt, wenn ihre Pfade auf die erwarteten LAC-spezifischen Suffixe enden.
+5. `/etc/lac` und Benutzerkonfigurationen werden ausdrücklich nicht entfernt.
+6. Ein erneuter Aufruf nach bereits abgeschlossener Deinstallation ist erlaubt und meldet lediglich, dass keine Installation vorhanden ist.
 
 ### Systeminformationen
 
@@ -247,6 +344,18 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 
 ## Sicherheitsgrenzen
 
+### Installation und Deinstallation
+
+- keine automatische Verwendung von `sudo`; Root-Rechte müssen vom Benutzer ausdrücklich bereitgestellt werden
+- `PREFIX` muss absolut sein und darf nicht `/` sein
+- ein gesetztes `DESTDIR` muss absolut sein
+- rekursive Löschungen sind zusätzlich an erwartete LAC-spezifische Pfadsuffixe gebunden
+- Installation beschränkt sich auf den gewählten Präfixbaum
+- aktive System- und Benutzerkonfiguration wird weder erstellt noch überschrieben
+- Deinstallation entfernt weder `/etc/lac` noch Benutzerkonfigurationen
+- keine automatische Installation von Betriebssystempaketen oder Abhängigkeiten
+- Reinstallation ersetzt nur von LAC verwaltete Runtime-, Shared- und Dokumentationsbäume
+
 ### Cleanup
 
 - keine automatische Ausführung beim Programmstart
@@ -320,6 +429,17 @@ Der Rückgabecode `10` erlaubt die Verwendung der Updateprüfung in weiteren Skr
 
 Die Tests unter `tests/` verwenden für Systembefehle nach Möglichkeit Mocks und temporäre Verzeichnisse. Dadurch können Parser und Bewertungslogik reproduzierbar geprüft werden, ohne den Testrechner zu verändern.
 
+Der Installationstest verwendet ein temporäres `DESTDIR`. Dadurch werden echte Systempfade weder beschrieben noch gelöscht. Geprüft werden unter anderem:
+
+- Erzeugung der beiden installierten Launcher
+- Kopieren des Runtime-Baums und der Dokumentation
+- Ausführung der installierten Anwendung
+- Entfernung absichtlich angelegter veralteter Runtime-Dateien bei Reinstallation
+- vollständige Entfernung verwalteter Installationsdateien
+- Erhalt einer vorhandenen Systemkonfiguration
+- sicherer mehrfacher Uninstall-Aufruf
+- Ablehnung eines relativen Präfixes
+
 Für Gaming Diagnostics werden unter anderem geprüft:
 
 - Parsing von Vulkan-Instance- und GPU-Daten
@@ -333,7 +453,7 @@ Für Gaming Diagnostics werden unter anderem geprüft:
 - Gamescope-Versionsausgabe
 - CLI- und Menüintegration
 
-Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft Einstiegspunkt, Core-Schicht, Module und Tests. GitHub Actions führt beide Prüfungen für Pull Requests und Änderungen an `main` aus.
+Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft `install.sh`, `uninstall.sh`, Einstiegspunkt, Core-Schicht, Module und Tests. GitHub Actions führt beide Prüfungen für Pull Requests und Änderungen an `main` aus.
 
 ## Erweiterung der Anwendung
 
@@ -346,5 +466,7 @@ Ein neuer Funktionsbereich sollte grundsätzlich aus folgenden Bestandteilen bes
 5. optionale CLI-Option in `src/core/cli.sh`
 6. passende Tests unter `tests/`
 7. Aktualisierung von README, Dokumentation und Changelog
+
+Neue Dateien im Laufzeitbaum unter `src/` werden durch den Installer automatisch in zukünftige Installationen übernommen. Dateien außerhalb von `src/`, die für eine installierte Laufzeit benötigt werden, müssen dagegen ausdrücklich in `install.sh` aufgenommen und durch `installation_test.sh` abgesichert werden.
 
 Neue Cleanup-Kategorien benötigen zusätzlich eine separate Sicherheitsbewertung, eine Vorschau der betroffenen Objekte und eine ausdrückliche Bestätigung vor jeder Veränderung. Neue Diagnosemodule sollen ohne Root-Rechte arbeiten, sofern der zugrunde liegende Messwert das zulässt, und dürfen fehlende Informationen nicht durch schreibende oder zustandsverändernde Tests erzwingen.
