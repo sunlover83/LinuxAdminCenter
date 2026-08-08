@@ -4,7 +4,9 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **0.9.0-alpha (Deployment)**
+Current version: **1.0.0-rc1 (Stable)**
+
+This is the first 1.0 release candidate. The feature scope is frozen; changes before the final 1.0 release are limited to release blockers, validation findings and release documentation.
 
 ## Current features
 
@@ -14,7 +16,14 @@ Current version: **0.9.0-alpha (Deployment)**
 - Configurable installation prefix and `DESTDIR` staging support
 - Safe reinstall workflow that replaces stale runtime files
 - Configuration preservation during uninstall
+- Bash 4.3 minimum-version enforcement before the full runtime is loaded
+- Distribution-family detection through `ID` and `ID_LIKE`
 - Interactive main menu
+- Read-only LAC Self Check
+- Bash-version, installation-type, runtime-file and launcher verification
+- Required core-tool and optional diagnostic-tool availability reporting
+- Configuration and package-manager availability reporting
+- Overall self-check assessment using `healthy`, `warning` and `failed`
 - Update checks and update installation
 - Support for APT, DNF, Pacman and Zypper
 - System and hardware information
@@ -59,6 +68,31 @@ Current version: **0.9.0-alpha (Deployment)**
 - Debug logging
 - Automated shell tests
 - Automated GitHub Actions quality checks
+- Cross-distribution portability checks for Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed
+
+## Requirements
+
+LAC requires:
+
+- Linux
+- Bash 4.3 or newer
+- common command-line tools such as `awk`, `sed`, `find`, `sort`, `tr`, `uname`, `df`, `du` and `hostname`
+- one supported package-manager family: APT, DNF, Pacman or Zypper
+
+Feature-specific tools are detected at runtime and are not installed automatically. For example, Arch-based update checks require `checkupdates`, while Pacman itself remains usable by other LAC functions without that helper. Pacman cache cleanup additionally uses `paccache`.
+
+## Distribution detection
+
+LAC reads `/etc/os-release`. Known base distributions are mapped directly, while derivatives can inherit support through `ID_LIKE`:
+
+| Distribution family | Package manager |
+|---|---|
+| Debian / Ubuntu | APT |
+| Fedora / RHEL / CentOS | DNF |
+| Arch | Pacman |
+| openSUSE / SLES / SUSE | Zypper |
+
+The multi-distribution CI verifies this mapping on Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed in addition to the full Ubuntu regression run.
 
 ## Installation
 
@@ -67,7 +101,7 @@ Clone the repository and install LAC system-wide:
 ```bash
 git clone git@github.com:sunlover83/LinuxAdminCenter.git
 cd LinuxAdminCenter
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 The default installation creates:
@@ -85,6 +119,7 @@ After installation, LAC can be started from anywhere:
 ```bash
 lac
 lac --version
+lac --self-check
 ```
 
 Update an installed copy by updating the repository and running the installer again:
@@ -92,7 +127,7 @@ Update an installed copy by updating the repository and running the installer ag
 ```bash
 git switch main
 git pull --ff-only
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Remove the installed application with:
@@ -106,16 +141,18 @@ The uninstaller deliberately preserves `/etc/lac` and user configuration under `
 The installer supports a custom absolute prefix:
 
 ```bash
-sudo bash install.sh --prefix /opt/lac
+sudo ./install.sh --prefix /opt/lac
 ```
 
 For packaging and staged installations, the conventional `DESTDIR` variable is supported:
 
 ```bash
-DESTDIR=/tmp/lac-package-root bash install.sh --prefix /usr
+DESTDIR=/tmp/lac-package-root ./install.sh --prefix /usr
 ```
 
-Version 0.9 does not yet provide distribution-specific `.deb`, `.rpm` or similar package files. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
+Unsafe installation targets are rejected before file operations. Relative paths, filesystem-root targets and `.` / `..` path components are not accepted for the protected prefix/staging values.
+
+Distribution-specific `.deb`, `.rpm` or similar package files are not yet provided in 1.0.0-rc1. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
 
 ## Usage
 
@@ -143,9 +180,12 @@ Available command-line options:
 -g, --gaming-readiness       Show gaming readiness
 -G, --gaming-diagnostics     Show detailed gaming diagnostics
 -e, --service-health         Show service health
+-S, --self-check             Check the LAC runtime and dependencies
 -u, --check-updates          Check for available updates
 -c, --cleanup-report         Show a read-only cleanup report
 ```
+
+The LAC Self Check is completely read-only. It verifies the active Bash version, installation type, the complete runtime tree, installed launchers, configuration readability, required core commands, optional diagnostic tools and the detected package manager. Missing optional diagnostic tools are reported but do not reduce the overall status. Missing runtime files, unsupported Bash versions or incomplete system-wide launchers produce `failed`; missing core tools, unreadable configuration or an unavailable package manager produce `warning`.
 
 The update check returns status `10` when updates are available. This allows scripts to distinguish available updates from execution errors.
 
@@ -153,7 +193,7 @@ The cleanup report never changes the system. Destructive cleanup actions are ava
 
 Hardware diagnostics are read-only. CPU, GPU and storage information is displayed only when the required tools are available. Drive-health checks may require root privileges; LAC does not request those privileges automatically.
 
-Network diagnostics are also read-only. LAC checks the IPv4 default gateway, DNS resolution and external IP reachability without modifying network interfaces, routes or DNS settings. Non-responsive ICMP targets are reported carefully because ping traffic may be blocked even when other network functions work.
+Network diagnostics are also read-only. LAC checks the IPv4 default gateway, DNS resolution and external IP reachability without modifying network interfaces, routes or DNS settings. Configurable test targets are validated before they are passed to `ping` or `getent`. Non-responsive ICMP targets are reported carefully because ping traffic may be blocked even when other network functions work.
 
 The default diagnostic targets can be overridden temporarily:
 
@@ -165,7 +205,7 @@ lac --network-diagnostics
 
 Gaming Readiness is the fast compatibility overview. It reports the graphical session, active graphics drivers, Vulkan verification, Steam availability, custom Proton tools and optional gaming utilities. Missing `vulkaninfo` is reported as `not verified`; it is not treated as proof that the Vulkan runtime itself is absent.
 
-Gaming Diagnostics provides a deeper, still read-only compatibility analysis. It reports Vulkan runtime details, detected Vulkan devices and drivers, 32-bit Vulkan support, Steam library roots, installed Proton runtimes, compatibility-prefix counts and gaming integration tools. Native Steam uses conservative host-library checks for 32-bit Vulkan; Flatpak Steam reports this support as managed by Flatpak instead of evaluating host i386 library paths.
+Gaming Diagnostics provides a deeper, still read-only compatibility analysis. It reports Vulkan runtime details, detected Vulkan devices and drivers, 32-bit Vulkan support, Steam library roots, installed Proton runtimes, compatibility-prefix counts and gaming integration tools. Native Steam uses conservative host-library checks for 32-bit Vulkan; Flatpak Steam reports this support as managed by Flatpak instead of evaluating host i386 library paths. User-visible Steam and Proton lists use deterministic `C`-locale ordering.
 
 Service Health is read-only and currently targets systemd systems. It reports the system state, service counts, failed-service details, total boot time and the slowest services. LAC does not start, stop, enable, disable or restart services and does not request elevated privileges for these checks.
 
@@ -186,9 +226,11 @@ Users should review every proposed package removal before entering the required 
 LAC reads configuration from these locations in order:
 
 1. `/etc/lac/lac.conf`
-2. `${XDG_CONFIG_HOME:-$HOME/.config}/lac/lac.conf`
+2. an explicit `LAC_USER_CONFIG`, otherwise `${XDG_CONFIG_HOME}/lac/lac.conf`, otherwise `$HOME/.config/lac/lac.conf`
 
-User settings override system settings. Currently supported:
+If no user configuration path can be constructed because neither the explicit path, `XDG_CONFIG_HOME` nor `HOME` is available, LAC simply keeps its defaults. User settings override system settings.
+
+Currently supported:
 
 ```ini
 DEBUG=false
@@ -220,18 +262,26 @@ Run all tests:
 bash tests/run_tests.sh
 ```
 
+Run the distribution-independent portability subset:
+
+```bash
+bash tests/portability_test.sh
+```
+
 Run ShellCheck:
 
 ```bash
 shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
-GitHub Actions runs both checks automatically for pull requests and pushes to `main`.
+GitHub Actions runs the complete test suite and ShellCheck on Ubuntu for pull requests and pushes to `main`. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
+
+Test fixtures use neutral example values. Personal home paths, hostnames and real development-machine hardware fingerprints are intentionally not used as fixtures or documentation examples.
 
 ## Project structure
 
 ```text
-.github/workflows/                  Automated quality checks
+.github/workflows/                  Automated quality and portability checks
 install.sh                          System installation and staged packaging
 uninstall.sh                        Safe system removal workflow
 src/lac.sh                          Application entry point
@@ -245,13 +295,16 @@ src/modules/hardware_diagnostics/   Hardware diagnostics view
 src/modules/gaming_readiness/       Gaming readiness view
 src/modules/gaming_diagnostics/     Detailed gaming compatibility diagnostics
 src/modules/service_health/         Service health view
-tests/                              Automated shell tests
+src/modules/self_check/             LAC runtime and dependency self-check
+tests/                              Automated shell and portability tests
 docs/                               Project documentation
 ```
 
 ## Roadmap
 
-Version `0.9.0-alpha` introduces a reproducible installation, update and removal workflow with standard Linux filesystem locations and `DESTDIR` support for future packaging.
+Version `0.9.0-alpha` introduced a reproducible installation, update and removal workflow with standard Linux filesystem locations and `DESTDIR` support for future packaging.
+
+Version `1.0.0-rc1` is the release-candidate baseline for the first stable release. It combines runtime/deployment hardening, Self Check, cross-distribution portability coverage, code and consistency reviews, neutral test fixtures and completed real-system validation. The RC is intentionally feature-frozen before `1.0.0`.
 
 Planned areas for later development include:
 

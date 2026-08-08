@@ -197,7 +197,7 @@ get_proton_compatibility_tools() {
 
     if [[ -n "$tool_names" ]]; then
         printf '%s' "$tool_names" |
-            sort -u
+            LC_ALL=C sort -u
     else
         printf '%s\n' "none"
     fi

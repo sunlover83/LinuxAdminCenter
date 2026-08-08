@@ -50,14 +50,14 @@ cat <<'OUTPUT'
 k10temp-pci-00c3
 Adapter: PCI adapter
 Tctl:
-  temp1_input: 55.260
+  temp1_input: 47.640
   temp1_max: 90.000
   temp1_crit: 95.000
 
 nvme-pci-0100
 Adapter: PCI adapter
 Composite:
-  temp1_input: 38.850
+  temp1_input: 34.250
 OUTPUT
 EOF
 
@@ -71,8 +71,8 @@ if [[ "${MOCK_NVIDIA_FAILURE:-false}" == "true" ]]; then
 fi
 
 cat <<'OUTPUT'
-0, NVIDIA GeForce RTX 4070, 43, 0, 1430, 12282
-1, NVIDIA Test GPU, 50, 25, 2048, 8192
+0, NVIDIA GeForce RTX 3060, 52, 17, 2048, 12288
+1, NVIDIA Test GPU, 46, 31, 1536, 8192
 OUTPUT
 EOF
 
@@ -82,8 +82,8 @@ cat > "${MOCK_BIN}/lsblk" <<'EOF'
 #!/usr/bin/env bash
 
 cat <<'OUTPUT'
-sda disk 500107862016 Samsung SSD 870 EVO
-nvme0n1 disk 1000204886016 Samsung SSD 990 PRO
+sda disk 500107862016 Example SATA SSD 500GB
+nvme0n1 disk 1000204886016 Example NVMe SSD 1TB
 sde disk 0 SD/MMC/MS/MSPRO
 zram0 disk 8589934592
 loop0 loop 1048576 Loop Device
@@ -107,7 +107,7 @@ cat > "${MOCK_BIN}/nvme" <<'EOF'
 
 cat <<'OUTPUT'
 critical_warning                    : 0
-temperature                         : 37 °C
+temperature                         : 35 °C
 available_spare                     : 100%
 OUTPUT
 EOF
@@ -147,19 +147,19 @@ assert_equals \
 
 assert_equals \
     "Whitespace is removed from hardware values" \
-    "NVIDIA GeForce RTX 4070" \
-    "$(trim_hardware_value "   NVIDIA GeForce RTX 4070   ")"
+    "NVIDIA GeForce RTX 3060" \
+    "$(trim_hardware_value "   NVIDIA GeForce RTX 3060   ")"
 
 assert_equals \
-    "AMD CPU temperature is detected and formatted" \
-    "55.3 °C" \
+    "CPU temperature is detected and formatted" \
+    "47.6 °C" \
     "$(get_cpu_temperature)"
 
 assert_equals \
     "Multiple NVIDIA GPUs are reported" \
     "$(cat <<'EXPECTED'
-GPU 0: NVIDIA GeForce RTX 4070 | 43 °C | 0% | 1430 MiB / 12282 MiB
-GPU 1: NVIDIA Test GPU | 50 °C | 25% | 2048 MiB / 8192 MiB
+GPU 0: NVIDIA GeForce RTX 3060 | 52 °C | 17% | 2048 MiB / 12288 MiB
+GPU 1: NVIDIA Test GPU | 46 °C | 31% | 1536 MiB / 8192 MiB
 EXPECTED
 )" \
     "$(get_nvidia_gpu_diagnostics)"
@@ -167,8 +167,8 @@ EXPECTED
 assert_equals \
     "Storage devices are detected without loop devices" \
     "$(cat <<'EXPECTED'
-/dev/sda|Samsung SSD 870 EVO
-/dev/nvme0n1|Samsung SSD 990 PRO
+/dev/sda|Example SATA SSD 500GB
+/dev/nvme0n1|Example NVMe SSD 1TB
 EXPECTED
 )" \
     "$(get_storage_devices)"
@@ -186,8 +186,8 @@ assert_equals \
 assert_equals \
     "Storage diagnostics use the correct health tool" \
     "$(cat <<'EXPECTED'
-/dev/sda: Samsung SSD 870 EVO | SMART health: healthy
-/dev/nvme0n1: Samsung SSD 990 PRO | NVMe health: healthy
+/dev/sda: Example SATA SSD 500GB | SMART health: healthy
+/dev/nvme0n1: Example NVMe SSD 1TB | NVMe health: healthy
 EXPECTED
 )" \
     "$(get_storage_diagnostics)"

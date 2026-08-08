@@ -73,14 +73,6 @@ get_service_health_summary_message() {
     local init_system="$1"
     local system_state="$2"
     local failed_service_count="$3"
-    local health_status
-
-    health_status="$(
-        get_service_health_summary \
-            "$init_system" \
-            "$system_state" \
-            "$failed_service_count"
-    )"
 
     if [[ "$init_system" != "systemd" ]]; then
         printf '%s\n' \
@@ -152,9 +144,6 @@ get_service_health_summary_message() {
                 "Service health could not be evaluated completely."
             ;;
     esac
-
-    # Keep the calculated value visible to ShellCheck as intentional logic.
-    [[ -n "$health_status" ]]
 }
 
 print_failed_service_details() {
@@ -221,40 +210,6 @@ print_failed_service_details() {
                 ;;
         esac
     done <<< "$failed_services"
-}
-
-print_slowest_service_details() {
-    local slowest_services="$1"
-    local service_record
-    local service_name
-    local duration
-
-    printf '%s\n' "Boot performance:"
-
-    case "$slowest_services" in
-        unsupported|unavailable|unknown|none|"")
-            printf '  Slowest services:        %s\n' \
-                "${slowest_services:-unknown}"
-            return
-            ;;
-    esac
-
-    printf '%s\n' "  Slowest services:"
-
-    while IFS= read -r service_record; do
-        [[ -n "$service_record" ]] || continue
-
-        service_name="${service_record%%|*}"
-        duration="${service_record#*|}"
-
-        if [[ "$service_name" == "$service_record" ]]; then
-            duration="unknown"
-        fi
-
-        printf '    %-40s %s\n' \
-            "$service_name" \
-            "$duration"
-    done <<< "$slowest_services"
 }
 
 print_service_health() {

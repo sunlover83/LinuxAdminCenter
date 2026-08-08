@@ -141,18 +141,18 @@ get_storage_devices() {
     fi
 
     while read -r device_name device_type device_size device_model; do
-    if [[ "$device_type" != "disk" || -z "$device_name" ]]; then
-        continue
-    fi
+        if [[ "$device_type" != "disk" || -z "$device_name" ]]; then
+            continue
+        fi
 
-    if [[ "$device_name" == zram* ]]; then
-        continue
-    fi
+        if [[ "$device_name" == zram* ]]; then
+            continue
+        fi
 
-    if [[ ! "$device_size" =~ ^[0-9]+$ ]] ||
-        (( device_size == 0 )); then
-        continue
-    fi
+        if [[ ! "$device_size" =~ ^[0-9]+$ ]] ||
+            (( device_size == 0 )); then
+            continue
+        fi
 
         device_model="$(trim_hardware_value "${device_model:-}")"
 

@@ -3,18 +3,35 @@
 is_package_manager_supported() {
     case "${PKG_MANAGER:-unknown}" in
         apt)
-            command -v apt-get >/dev/null 2>&1 &&
-                command -v apt >/dev/null 2>&1
+            command -v apt-get >/dev/null 2>&1
             ;;
         dnf)
             command -v dnf >/dev/null 2>&1
             ;;
         pacman)
-            command -v pacman >/dev/null 2>&1 &&
-                command -v checkupdates >/dev/null 2>&1
+            command -v pacman >/dev/null 2>&1
             ;;
         zypper)
             command -v zypper >/dev/null 2>&1
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+is_update_package_manager_supported() {
+    is_package_manager_supported || return 1
+
+    case "${PKG_MANAGER:-unknown}" in
+        apt)
+            command -v apt >/dev/null 2>&1
+            ;;
+        pacman)
+            command -v checkupdates >/dev/null 2>&1
+            ;;
+        dnf|zypper)
+            return 0
             ;;
         *)
             return 1

@@ -2,11 +2,61 @@
 
 All notable changes to Linux Admin Center are documented in this file.
 
-The format is based on Keep a Changelog. The project currently follows an early alpha development model.
+The format is based on Keep a Changelog. Release candidates use semantic pre-release versioning before the stable 1.0 release.
 
 ## [Unreleased]
 
 No changes yet.
+
+## [1.0.0-rc1] - 2026-08-08
+
+### Added
+
+- Read-only LAC Self Check through `-S` and `--self-check`
+- Interactive `LAC Self Check` menu entry
+- Self Check reporting for Bash compatibility, installation type, runtime files, launchers and configuration handling
+- Required core-tool and optional diagnostic-tool availability reporting
+- Detected package-manager availability in Self Check
+- Overall Self Check assessment using `healthy`, `warning` and `failed`
+- Automated tests for Self Check metrics, assessment logic, formatted output, CLI behavior and menu integration
+- Installation of the MIT license alongside system documentation
+- Distribution-independent portability test runner with project-wide Bash syntax validation
+- GitHub Actions portability coverage for Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed
+- Common runtime tests for the Bash minimum version and package-manager family mapping through `ID` and `ID_LIKE`
+- Configuration tests for explicit, XDG, HOME and HOME-less user configuration environments
+- Package-manager capability tests that distinguish base Pacman support from the optional `checkupdates` update helper
+
+### Changed
+
+- Version and codename updated to `1.0.0-rc1 (Stable)`
+- Repository `install.sh` and `uninstall.sh` are executable after a fresh checkout
+- CLI help now documents the installed `lac` command instead of the repository entry-point name
+- Self Check verifies the complete set of Core and module files sourced by the runtime
+- Self Check now lists the actual core runtime dependencies including `find`, `sort` and `tr`, and reports additional feature-specific tools such as `lsblk`, `checkupdates` and `paccache`
+- Ubuntu remains the full regression and ShellCheck environment while other Linux families run a focused portability suite for configuration, installation, network-target hardening, package-manager abstraction and Self Check behavior
+- Portability jobs verify the actual container distribution and the package manager selected by LAC
+- LAC enforces the documented Bash 4.3 minimum before loading the remaining runtime modules
+- Distribution detection now uses `ID_LIKE` as a fallback instead of hard-coding individual distribution derivatives
+- Base package-manager availability is separated from update-specific helper requirements
+- Pacman remains a supported package manager when `checkupdates` is absent; only update functionality is then reported as unavailable
+- Gaming compatibility-tool and Proton-runtime ordering is explicitly locale-independent with `LC_ALL=C`
+- Service Health presentation code no longer contains an unused duplicate formatter
+- Hardware metrics formatting and project documentation were normalized during the 1.0 code review
+- Machine-specific test fixtures and personal development-path examples were replaced by neutral, plausible values
+- Feature scope is frozen for RC1; subsequent pre-1.0 changes are limited to release blockers, validation findings and release documentation
+
+### Fixed
+
+- Restored the complete MIT license text in the previously empty `LICENSE` file
+- User configuration discovery no longer assumes that `HOME` is always set under strict `set -u` execution
+
+### Security
+
+- Installer and uninstaller reject `PREFIX` and `DESTDIR` values containing `.` or `..` path components
+- `DESTDIR=/` is rejected so staging cannot bypass normal system-install privilege handling
+- Configurable network diagnostic targets reject option-like values and whitespace before being passed to `ping` or `getent`
+- Self Check is completely read-only and does not install, remove or repair dependencies
+- Test and documentation fixtures no longer expose the development machine's hardware profile, desktop environment or personal project-directory convention
 
 ## [0.9.0-alpha] - 2026-08-07
 

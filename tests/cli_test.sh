@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 0.9.0-alpha (Deployment)" \
+    "Linux Admin Center 1.0.0-rc1 (Stable)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 0.9.0-alpha (Deployment)" \
+    "Linux Admin Center 1.0.0-rc1 (Stable)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -169,6 +169,18 @@ assert_output_contains \
     -e
 
 assert_output_contains \
+    "Long self-check option displays LAC runtime status" \
+    "Overall self-check:" \
+    "$LAC_SCRIPT" \
+    --self-check
+
+assert_output_contains \
+    "Short self-check option displays LAC runtime status" \
+    "LAC runtime:" \
+    "$LAC_SCRIPT" \
+    -S
+
+assert_output_contains \
     "Long cleanup report option displays cache information" \
     "Package cache size:" \
     "$LAC_SCRIPT" \
@@ -183,6 +195,18 @@ assert_output_contains \
 assert_output_contains \
     "Long help option displays usage information" \
     "Usage:" \
+    "$LAC_SCRIPT" \
+    --help
+
+assert_output_contains \
+    "Help uses the installed command name" \
+    "  lac [OPTION]" \
+    "$LAC_SCRIPT" \
+    --help
+
+assert_output_contains \
+    "Help displays the self-check option" \
+    "--self-check" \
     "$LAC_SCRIPT" \
     --help
 

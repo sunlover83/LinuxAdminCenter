@@ -17,7 +17,7 @@ Empfohlene Werkzeuge:
 Repository aktualisieren:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
+cd ~/projects/LinuxAdminCenter
 git switch main
 git pull --ff-only
 ```
@@ -57,7 +57,20 @@ Die detaillierte Zuordnung der Dateien und die installierten Zielpfade sind in `
 - Administrative Aktionen müssen sichtbar sein und dürfen nicht unerwartet ausgeführt werden.
 - Installationen, Löschungen oder andere verändernde Aktionen benötigen eine ausdrückliche Benutzeraktion.
 - Für schreibende Funktionen muss nach Möglichkeit zuerst eine schreibgeschützte Vorschau existieren.
-- Skripte dürfen `sudo` nicht selbst aufrufen, wenn der Benutzer die erforderlichen Rechte auch beim Start des Skripts bereitstellen kann.
+- Skripte dürfen `sudo` nicht selbst aufrufen, wenn der Benutzer die erforderlichen Rechte auch beim Start des Skripts bereitstellen kann. Die interaktiven Paketaktionen sind hiervon bewusst getrennt und machen ihre `sudo`-Nutzung sichtbar.
+
+### Mindestversion
+
+LAC unterstützt Bash ab Version 4.3. Der Einstiegspunkt prüft diese Voraussetzung unmittelbar nach dem Laden von `core/common.sh` und bevor Module mit neueren Bash-Funktionen eingebunden werden.
+
+Die zentrale Prüfung liegt in:
+
+```text
+is_bash_version_supported
+require_supported_bash
+```
+
+Tests für die Mindestversion gehören in `tests/common_test.sh`.
 
 ### Strikte Fehlerbehandlung
 
@@ -68,6 +81,8 @@ set -euo pipefail
 ```
 
 Eingebundene Core- und Moduldateien setzen diese Optionen nicht erneut, da sie im Kontext des aufrufenden Skripts laufen.
+
+Code muss deshalb auch mit fehlenden optionalen Umgebungsvariablen sicher umgehen. Insbesondere dürfen Variablen wie `HOME` oder `XDG_CONFIG_HOME` unter `set -u` nicht ungeprüft dereferenziert werden.
 
 ### Ausgabe
 
@@ -119,6 +134,25 @@ bash tests/run_tests.sh
 
 Der Test-Runner führt jede Datei mit dem Muster `tests/*_test.sh` aus und beendet sich beim ersten fehlgeschlagenen Test.
 
+Portabilitätsprüfungen starten:
+
+```bash
+bash tests/portability_test.sh
+```
+
+GitHub Actions führt den vollständigen Test- und ShellCheck-Lauf auf Ubuntu aus. Zusätzlich läuft der Portabilitätstest in Containern für Debian stable, Fedora, Arch Linux und openSUSE Tumbleweed.
+
+Der Portabilitätstest prüft unter anderem:
+
+- Bash-Syntax aller Shell-Dateien
+- Erkennung der tatsächlich laufenden Distribution
+- Zuordnung zu einem unterstützten Paketmanager
+- Konfiguration
+- Installation und Deinstallation
+- Netzwerkziel-Hardening
+- Paketmanager-Abstraktion
+- Self Check
+
 ### Aufbau eines Tests
 
 Ein Testskript soll:
@@ -132,6 +166,8 @@ Ein Testskript soll:
 
 Verändernde Systembefehle werden in Tests immer gemockt oder auf ein temporäres Ziel umgeleitet. Tests dürfen weder Pakete installieren beziehungsweise entfernen noch echte System-Caches oder Installationspfade verändern.
 
+Testdaten sollen neutral und reproduzierbar sein. Persönliche Home-Pfade, Hostnamen, reale Hardwarekonfigurationen oder andere maschinenspezifische Fingerprints dürfen nicht als Fixtures übernommen werden. Stattdessen werden plausible generische Beispielwerte verwendet.
+
 ### Benennung
 
 ```text
@@ -140,6 +176,7 @@ Verändernde Systembefehle werden in Tests immer gemockt oder auf ein temporäre
 
 Beispiele:
 
+- `common_test.sh`
 - `cli_test.sh`
 - `cleanup_test.sh`
 - `config_test.sh`
@@ -161,7 +198,7 @@ Der Installer verwendet zwei getrennte Pfadkonzepte:
 Beispiel für eine Test- oder Paketinstallation:
 
 ```bash
-DESTDIR=/tmp/lac-root bash install.sh --prefix /usr
+DESTDIR=/tmp/lac-root ./install.sh --prefix /usr
 ```
 
 Der resultierende Dateibaum liegt dann unter `/tmp/lac-root/usr/...`, während die späteren Laufzeitpfade im Paket weiterhin `/usr/...` sind.
@@ -171,6 +208,8 @@ Der resultierende Dateibaum liegt dann unter `/tmp/lac-root/usr/...`, während d
 - `PREFIX` muss absolut sein.
 - `PREFIX=/` bleibt verboten.
 - `DESTDIR` muss, wenn gesetzt, absolut sein.
+- `PREFIX` und `DESTDIR` dürfen keine `.`- oder `..`-Pfadkomponenten enthalten.
+- `DESTDIR=/` bleibt verboten.
 - Das Skript darf `sudo` nicht selbst aufrufen.
 - Bei echter Systeminstallation ohne `DESTDIR` müssen Root-Rechte explizit geprüft werden.
 - Rekursive Löschungen dürfen nur auf fest definierte LAC-Zielbäume angewendet werden.
@@ -192,15 +231,16 @@ Der resultierende Dateibaum liegt dann unter `/tmp/lac-root/usr/...`, während d
 
 Der Test muss mindestens absichern:
 
+- Ausführungsrechte der Repository-Installer
 - installierte Launcher
 - installierten Runtime-Baum
-- Beispielkonfiguration und Dokumentation
+- Beispielkonfiguration, Lizenz und Dokumentation
 - Ausführung des installierten `lac`-Launchers
 - Entfernung veralteter Runtime-Dateien bei Reinstallation
 - Entfernung verwalteter Dateien beim Uninstall
 - Erhalt aktiver Konfiguration
 - idempotente Deinstallation
-- Ablehnung unsicherer Präfixe
+- Ablehnung unsicherer Präfixe und Staging-Wurzeln
 
 Bei späteren `.deb`-, `.rpm`- oder anderen Paketformaten soll diese `DESTDIR`-fähige Installationslogik möglichst wiederverwendet werden, statt separate Dateilisten mit abweichendem Verhalten aufzubauen.
 
@@ -220,13 +260,19 @@ Neue Dateien unter `src/` werden durch die aktuelle Installation automatisch in 
 
 ## Paketmanager erweitern
 
-Für einen zusätzlichen Paketmanager müssen mindestens diese Update-Funktionen geprüft werden:
+Die Paketmanager-Schicht unterscheidet zwischen der grundlegenden Verfügbarkeit eines Paketmanagers und funktionsspezifischen Zusatzvoraussetzungen.
 
+Für einen zusätzlichen Paketmanager müssen mindestens diese Funktionen geprüft werden:
+
+- `get_package_manager_for_distribution`
 - `detect_distribution`
 - `is_package_manager_supported`
+- `is_update_package_manager_supported`
 - `refresh_package_information`
 - `list_available_updates`
 - `install_available_updates`
+
+`detect_distribution` verwendet zuerst `ID` und danach `ID_LIKE` aus `/etc/os-release`. Dadurch sollen Derivate nicht unnötig als einzelne Distributionen im Code fest verdrahtet werden.
 
 Für die Cleanup-Unterstützung müssen zusätzlich geprüft werden:
 
@@ -235,6 +281,8 @@ Für die Cleanup-Unterstützung müssen zusätzlich geprüft werden:
 - `clean_package_cache`
 - `remove_unneeded_packages`
 - `get_package_cache_directory`
+
+Eine fehlende Zusatzvoraussetzung für Updates darf nicht automatisch andere Funktionen des Paketmanagers deaktivieren. Beispiel: Auf Arch ist `pacman` die Basisvoraussetzung; `checkupdates` wird zusätzlich nur für Update-Prüfungen benötigt und `paccache` nur für die Cache-Bereinigung.
 
 Die Ausgabe von `list_available_updates` und `list_unneeded_packages` muss jeweils eine Zeile pro Paket liefern. Besondere erfolgreiche Rückgabecodes eines Paketmanagers müssen explizit behandelt und getestet werden.
 
@@ -263,6 +311,18 @@ Cleanup-Code benötigt eine zusätzliche Sicherheitsprüfung.
 
 Neue oder geänderte Befehle müssen gegen die offizielle Dokumentation des jeweiligen Paketmanagers geprüft werden.
 
+## Locale und deterministische Ausgabe
+
+Ausgaben, die geparst oder sortiert werden und Teil automatisierter Tests beziehungsweise stabiler CLI-Ausgaben sind, dürfen nicht vom Locale des Systems abhängen.
+
+Dafür gilt insbesondere:
+
+- externe Textausgaben bei Bedarf mit `LC_ALL=C` abfragen
+- deterministische Sortierung mit `LC_ALL=C sort` beziehungsweise `LC_ALL=C sort -u`
+- numerische Formatierung bei Bedarf mit `LC_NUMERIC=C`
+
+Neue Sortierstellen müssen darauf geprüft werden, ob ihre Reihenfolge Teil des sichtbaren oder getesteten Verhaltens ist.
+
 ## Versionierung und Changelog
 
 Die Versionsangaben befinden sich in `src/core/common.sh`:
@@ -290,6 +350,7 @@ Vor dem Push:
 
 ```bash
 bash tests/run_tests.sh
+bash tests/portability_test.sh
 shellcheck \
     install.sh \
     uninstall.sh \
@@ -297,6 +358,7 @@ shellcheck \
     src/core/*.sh \
     src/modules/*/*.sh \
     tests/*.sh
+git diff --check
 git status --short
 ```
 
@@ -309,4 +371,4 @@ Der Pull Request sollte enthalten:
 - bekannte Einschränkungen
 - bei Cleanup- oder Deployment-Änderungen die ausdrücklich geltenden Sicherheitsgrenzen
 
-GitHub Actions führt Tests und ShellCheck zusätzlich automatisch aus. Ein fehlgeschlagener Workflow muss vor dem Merge untersucht werden.
+GitHub Actions führt Tests, ShellCheck und die Multi-Distribution-Portabilitätsprüfungen zusätzlich automatisch aus. Ein fehlgeschlagener Workflow muss vor dem Merge untersucht werden.

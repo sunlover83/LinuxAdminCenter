@@ -6,6 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=core/common.sh
 source "${SCRIPT_DIR}/core/common.sh"
 
+require_supported_bash || exit $?
+
 # shellcheck source=core/config.sh
 source "${SCRIPT_DIR}/core/config.sh"
 
@@ -32,6 +34,9 @@ source "${SCRIPT_DIR}/core/gaming_diagnostics_metrics.sh"
 
 # shellcheck source=core/service_metrics.sh
 source "${SCRIPT_DIR}/core/service_metrics.sh"
+
+# shellcheck source=core/self_check_metrics.sh
+source "${SCRIPT_DIR}/core/self_check_metrics.sh"
 
 # shellcheck source=core/cli.sh
 source "${SCRIPT_DIR}/core/cli.sh"
@@ -68,6 +73,9 @@ source "${SCRIPT_DIR}/modules/gaming_diagnostics/gaming_diagnostics.sh"
 
 # shellcheck source=modules/service_health/service_health.sh
 source "${SCRIPT_DIR}/modules/service_health/service_health.sh"
+
+# shellcheck source=modules/self_check/self_check.sh
+source "${SCRIPT_DIR}/modules/self_check/self_check.sh"
 
 load_configuration
 

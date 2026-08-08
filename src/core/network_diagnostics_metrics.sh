@@ -16,6 +16,16 @@ get_network_diagnostic_tool_status() {
     fi
 }
 
+is_safe_network_target() {
+    local target="${1:-}"
+
+    [[ -n "$target" ]] || return 1
+    [[ "$target" != -* ]] || return 1
+    [[ "$target" != *[[:space:]]* ]] || return 1
+
+    return 0
+}
+
 get_default_gateway_address() {
     local gateway=""
 
@@ -57,7 +67,7 @@ get_ping_diagnostics() {
     local packet_loss=""
     local average_latency=""
 
-    if [[ -z "$target" ]]; then
+    if ! is_safe_network_target "$target"; then
         printf '%s\n' "invalid target"
         return
     fi
@@ -147,6 +157,11 @@ get_gateway_connectivity() {
 
 get_dns_resolution_status() {
     local hostname="${1:-${LAC_DNS_TEST_HOST:-example.com}}"
+
+    if ! is_safe_network_target "$hostname"; then
+        printf '%s\n' "invalid target"
+        return
+    fi
 
     if ! is_network_diagnostic_tool_available getent; then
         printf '%s\n' "unavailable"

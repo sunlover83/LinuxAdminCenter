@@ -68,6 +68,10 @@ show_gaming_diagnostics() {
     printf '%s\n' "gaming diagnostics selected"
 }
 
+show_lac_self_check() {
+    printf '%s\n' "self check selected"
+}
+
 printf '%s\n\n' "Running UI tests..."
 
 assert_output_contains \
@@ -93,6 +97,11 @@ assert_output_contains \
 assert_output_contains \
     "Main menu displays gaming diagnostics" \
     "9) Gaming Diagnostics" \
+    "$(draw_main_menu)"
+
+assert_output_contains \
+    "Main menu displays LAC self check" \
+    "10) LAC Self Check" \
     "$(draw_main_menu)"
 
 assert_output_contains \
@@ -124,6 +133,11 @@ assert_equals \
     "Menu option 9 starts gaming diagnostics" \
     "gaming diagnostics selected" \
     "$(read_choice <<< "9")"
+
+assert_equals \
+    "Menu option 10 starts LAC self check" \
+    "self check selected" \
+    "$(read_choice <<< "10")"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

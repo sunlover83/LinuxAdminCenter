@@ -4,7 +4,7 @@
 
 Ab Version `0.9.0-alpha` kann Linux Admin Center systemweit installiert, aktualisiert und wieder entfernt werden. Die Installation verwendet standardmäßig `/usr/local` und stellt anschließend die Befehle `lac` und `lac-uninstall` bereit.
 
-Es gibt weiterhin noch keine distributionsspezifischen Pakete wie `.deb`, `.rpm` oder Arch-Pakete. Der neue Installer verwendet jedoch ein klassisches Linux-Verzeichnislayout und unterstützt `DESTDIR`, sodass spätere Paketformate darauf aufbauen können.
+Der aktuelle Stand ist `1.0.0-rc1 (Stable)`. Es gibt weiterhin noch keine distributionsspezifischen Pakete wie `.deb`, `.rpm` oder Arch-Pakete. Der Installer verwendet jedoch ein klassisches Linux-Verzeichnislayout und unterstützt `DESTDIR`, sodass spätere Paketformate darauf aufbauen können.
 
 ## Voraussetzungen
 
@@ -13,7 +13,7 @@ Erforderlich:
 - Linux-System
 - Bash ab Version 4.3
 - Git zum Klonen und Aktualisieren des Repositorys
-- Standardprogramme wie `awk`, `sed`, `find`, `cp`, `rm`, `uname`, `df`, `du` und `hostname`
+- Standardprogramme wie `awk`, `sed`, `find`, `sort`, `tr`, `cp`, `rm`, `uname`, `df`, `du` und `hostname`
 - `ip` für Netzwerkinformationen und Gateway-Erkennung
 - `ping` für Gateway- und Internet-Erreichbarkeitstests
 - `getent` für die DNS-Auflösungsprüfung
@@ -24,10 +24,10 @@ Unterstützte Paketmanager:
 
 - APT
 - DNF
-- Pacman zusammen mit `checkupdates`
+- Pacman
 - Zypper
 
-Für die vollständige Cleanup-Funktion auf Arch-basierten Systemen wird außerdem `paccache` benötigt. Es ist Bestandteil des Pakets `pacman-contrib`.
+Für Update-Prüfungen auf Arch-basierten Systemen wird zusätzlich `checkupdates` benötigt. Für die vollständige Cleanup-Funktion wird außerdem `paccache` benötigt. Beide Programme sind Bestandteil des Pakets `pacman-contrib`.
 
 ```bash
 sudo pacman -S pacman-contrib
@@ -44,6 +44,7 @@ Optional für vollständigere Informationen und Diagnosen:
 
 - `lscpu` für das CPU-Modell
 - `lspci` für Grafikkarten und aktive Grafiktreiber
+- `lsblk` für die Laufwerkserkennung
 - `lm-sensors` beziehungsweise `sensors` für CPU-Temperaturen
 - `nvidia-smi` für NVIDIA-GPU-Diagnosedaten und die NVIDIA-Treiberversion
 - `smartmontools` beziehungsweise `smartctl` für SMART-Laufwerksprüfungen
@@ -62,7 +63,7 @@ Fehlt `vulkaninfo`, funktionieren Gaming Readiness und Gaming Diagnostics weiter
 
 Bei nativer Steam-Installation prüft Gaming Diagnostics typische Pfade auf einen 32-Bit-Vulkan-Loader. Ein Ergebnis `not verified` bedeutet nur, dass LAC an diesen bekannten Orten keinen Loader gefunden hat. Bei Flatpak-Steam wird die 32-Bit-Grafikunterstützung als von Flatpak verwaltet ausgewiesen, statt Host-i386-Pfade zu bewerten.
 
-Auf Debian, Ubuntu und Pop!_OS können die Hardwarediagnosewerkzeuge installiert werden mit:
+Auf Debian- und Ubuntu-basierten Systemen können die Hardwarediagnosewerkzeuge beispielsweise installiert werden mit:
 
 ```bash
 sudo apt install lm-sensors smartmontools nvme-cli
@@ -70,11 +71,11 @@ sudo apt install lm-sensors smartmontools nvme-cli
 
 ## Repository klonen
 
-Empfohlener Projektpfad:
+Ein möglicher Projektpfad ist:
 
 ```bash
-mkdir -p ~/Projekte
-cd ~/Projekte
+mkdir -p ~/projects
+cd ~/projects
 ```
 
 Klonen per SSH:
@@ -94,7 +95,7 @@ Da das Repository privat ist, muss das verwendete GitHub-Konto Zugriff besitzen.
 Danach in das Repository wechseln:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
+cd ~/projects/LinuxAdminCenter
 ```
 
 ## Systemweite Installation
@@ -102,7 +103,7 @@ cd ~/Projekte/LinuxAdminCenter
 Die Standardinstallation erfolgt nach `/usr/local`:
 
 ```bash
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Der Installer kopiert ausschließlich die für LAC vorgesehenen Laufzeit-, Dokumentations- und Hilfsdateien. Er installiert keine Betriebssystempakete und verändert keine aktive LAC-Konfiguration.
@@ -117,7 +118,7 @@ Nach einer Standardinstallation existieren folgende Bereiche:
 | `/usr/local/bin/lac-uninstall` | systemweite Deinstallation |
 | `/usr/local/lib/linux-admin-center/` | Laufzeitdateien aus `src/` |
 | `/usr/local/share/linux-admin-center/` | Beispielkonfiguration und installierter Uninstaller |
-| `/usr/local/share/doc/linux-admin-center/` | README, Changelog und Projektdokumentation |
+| `/usr/local/share/doc/linux-admin-center/` | README, Changelog, Lizenz und Projektdokumentation |
 
 Die Beispielkonfiguration liegt bei Standardinstallation unter:
 
@@ -135,11 +136,19 @@ Version anzeigen:
 lac --version
 ```
 
-Erwartete Ausgabe für Version 0.9:
+Erwartete Ausgabe für den aktuellen Release Candidate:
 
 ```text
-Linux Admin Center 0.9.0-alpha (Deployment)
+Linux Admin Center 1.0.0-rc1 (Stable)
 ```
+
+LAC selbst prüfen:
+
+```bash
+lac --self-check
+```
+
+Der Self Check kontrolliert unter anderem Bash-Version, Runtime-Dateien, Launcher, Konfigurationszugriff, Kernwerkzeuge und den erkannten Paketmanager. Fehlende optionale Diagnosewerkzeuge werden angezeigt, verschlechtern den Gesamtstatus aber nicht.
 
 Hilfe anzeigen:
 
@@ -163,6 +172,7 @@ lac --hardware-diagnostics
 lac --gaming-readiness
 lac --gaming-diagnostics
 lac --service-health
+lac --self-check
 lac --cleanup-report
 ```
 
@@ -171,7 +181,7 @@ lac --cleanup-report
 Mit `--prefix` kann ein anderes absolutes Ziel gewählt werden:
 
 ```bash
-sudo bash install.sh --prefix /opt/lac
+sudo ./install.sh --prefix /opt/lac
 ```
 
 Dann werden beispielsweise folgende Befehle erzeugt:
@@ -183,7 +193,7 @@ Dann werden beispielsweise folgende Befehle erzeugt:
 
 Bei einem benutzerdefinierten Präfix muss dessen `bin`-Verzeichnis gegebenenfalls zusätzlich in `PATH` aufgenommen werden.
 
-Relative Präfixe und `PREFIX=/` werden aus Sicherheitsgründen abgelehnt.
+Relative Präfixe, `PREFIX=/` sowie Präfixe mit `.`- oder `..`-Pfadkomponenten werden aus Sicherheitsgründen abgelehnt.
 
 ## DESTDIR für Paketbau und Tests
 
@@ -193,7 +203,7 @@ Beispiel:
 
 ```bash
 DESTDIR=/tmp/lac-package-root \
-    bash install.sh --prefix /usr
+    ./install.sh --prefix /usr
 ```
 
 Dabei entstehen unter anderem:
@@ -203,7 +213,7 @@ Dabei entstehen unter anderem:
 /tmp/lac-package-root/usr/lib/linux-admin-center/
 ```
 
-`DESTDIR` wird hauptsächlich für automatisierte Tests und spätere Paketformate verwendet. Ist `DESTDIR` gesetzt, verlangt der Installer keine Root-Rechte, da er nicht in das echte Systemziel schreibt.
+`DESTDIR` wird hauptsächlich für automatisierte Tests und spätere Paketformate verwendet. Ist `DESTDIR` gesetzt, verlangt der Installer keine Root-Rechte, da er nicht in das echte Systemziel schreibt. Relative Staging-Pfade, `/` sowie Pfade mit `.`- oder `..`-Komponenten werden abgelehnt.
 
 ## Konfiguration
 
@@ -234,10 +244,10 @@ Der Installer und der Uninstaller behandeln diese Konfigurationsdateien als Benu
 Eine bestehende Installation wird aus dem aktualisierten Repository erneut installiert:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
+cd ~/projects/LinuxAdminCenter
 git switch main
 git pull --ff-only
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Die Neuinstallation ersetzt den vorhandenen LAC-Laufzeitbaum vollständig. Dadurch bleiben keine veralteten Dateien zurück, wenn Dateien in einer neuen Version entfernt oder umbenannt wurden.
@@ -248,6 +258,7 @@ Danach prüfen:
 
 ```bash
 lac --version
+lac --self-check
 lac --system-info
 ```
 
@@ -262,7 +273,7 @@ sudo lac-uninstall
 Alternativ kann aus einem weiterhin vorhandenen Repository ausgeführt werden:
 
 ```bash
-sudo bash uninstall.sh
+sudo ./uninstall.sh
 ```
 
 Entfernt werden ausschließlich:
@@ -294,6 +305,12 @@ Alle Tests ausführen:
 
 ```bash
 bash tests/run_tests.sh
+```
+
+Portabilitätsprüfungen ausführen:
+
+```bash
+bash tests/portability_test.sh
 ```
 
 ShellCheck ausführen:

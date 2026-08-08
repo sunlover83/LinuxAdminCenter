@@ -271,7 +271,7 @@ get_installed_proton_runtimes() {
 
     if [[ -n "$runtimes" ]]; then
         printf '%s' "$runtimes" |
-            sort -u
+            LC_ALL=C sort -u
     else
         printf '%s\n' "none"
     fi

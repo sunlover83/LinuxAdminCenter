@@ -5,8 +5,8 @@ show_cli_help() {
 Linux Admin Center (LAC)
 
 Usage:
-  lac.sh
-  lac.sh [OPTION]
+  lac
+  lac [OPTION]
 
 Options:
   -h, --help                   Show this help message
@@ -18,6 +18,7 @@ Options:
   -g, --gaming-readiness       Show gaming readiness
   -G, --gaming-diagnostics     Show detailed gaming diagnostics
   -e, --service-health         Show service health
+  -S, --self-check             Check the LAC runtime and dependencies
   -u, --check-updates          Check for available updates
   -c, --cleanup-report         Show a read-only cleanup report
 
@@ -62,6 +63,10 @@ show_cli_service_health() {
     print_service_health
 }
 
+show_cli_self_check() {
+    print_lac_self_check
+}
+
 show_cli_update_check() {
     check_for_updates_cli
 }
@@ -104,6 +109,9 @@ handle_cli_arguments() {
             ;;
         -e|--service-health)
             show_cli_service_health
+            ;;
+        -S|--self-check)
+            show_cli_self_check
             ;;
         -u|--check-updates)
             show_cli_update_check

@@ -56,7 +56,7 @@ Devices:
 ========
 GPU0:
     apiVersion         = 1.4.303
-    deviceName         = NVIDIA GeForce RTX 4070
+    deviceName         = NVIDIA GeForce RTX 3060
     driverName         = NVIDIA
 GPU1:
     apiVersion         = 1.3.290
@@ -129,7 +129,7 @@ assert_equals \
 
 assert_equals \
     "Vulkan devices and drivers are parsed" \
-    $'device=NVIDIA GeForce RTX 4070|driver=NVIDIA|api=1.4.303\ndevice=AMD Radeon Graphics|driver=RADV|api=1.3.290' \
+    $'device=NVIDIA GeForce RTX 3060|driver=NVIDIA|api=1.4.303\ndevice=AMD Radeon Graphics|driver=RADV|api=1.3.290' \
     "$(get_vulkan_device_records)"
 
 assert_equals \

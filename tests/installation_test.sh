@@ -60,7 +60,42 @@ assert_equals() {
     fi
 }
 
+assert_failure_contains() {
+    local description="$1"
+    local expected_status="$2"
+    local expected_output="$3"
+    local output
+    local actual_status
+
+    shift 3
+
+    if output=$("$@" 2>&1); then
+        actual_status=0
+    else
+        actual_status=$?
+    fi
+
+    if (( actual_status == expected_status )) &&
+        [[ "$output" == *"$expected_output"* ]]; then
+        pass_test "$description"
+    else
+        fail_test "$description"
+        printf '       Expected status: %s\n' "$expected_status"
+        printf '       Actual status:   %s\n' "$actual_status"
+        printf '       Expected output: %s\n' "$expected_output"
+        printf '       Output:          %s\n' "$output"
+    fi
+}
+
 printf '%s\n\n' "Running installation tests..."
+
+assert_true \
+    "Repository installer is executable" \
+    test -x "${PROJECT_ROOT}/install.sh"
+
+assert_true \
+    "Repository uninstaller is executable" \
+    test -x "${PROJECT_ROOT}/uninstall.sh"
 
 install_output="$(
     DESTDIR="$TEST_ROOT" \
@@ -106,6 +141,10 @@ assert_true \
 assert_true \
     "Installer copies user documentation" \
     test -f "${DOC_DIR}/Benutzerhandbuch.md"
+
+assert_true \
+    "Installer copies the MIT license" \
+    test -s "${DOC_DIR}/LICENSE"
 
 assert_true \
     "Installer reports the installed command" \
@@ -185,12 +224,68 @@ assert_true \
     "Repeated uninstall is safe" \
     grep -Fq "is not installed" <<< "$second_uninstall_output"
 
-if DESTDIR="$TEST_ROOT" PREFIX="relative/path" \
-    bash "${PROJECT_ROOT}/install.sh" >/dev/null 2>&1; then
-    fail_test "Installer rejects relative prefixes"
-else
-    pass_test "Installer rejects relative prefixes"
-fi
+assert_failure_contains \
+    "Installer rejects relative prefixes" \
+    2 \
+    "PREFIX must be an absolute path" \
+    env DESTDIR="$TEST_ROOT" PREFIX="relative/path" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects the root prefix" \
+    2 \
+    "PREFIX=/ is not supported" \
+    env DESTDIR="$TEST_ROOT" PREFIX="/" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects parent-directory prefix components" \
+    2 \
+    "PREFIX must not contain '.' or '..' path components" \
+    env DESTDIR="$TEST_ROOT" PREFIX="/usr/local/../local" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects current-directory prefix components" \
+    2 \
+    "PREFIX must not contain '.' or '..' path components" \
+    env DESTDIR="$TEST_ROOT" PREFIX="/usr/./local" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects relative staging roots" \
+    2 \
+    "DESTDIR must be an absolute path" \
+    env DESTDIR="relative/root" PREFIX="$PREFIX" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects the filesystem root as staging root" \
+    2 \
+    "DESTDIR=/ is not supported" \
+    env DESTDIR="/" PREFIX="$PREFIX" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Installer rejects parent-directory staging components" \
+    2 \
+    "DESTDIR must not contain '.' or '..' path components" \
+    env DESTDIR="${TEST_TMP_DIR}/root/../escape" PREFIX="$PREFIX" \
+    bash "${PROJECT_ROOT}/install.sh"
+
+assert_failure_contains \
+    "Uninstaller rejects parent-directory prefix components" \
+    2 \
+    "PREFIX must not contain '.' or '..' path components" \
+    env DESTDIR="$TEST_ROOT" PREFIX="/usr/local/../local" \
+    bash "${PROJECT_ROOT}/uninstall.sh"
+
+assert_failure_contains \
+    "Uninstaller rejects the filesystem root as staging root" \
+    2 \
+    "DESTDIR=/ is not supported" \
+    env DESTDIR="/" PREFIX="$PREFIX" \
+    bash "${PROJECT_ROOT}/uninstall.sh"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

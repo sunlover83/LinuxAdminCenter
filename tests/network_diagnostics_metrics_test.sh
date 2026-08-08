@@ -148,6 +148,16 @@ assert_equals \
     "$(get_ping_diagnostics 203.0.113.1)"
 
 assert_equals \
+    "Option-like ping targets are rejected" \
+    "invalid target" \
+    "$(get_ping_diagnostics --help)"
+
+assert_equals \
+    "Whitespace in ping targets is rejected" \
+    "invalid target" \
+    "$(get_ping_diagnostics 'example.com extra')"
+
+assert_equals \
     "Gateway connectivity uses the detected gateway" \
     "reachable|packet_loss=0%|average_latency=1.2 ms" \
     "$(get_gateway_connectivity)"
@@ -163,9 +173,24 @@ assert_equals \
     "$(get_dns_resolution_status invalid.example)"
 
 assert_equals \
+    "Option-like DNS targets are rejected" \
+    "invalid target" \
+    "$(get_dns_resolution_status --help)"
+
+assert_equals \
+    "Whitespace in DNS targets is rejected" \
+    "invalid target" \
+    "$(get_dns_resolution_status 'example.com extra')"
+
+assert_equals \
     "Internet connectivity uses the configured test target" \
     "reachable|packet_loss=0%|average_latency=12.5 ms" \
     "$(get_internet_connectivity)"
+
+assert_equals \
+    "Unsafe configured internet targets are rejected" \
+    "invalid target" \
+    "$(LAC_INTERNET_TEST_TARGET=--help get_internet_connectivity)"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

@@ -31,3 +31,58 @@ jobs:
 
       - name: Run ShellCheck
         run: shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+
+  portability:
+    name: Portability (${{ matrix.name }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Debian stable
+            distro: debian
+            image: debian:stable-slim
+          - name: Fedora
+            distro: fedora
+            image: fedora:latest
+          - name: Arch Linux
+            distro: arch
+            image: archlinux:latest
+          - name: openSUSE Tumbleweed
+            distro: opensuse
+            image: opensuse/tumbleweed:latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run portability tests
+        env:
+          DISTRO: ${{ matrix.distro }}
+          IMAGE: ${{ matrix.image }}
+        run: |
+          case "$DISTRO" in
+            debian)
+              setup='apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes bash coreutils grep sed gawk findutils'
+              ;;
+            fedora)
+              setup='dnf install --assumeyes bash coreutils grep sed gawk findutils'
+              ;;
+            arch)
+              setup='pacman -Sy --noconfirm --needed bash coreutils grep sed gawk findutils'
+              ;;
+            opensuse)
+              setup='zypper --non-interactive install --no-recommends bash coreutils grep sed gawk findutils'
+              ;;
+            *)
+              printf 'Unsupported CI distribution: %s\n' "$DISTRO" >&2
+              exit 2
+              ;;
+          esac
+
+          docker run --rm \
+            --volume "$PWD:/workspace:ro" \
+            --workdir /workspace \
+            "$IMAGE" \
+            /bin/bash -lc "$setup && bash tests/portability_test.sh"

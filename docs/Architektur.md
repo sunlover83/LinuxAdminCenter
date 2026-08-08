@@ -14,7 +14,10 @@ Die Architektur verfolgt folgende Grundsätze:
 - Diagnosemodule bleiben grundsätzlich schreibgeschützt
 - fehlende Werkzeuge werden als Zustand behandelt und nicht durch automatische Installationen ersetzt
 - Installation und Deinstallation verwenden klar begrenzte, reproduzierbare Zielpfade
-- Änderungen werden durch ShellCheck und automatisierte Tests abgesichert
+- die dokumentierte Bash-Mindestversion wird vor dem Laden der übrigen Laufzeitmodule geprüft
+- Distributionen werden über `ID` und `ID_LIKE` aus `/etc/os-release` Paketmanager-Familien zugeordnet
+- Ausgaben, deren Reihenfolge Teil des sichtbaren oder getesteten Verhaltens ist, werden locale-unabhängig erzeugt
+- Änderungen werden durch ShellCheck, automatisierte Tests und Multi-Distribution-Portabilitätsprüfungen abgesichert
 
 ## Verzeichnisstruktur
 
@@ -47,7 +50,7 @@ Bei einer Standardinstallation mit `PREFIX=/usr/local` werden folgende Ziele ver
 | `/usr/local/bin/lac-uninstall` | Launcher für den installierten Uninstaller |
 | `/usr/local/lib/linux-admin-center/` | vollständiger Laufzeitbaum aus `src/` |
 | `/usr/local/share/linux-admin-center/` | Beispielkonfiguration und installierter Uninstaller |
-| `/usr/local/share/doc/linux-admin-center/` | README, Changelog und Markdown-Dokumentation |
+| `/usr/local/share/doc/linux-admin-center/` | README, Changelog, Lizenz und Markdown-Dokumentation |
 
 Der installierte Befehl `lac` enthält keine Kopie der Programmlogik. Er bestimmt sein eigenes `bin`-Verzeichnis, leitet daraus das Installationspräfix ab und startet anschließend:
 
@@ -67,7 +70,7 @@ Dadurch funktioniert dasselbe Launcher-Prinzip sowohl unter `/usr/local` als auc
 /usr/local
 ```
 
-Der Installer akzeptiert zusätzlich `--prefix` und lässt ausschließlich absolute Präfixe zu. `PREFIX=/` wird ausdrücklich abgelehnt.
+Der Installer akzeptiert zusätzlich `--prefix` und lässt ausschließlich absolute Präfixe zu. `PREFIX=/` sowie Werte mit `.`- oder `..`-Pfadkomponenten werden ausdrücklich abgelehnt.
 
 `DESTDIR` ist ein vorgeschaltetes Staging-Verzeichnis. Es verändert nicht die späteren Laufzeitpfade, sondern legt die Dateien unter einem temporären Root ab. Beispiel:
 
@@ -85,7 +88,7 @@ führt beim Paketbau zu:
 
 Diese Trennung entspricht dem üblichen Modell vieler Linux-Paketsysteme und bildet die Grundlage für spätere `.deb`-, `.rpm`- oder andere distributionsspezifische Pakete.
 
-Ist `DESTDIR` gesetzt, kann die Installation ohne Root-Rechte getestet werden. Ohne `DESTDIR` verlangt die Deployment-Schicht explizite Root-Ausführung, ruft `sudo` aber niemals selbst auf.
+Ist `DESTDIR` gesetzt, kann die Installation ohne Root-Rechte getestet werden. Ohne `DESTDIR` verlangt die Deployment-Schicht explizite Root-Ausführung, ruft `sudo` aber niemals selbst auf. Relative Staging-Pfade, `DESTDIR=/` sowie `.`- und `..`-Pfadkomponenten werden abgelehnt.
 
 ### Reinstallation und veraltete Dateien
 
@@ -108,10 +111,12 @@ Beim Start geschieht Folgendes:
 
 1. Bash aktiviert mit `set -euo pipefail` eine strikte Fehlerbehandlung.
 2. Das Verzeichnis des Einstiegsskripts wird bestimmt.
-3. Die Core-Dateien und Funktionsmodule werden eingebunden.
-4. Die System- und Benutzerkonfiguration wird geladen.
-5. Bei einem übergebenen Argument wird der CLI-Modus verwendet.
-6. Ohne Argument startet das interaktive Hauptmenü.
+3. `core/common.sh` wird eingebunden.
+4. `require_supported_bash` prüft die Mindestversion Bash 4.3; eine ältere Bash beendet LAC mit Status `2`, bevor die übrigen Module geladen werden.
+5. Die restlichen Core-Dateien und Funktionsmodule werden eingebunden.
+6. Die System- und Benutzerkonfiguration wird geladen. Fehlt ein Benutzerkonfigurationspfad, weil weder `LAC_USER_CONFIG`, `XDG_CONFIG_HOME` noch `HOME` verfügbar ist, arbeitet LAC mit den Standardwerten weiter.
+7. Bei einem übergebenen Argument wird der CLI-Modus verwendet.
+8. Ohne Argument startet das interaktive Hauptmenü.
 
 Die eingebundenen Dateien definieren ausschließlich Funktionen und gemeinsam verwendete Variablen. Sie starten beim Einbinden keine administrativen Aktionen.
 
@@ -121,18 +126,19 @@ Die Dateien unter `src/core/` stellen gemeinsam genutzte Funktionen bereit.
 
 | Datei | Aufgabe |
 |---|---|
-| `common.sh` | Version, Codename, Farben, Meldungen, Distributionserkennung und Neustartstatus |
-| `config.sh` | Laden und Prüfen der System- und Benutzerkonfiguration |
+| `common.sh` | Version, Codename, Bash-Mindestversion, Farben, Meldungen, Distributionserkennung und Neustartstatus |
+| `config.sh` | Laden und Prüfen der System- und Benutzerkonfiguration sowie sichere Ermittlung des Benutzerkonfigurationspfads |
 | `cli.sh` | Verarbeitung der Kommandozeilenoptionen |
 | `ui.sh` | Hauptmenü und Navigation im interaktiven Modus |
-| `package_manager.sh` | Abstraktion für Update- und Cleanup-Befehle von APT, DNF, Pacman und Zypper |
+| `package_manager.sh` | Abstraktion für Update- und Cleanup-Befehle von APT, DNF, Pacman und Zypper sowie funktionsspezifische Fähigkeitsprüfungen |
 | `system_metrics.sh` | Ermittlung von System-, Hardware- und Ressourcendaten |
 | `hardware_metrics.sh` | Temperaturen, NVIDIA-GPU-Daten, Laufwerke sowie SMART- und NVMe-Gesundheitsstatus |
 | `network_metrics.sh` | Netzwerkschnittstellen, IPv4-Adressen, Gateway und DNS-Server |
-| `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie Ping-, DNS- und externe Verbindungstests |
+| `network_diagnostics_metrics.sh` | Gateway-Erkennung sowie validierte Ping-, DNS- und externe Verbindungstests |
 | `gaming_metrics.sh` | Sitzung, Desktop, Grafiktreiber, Vulkan-Grundstatus, Steam, benutzerdefinierte Proton-Werkzeuge und optionale Gaming-Programme |
 | `gaming_diagnostics_metrics.sh` | Vulkan-Details, 32-Bit-Vulkan-Prüfung, Steam-Bibliotheken, Proton-Runtimes, Kompatibilitätspräfixe und Gamescope-Version |
 | `service_metrics.sh` | Init-System, systemd-Zustand, Dienstzahlen, fehlgeschlagene Units und Bootzeiten |
+| `self_check_metrics.sh` | LAC-Runtime, Installationsart, Launcher, Konfiguration, Kern- und optionale Werkzeuge sowie Paketmanagerstatus |
 | `cleanup_metrics.sh` | Paket-Cache-Pfad, Cache-Größe und Journalbelegung |
 
 ## Funktionsmodule
@@ -150,6 +156,7 @@ Die Dateien unter `src/modules/` bilden die sichtbaren Funktionsbereiche der Anw
 | `gaming_readiness/` | Schnelle schreibgeschützte Gaming-Grundprüfung und Gesamtbewertung |
 | `gaming_diagnostics/` | Detaillierte schreibgeschützte Vulkan-, Steam- und Proton-Kompatibilitätsdiagnose |
 | `service_health/` | Schreibgeschützte systemd-Dienst- und Bootdiagnose mit Gesamtbewertung |
+| `self_check/` | Schreibgeschützte Prüfung der LAC-Laufzeit und ihrer Abhängigkeiten |
 
 Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine Implementierungsdetails eines anderen Funktionsmoduls voraussetzen. Gemeinsam benötigte Ermittlung gehört in die Core-Schicht.
 
@@ -158,11 +165,23 @@ Ein Modul verwendet die Funktionen der Core-Schicht, soll aber möglichst keine 
 Einige Variablen werden absichtlich zwischen den eingebundenen Dateien geteilt:
 
 - `LAC_VERSION` und `LAC_CODENAME`
+- `LAC_MIN_BASH_MAJOR` und `LAC_MIN_BASH_MINOR`
 - `LAC_DEBUG`
 - `DISTRO_ID`, `DISTRO_NAME` und `DISTRO_VERSION`
 - `PKG_MANAGER`
 
-Die Distributionserkennung setzt diese Werte anhand von `/etc/os-release`. Neue Funktionen sollen ihre Werte nach Möglichkeit als lokale Variablen führen.
+Die Distributionserkennung liest `/etc/os-release`. Zuerst wird `ID` ausgewertet. Ist die Distribution kein direkt unterstützter Basistyp, wird `ID_LIKE` tokenweise ausgewertet und einer unterstützten Paketmanager-Familie zugeordnet. Dadurch müssen Derivate nicht einzeln im Code gepflegt werden.
+
+Aktuelle Familienzuordnung:
+
+| Familie aus `ID`/`ID_LIKE` | Paketmanager |
+|---|---|
+| Debian oder Ubuntu | APT |
+| Fedora, RHEL oder CentOS | DNF |
+| Arch | Pacman |
+| openSUSE, SLES oder SUSE | Zypper |
+
+Neue Funktionen sollen ihre Werte nach Möglichkeit als lokale Variablen führen.
 
 Für Tests können einzelne Pfade umgeleitet werden:
 
@@ -189,13 +208,14 @@ Diese Variablen verändern keine dauerhafte Systemkonfiguration und gelten nur f
 
 1. `install.sh` bestimmt das Quell-Repository relativ zu seinem eigenen Pfad.
 2. Argumente und Umgebungsvariablen für `PREFIX` und `DESTDIR` werden geprüft.
-3. Bei einer echten Systeminstallation ohne `DESTDIR` werden Root-Rechte vorausgesetzt.
-4. Bestehende verwaltete LAC-Bäume werden ausschließlich an den erwarteten LAC-spezifischen Zielpfaden entfernt.
-5. Der gesamte Inhalt von `src/` wird als Laufzeitbaum installiert.
-6. Dateirechte werden vereinheitlicht; nur `lac.sh` wird im Runtime-Baum ausführbar gesetzt.
-7. Beispielkonfiguration, Uninstaller und Dokumentation werden in die Shared-Pfade kopiert.
-8. Die Launcher `lac` und `lac-uninstall` werden erzeugt und ausführbar gesetzt.
-9. Aktive System- und Benutzerkonfigurationen werden nicht berührt.
+3. Unsichere Zielwerte wie Root-Ziele, relative Pfade sowie `.`- oder `..`-Komponenten werden vor jeder Dateioperation abgelehnt.
+4. Bei einer echten Systeminstallation ohne `DESTDIR` werden Root-Rechte vorausgesetzt.
+5. Bestehende verwaltete LAC-Bäume werden ausschließlich an den erwarteten LAC-spezifischen Zielpfaden entfernt.
+6. Der gesamte Inhalt von `src/` wird als Laufzeitbaum installiert.
+7. Dateirechte werden vereinheitlicht; nur `lac.sh` wird im Runtime-Baum ausführbar gesetzt.
+8. Beispielkonfiguration, Uninstaller, Lizenz und Dokumentation werden in die Shared-Pfade kopiert.
+9. Die Launcher `lac` und `lac-uninstall` werden erzeugt und ausführbar gesetzt.
+10. Aktive System- und Benutzerkonfigurationen werden nicht berührt.
 
 ### Deinstallation
 
@@ -218,12 +238,13 @@ Diese Variablen verändern keine dauerhafte Systemkonfiguration und gelten nur f
 
 1. `network_diagnostics_metrics.sh` prüft die Verfügbarkeit von `ip`, `ping` und `getent`.
 2. Die IPv4-Standardroute wird aus `ip -4 route show default` ermittelt.
-3. Das Standard-Gateway wird mit einer begrenzten Zahl von Ping-Paketen geprüft.
-4. `getent ahosts` prüft die DNS-Auflösung eines konfigurierbaren Testnamens.
-5. Ein konfigurierbares externes IP-Ziel wird unabhängig von DNS geprüft.
-6. Ping-Ausgaben werden in Status, Paketverlust und durchschnittliche Latenz zerlegt.
-7. `network_diagnostics.sh` formatiert die Messwerte und erzeugt eine Gesamtbewertung.
-8. Nicht reagierende Ping-Ziele werden mit anderen Ergebnissen abgeglichen, da ICMP blockiert sein kann.
+3. Testziele werden geprüft; optionsähnliche Werte mit führendem `-` und Werte mit Whitespace werden nicht an Systemprogramme weitergegeben.
+4. Das Standard-Gateway wird mit einer begrenzten Zahl von Ping-Paketen geprüft.
+5. `getent ahosts` prüft die DNS-Auflösung eines konfigurierbaren Testnamens.
+6. Ein konfigurierbares externes IP-Ziel wird unabhängig von DNS geprüft.
+7. Ping-Ausgaben werden in Status, Paketverlust und durchschnittliche Latenz zerlegt.
+8. `network_diagnostics.sh` formatiert die Messwerte und erzeugt eine Gesamtbewertung.
+9. Nicht reagierende Ping-Ziele werden mit anderen Ergebnissen abgeglichen, da ICMP blockiert sein kann.
 
 Die Bewertung kennt die Zustände:
 
@@ -256,7 +277,7 @@ Gaming Readiness ist absichtlich eine schnelle Grundprüfung und bleibt von der 
 4. `nvidia-smi` liefert bei NVIDIA-Systemen die Treiberversion.
 5. `vulkaninfo --summary` bestätigt die Vulkan-Funktion, sofern das Werkzeug installiert ist.
 6. Steam wird als nativer Befehl oder Flatpak-Anwendung erkannt.
-7. Bekannte native und Flatpak-Verzeichnisse werden nach benutzerdefinierten Proton-Werkzeugen durchsucht.
+7. Bekannte native und Flatpak-Verzeichnisse werden nach benutzerdefinierten Proton-Werkzeugen durchsucht. Die sichtbare Reihenfolge wird mit `LC_ALL=C sort -u` deterministisch gehalten.
 8. GameMode, MangoHud und Gamescope werden als optionale Werkzeuge erfasst.
 9. `gaming_readiness.sh` formatiert die Werte und erzeugt die Gesamtbewertung.
 
@@ -281,9 +302,9 @@ Gaming Diagnostics baut auf den Grundfunktionen aus `gaming_metrics.sh` auf, fü
 5. Bei Flatpak-Steam wird die 32-Bit-Grafikunterstützung als `managed by Flatpak` behandelt, da die Runtime und Grafik-Erweiterungen nicht sinnvoll über Host-i386-Pfade bewertet werden können.
 6. `get_steam_launch_target` unterscheidet native Steam-Ausführung und Flatpak-Anwendung.
 7. Bekannte Steam-Wurzeln werden gesucht und über `pwd -P` kanonisiert, damit symbolische Links auf dieselbe Installation nicht doppelt erscheinen.
-8. `steamapps/libraryfolders.vdf` liefert zusätzliche vom Benutzer konfigurierte Steam-Bibliotheken; auch diese Pfade werden kanonisiert und dedupliziert.
+8. `steamapps/libraryfolders.vdf` liefert zusätzliche vom Benutzer konfigurierte Steam-Bibliotheken; auch diese Pfade werden kanonisiert, dedupliziert und mit `LC_ALL=C` deterministisch sortiert.
 9. In `steamapps/common` werden Verzeichnisse `Proton*` nur dann als gebündelte Proton-Runtime gewertet, wenn darin eine `proton`-Datei vorhanden ist.
-10. Benutzerdefinierte Kompatibilitätswerkzeuge aus `compatibilitytools.d` werden als `custom` ergänzt.
+10. Benutzerdefinierte Kompatibilitätswerkzeuge aus `compatibilitytools.d` werden als `custom` ergänzt; die kombinierte Runtime-Liste wird locale-unabhängig sortiert.
 11. Numerische Verzeichnisse unter `steamapps/compatdata` werden bibliotheksübergreifend als eindeutige Kompatibilitätspräfixe gezählt.
 12. GameMode, MangoHud, MangoApp und Gamescope werden als Integrationswerkzeuge erfasst.
 13. `gamescope --version` liefert ausschließlich Versionsinformationen und startet keine Sitzung.
@@ -323,13 +344,37 @@ Inaktive Dienste werden nicht als Fehler bewertet. Die Bootzeit und die Liste la
 
 Die CLI-Option `--service-health` und der interaktive Menüpunkt verwenden dieselben Mess- und Bewertungsfunktionen.
 
+### LAC Self Check
+
+1. `self_check_metrics.sh` ermittelt Bash-Kompatibilität, Runtime-Wurzel und Installationsart.
+2. Alle von `lac.sh` eingebundenen Core- und Moduldateien werden auf Lesbarkeit geprüft.
+3. Bei systemweiter Installation werden `lac` und `lac-uninstall` auf Ausführbarkeit geprüft.
+4. System- und Benutzerkonfigurationsdateien werden als `available`, `defaults` oder `not readable` eingestuft; eine fehlende Konfigurationsdatei ist kein Fehler.
+5. Kernwerkzeuge wie `awk`, `sed`, `find`, `sort`, `tr`, `uname`, `df`, `du` und `hostname` werden geprüft.
+6. Optionale beziehungsweise funktionsspezifische Werkzeuge wie `ip`, `lsblk`, `vulkaninfo`, `systemctl`, `checkupdates` oder `paccache` werden separat angezeigt.
+7. Der erkannte Paketmanager wird geprüft, ohne optionale Diagnosewerkzeuge automatisch zu installieren.
+8. `self_check.sh` erzeugt daraus die Gesamtbewertung.
+
+Die Bewertung kennt:
+
+- `healthy`: LAC-Runtime, Launcher, Konfigurationsbehandlung und Kernwerkzeuge sind einsatzbereit
+- `warning`: beispielsweise ein Kernwerkzeug, eine lesbare Konfiguration oder ein nutzbarer Paketmanager fehlt
+- `failed`: die Bash-Version ist zu alt, Runtime-Dateien fehlen oder eine systemweite Installation hat unvollständige Launcher
+
+Fehlende optionale Diagnosewerkzeuge beeinflussen die Gesamtbewertung nicht.
+
+Die CLI-Option `--self-check` und Menüpunkt 10 verwenden dieselben Ermittlungs- und Bewertungsfunktionen.
+
 ### Updateverwaltung
 
-1. `detect_distribution` erkennt Distribution und Paketmanager.
-2. `is_package_manager_supported` prüft die benötigten Programme.
-3. `refresh_package_information` aktualisiert die Paketinformationen.
-4. `list_available_updates` liefert eine vereinheitlichte Liste.
-5. Das Update-Modul zeigt die Liste an oder ruft nach Bestätigung `install_available_updates` auf.
+1. `detect_distribution` erkennt Distribution und Paketmanager-Familie über `ID` und optional `ID_LIKE`.
+2. `is_package_manager_supported` prüft nur den grundlegenden Paketmanager.
+3. `is_update_package_manager_supported` prüft zusätzlich update-spezifische Voraussetzungen. Bei APT gehört dazu `apt`; bei Pacman `checkupdates`.
+4. `refresh_package_information` aktualisiert die Paketinformationen beziehungsweise nutzt beim Pacman-Workflow die separate `checkupdates`-Datenbank.
+5. `list_available_updates` liefert eine vereinheitlichte Liste.
+6. Das Update-Modul zeigt die Liste an oder ruft nach Bestätigung `install_available_updates` auf.
+
+Die Trennung zwischen Basis- und Update-Fähigkeit verhindert, dass beispielsweise ein Arch-System ohne `checkupdates` vollständig als nicht unterstützter Paketmanager gilt. In diesem Fall ist lediglich die Update-Funktion nicht verfügbar; andere Pacman-basierte Funktionen bleiben nutzbar.
 
 ### Systembereinigung
 
@@ -348,7 +393,8 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 
 - keine automatische Verwendung von `sudo`; Root-Rechte müssen vom Benutzer ausdrücklich bereitgestellt werden
 - `PREFIX` muss absolut sein und darf nicht `/` sein
-- ein gesetztes `DESTDIR` muss absolut sein
+- ein gesetztes `DESTDIR` muss absolut sein und darf nicht `/` sein
+- `PREFIX` und `DESTDIR` dürfen keine `.`- oder `..`-Pfadkomponenten enthalten
 - rekursive Löschungen sind zusätzlich an erwartete LAC-spezifische Pfadsuffixe gebunden
 - Installation beschränkt sich auf den gewählten Präfixbaum
 - aktive System- und Benutzerkonfiguration wird weder erstellt noch überschrieben
@@ -381,6 +427,7 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 - keine Änderungen an Adressen, Routingtabellen, Gateways oder DNS
 - keine automatische Verwendung von `sudo`
 - begrenzte Zahl von Ping-Paketen mit Zeitüberschreitung
+- konfigurierbare Testziele werden validiert, bevor sie an `ping` oder `getent` übergeben werden
 - kein einzelner fehlgeschlagener Ping-Test wird als sicherer Internetausfall eingestuft
 
 ### Gaming Readiness
@@ -414,13 +461,21 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 - validierte Service-Namen vor Detailabfragen
 - nicht-systemd-Systeme werden ausdrücklich als nicht unterstützt gemeldet
 
+### LAC Self Check
+
+- vollständig schreibgeschützt
+- keine automatische Installation, Reparatur oder Entfernung von Abhängigkeiten
+- fehlende optionale Werkzeuge werden nur gemeldet
+- Konfigurationsdateien werden nicht erzeugt oder verändert
+- Runtime-Dateien und Launcher werden nur auf Vorhandensein beziehungsweise Les-/Ausführbarkeit geprüft
+
 ## Rückgabecodes im CLI-Modus
 
 | Code | Bedeutung |
 |---:|---|
 | `0` | Befehl erfolgreich ausgeführt oder keine Updates verfügbar |
 | `1` | Ausführung aufgrund eines Laufzeit- oder Analysefehlers fehlgeschlagen |
-| `2` | Ungültige Option oder nicht unterstützter beziehungsweise nicht verfügbarer Paketmanager |
+| `2` | Ungültige Option, nicht unterstützte Umgebung oder fehlende Voraussetzung für die angeforderte Funktion |
 | `10` | Updates wurden gefunden |
 
 Der Rückgabecode `10` erlaubt die Verwendung der Updateprüfung in weiteren Skripten, ohne eine gefundene Aktualisierung als technischen Fehler zu behandeln.
@@ -429,16 +484,19 @@ Der Rückgabecode `10` erlaubt die Verwendung der Updateprüfung in weiteren Skr
 
 Die Tests unter `tests/` verwenden für Systembefehle nach Möglichkeit Mocks und temporäre Verzeichnisse. Dadurch können Parser und Bewertungslogik reproduzierbar geprüft werden, ohne den Testrechner zu verändern.
 
+Test-Fixtures verwenden neutrale, plausible Beispielwerte. Persönliche Home-Pfade, Hostnamen, reale Hardwarekonfigurationen oder andere maschinenspezifische Fingerprints sollen nicht in Testdaten oder Beispielausgaben übernommen werden.
+
 Der Installationstest verwendet ein temporäres `DESTDIR`. Dadurch werden echte Systempfade weder beschrieben noch gelöscht. Geprüft werden unter anderem:
 
+- Ausführungsrechte der Repository-Installer
 - Erzeugung der beiden installierten Launcher
-- Kopieren des Runtime-Baums und der Dokumentation
+- Kopieren des Runtime-Baums, der Lizenz und der Dokumentation
 - Ausführung der installierten Anwendung
 - Entfernung absichtlich angelegter veralteter Runtime-Dateien bei Reinstallation
 - vollständige Entfernung verwalteter Installationsdateien
 - Erhalt einer vorhandenen Systemkonfiguration
 - sicherer mehrfacher Uninstall-Aufruf
-- Ablehnung eines relativen Präfixes
+- Ablehnung relativer, Root- und traversal-artiger Präfix- und Staging-Werte
 
 Für Gaming Diagnostics werden unter anderem geprüft:
 
@@ -450,10 +508,20 @@ Für Gaming Diagnostics werden unter anderem geprüft:
 - zusätzliche Steam-Bibliotheken
 - gebündelte und benutzerdefinierte Proton-Runtimes
 - eindeutige Compatdata-Zählung
+- locale-unabhängige Sortierung
 - Gamescope-Versionsausgabe
 - CLI- und Menüintegration
 
-Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft `install.sh`, `uninstall.sh`, Einstiegspunkt, Core-Schicht, Module und Tests. GitHub Actions führt beide Prüfungen für Pull Requests und Änderungen an `main` aus.
+`tests/common_test.sh` prüft die Bash-Mindestversion sowie die direkte und über `ID_LIKE` abgeleitete Paketmanager-Zuordnung. `tests/config_test.sh` prüft auch Umgebungen ohne `HOME`. `tests/package_manager_test.sh` trennt grundlegende Paketmanager-Fähigkeiten von update-spezifischen Helfern.
+
+Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft `install.sh`, `uninstall.sh`, Einstiegspunkt, Core-Schicht, Module und Tests.
+
+GitHub Actions verwendet zwei Ebenen:
+
+1. Ubuntu führt die vollständige Testsuite und ShellCheck aus.
+2. Debian stable, Fedora, Arch Linux und openSUSE Tumbleweed führen `tests/portability_test.sh` in Containern aus.
+
+Der Portabilitätstest prüft zusätzlich die tatsächlich laufende Distribution und verifiziert, dass LAC sie einem vorhandenen unterstützten Paketmanager zuordnet. Danach folgen Bash-Syntaxprüfung und ein distributionsunabhängiger Testumfang für Konfiguration, Installation, Netzwerk-Hardening, Paketmanager-Abstraktion und Self Check.
 
 ## Erweiterung der Anwendung
 

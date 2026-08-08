@@ -53,7 +53,7 @@ get_display_server() {
 }
 
 get_desktop_environment() {
-    printf '%s\n' "COSMIC"
+    printf '%s\n' "GNOME"
 }
 
 get_graphics_drivers() {
@@ -61,7 +61,7 @@ get_graphics_drivers() {
 }
 
 get_nvidia_driver_version() {
-    printf '%s\n' "575.64.03"
+    printf '%s\n' "550.78"
 }
 
 get_vulkan_status() {
@@ -221,7 +221,7 @@ assert_output_contains \
 
 assert_output_contains \
     "Gaming readiness displays the desktop environment" \
-    "Desktop environment:     COSMIC" \
+    "Desktop environment:     GNOME" \
     "$readiness_output"
 
 assert_output_contains \
@@ -231,7 +231,7 @@ assert_output_contains \
 
 assert_output_contains \
     "Gaming readiness displays the NVIDIA driver version" \
-    "NVIDIA driver version:   575.64.03" \
+    "NVIDIA driver version:   550.78" \
     "$readiness_output"
 
 assert_output_contains \

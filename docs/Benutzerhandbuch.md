@@ -6,15 +6,15 @@ Linux Admin Center (LAC) bündelt grundlegende Administrationsaufgaben in einer 
 
 Ab Version `0.9.0-alpha` kann LAC systemweit installiert werden. Danach steht der Befehl `lac` unabhängig vom Repository-Pfad zur Verfügung. Diagnosefunktionen sind grundsätzlich schreibgeschützt. Schreibende Update- und Cleanup-Aktionen werden nur nach einer ausdrücklichen Bestätigung ausgeführt.
 
-Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper.
+Die aktuelle Version richtet sich an Linux-Desktop-Systeme mit APT, DNF, Pacman oder Zypper. Linux-Derivate werden über die Angaben `ID` und `ID_LIKE` aus `/etc/os-release` einer unterstützten Paketmanager-Familie zugeordnet.
 
 ## Installation und Programmstart
 
 Die Standardinstallation aus dem geklonten Repository erfolgt mit:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
-sudo bash install.sh
+cd ~/projects/LinuxAdminCenter
+sudo ./install.sh
 ```
 
 Danach kann LAC aus jedem Verzeichnis gestartet werden:
@@ -29,6 +29,12 @@ Version prüfen:
 lac --version
 ```
 
+LAC-Installation und Laufzeitumgebung prüfen:
+
+```bash
+lac --self-check
+```
+
 Für Entwicklung und Tests ist weiterhin der direkte Start aus dem Repository möglich:
 
 ```bash
@@ -38,10 +44,10 @@ Für Entwicklung und Tests ist weiterhin der direkte Start aus dem Repository m�
 Eine bestehende Installation wird nach einem Repository-Update durch erneutes Ausführen des Installers aktualisiert:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
+cd ~/projects/LinuxAdminCenter
 git switch main
 git pull --ff-only
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Die Anwendung kann systemweit entfernt werden mit:
@@ -66,6 +72,7 @@ Weitere Installationsdetails, benutzerdefinierte Präfixe und `DESTDIR` sind in 
 7) Gaming Readiness
 8) Service Health
 9) Gaming Diagnostics
+10) LAC Self Check
 
 0) Exit
 ```
@@ -81,14 +88,16 @@ Das Update-Menü bietet zwei Funktionen:
 
 Vor einer Installation zeigt LAC die gefundenen Pakete an und verlangt eine ausdrückliche Bestätigung. Ohne Bestätigung werden keine Updates installiert. Abhängig von Distribution und lokaler Konfiguration kann `sudo` nach einem Passwort fragen.
 
-Unterstützte Paketmanager:
+Unterstützte Paketmanager-Familien:
 
 | Distributionen | Paketmanager |
 |---|---|
-| Debian, Ubuntu, Pop!_OS, Linux Mint | APT |
-| Fedora, RHEL, CentOS, Rocky Linux, AlmaLinux | DNF |
-| Arch Linux, Manjaro | Pacman und `checkupdates` |
-| openSUSE, SUSE Linux Enterprise | Zypper |
+| Debian- und Ubuntu-basierte Systeme | APT |
+| Fedora- und RHEL-basierte Systeme | DNF |
+| Arch-basierte Systeme | Pacman |
+| openSUSE- und SUSE-basierte Systeme | Zypper |
+
+Für Update-Prüfungen auf Arch-basierten Systemen wird zusätzlich `checkupdates` benötigt. Fehlt dieses Werkzeug, bleiben andere Pacman-basierte LAC-Funktionen weiterhin nutzbar; nur die Update-Funktion wird als unvollständig gemeldet.
 
 Für openSUSE Tumbleweed verwendet LAC `zypper dist-upgrade`. Andere Zypper-Systeme werden mit `zypper update` aktualisiert.
 
@@ -154,6 +163,8 @@ LAC_DNS_TEST_HOST=example.org \
 LAC_INTERNET_TEST_TARGET=9.9.9.9 \
 lac --network-diagnostics
 ```
+
+Ungültige beziehungsweise optionsähnliche Werte und Werte mit Whitespace werden abgewiesen, bevor sie an `ping` oder `getent` übergeben werden.
 
 ### Hardware Diagnostics
 
@@ -331,6 +342,26 @@ Die angezeigte Gesamtstartzeit stammt aus `systemd-analyze time`. Sie kann Firmw
 
 Service Health startet, stoppt, aktiviert, deaktiviert oder verändert keine Dienste und benötigt keine Root-Rechte. Nicht-systemd-Systeme werden derzeit als nicht unterstützt gemeldet.
 
+### LAC Self Check
+
+Der Self Check prüft die LAC-Laufzeit selbst und ist vollständig schreibgeschützt. Er zeigt:
+
+- aktive Bash-Version und Kompatibilität mit der Mindestversion 4.3
+- Installationsart (`repository`, `system-wide` oder `custom`)
+- Runtime-Wurzel und Vollständigkeit aller eingebundenen Core- und Moduldateien
+- installierte Launcher bei einer systemweiten Installation
+- Status von System- und Benutzerkonfiguration
+- Verfügbarkeit der von LAC benötigten Kernwerkzeuge
+- Verfügbarkeit optionaler Diagnosewerkzeuge
+- erkannten Paketmanager
+- Gesamtstatus `healthy`, `warning` oder `failed`
+
+Fehlende optionale Diagnosewerkzeuge verschlechtern den Gesamtstatus nicht. Fehlende Runtime-Dateien, eine zu alte Bash-Version oder unvollständige systemweite Launcher führen zu `failed`. Fehlende Kernwerkzeuge, nicht lesbare Konfiguration oder ein nicht nutzbarer Paketmanager führen zu `warning`.
+
+```bash
+lac --self-check
+```
+
 ### System Cleanup
 
 Das Cleanup-Menü enthält drei Funktionen:
@@ -388,6 +419,7 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -g, --gaming-readiness       Gaming-Bereitschaft anzeigen
 -G, --gaming-diagnostics     Detaillierte Gaming-Diagnose anzeigen
 -e, --service-health         Dienst- und Startzustand anzeigen
+-S, --self-check             LAC-Laufzeit und Abhängigkeiten prüfen
 -u, --check-updates          Nach verfügbaren Updates suchen
 -c, --cleanup-report         Schreibgeschützten Cleanup-Bericht anzeigen
 ```
@@ -403,6 +435,7 @@ lac --hardware-diagnostics
 lac --gaming-readiness
 lac --gaming-diagnostics
 lac --service-health
+lac --self-check
 lac --check-updates
 lac --cleanup-report
 ```
@@ -415,7 +448,7 @@ Es darf jeweils genau eine Option übergeben werden.
 |---:|---|
 | `0` | erfolgreich ausgeführt oder keine Updates gefunden |
 | `1` | Laufzeitfehler, zum Beispiel fehlgeschlagene Paketaktualisierung oder Analyse |
-| `2` | ungültige Option oder nicht unterstützter Paketmanager |
+| `2` | ungültige Option, nicht unterstützte Umgebung oder fehlende Voraussetzung für die angeforderte Funktion |
 | `10` | verfügbare Updates wurden gefunden |
 
 Beispiel:
@@ -437,6 +470,8 @@ LAC lädt die Konfiguration in dieser Reihenfolge:
 
 1. `/etc/lac/lac.conf`
 2. `${XDG_CONFIG_HOME:-$HOME/.config}/lac/lac.conf`
+
+Ist weder ein expliziter Benutzerpfad noch `XDG_CONFIG_HOME` oder `HOME` verfügbar, wird einfach keine Benutzerkonfigurationsdatei geladen.
 
 Die Benutzerkonfiguration überschreibt die systemweite Konfiguration.
 
@@ -480,7 +515,7 @@ ls -l /usr/local/bin/lac
 Falls die Datei fehlt, im Repository erneut installieren:
 
 ```bash
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Bei einem benutzerdefinierten Präfix muss dessen `bin`-Verzeichnis in `PATH` enthalten sein.
@@ -493,21 +528,22 @@ Beim direkten Start aus dem Repository kann das Ausführungsrecht gesetzt werden
 chmod +x src/lac.sh
 ```
 
-Alternativ funktioniert immer:
+Alternativ funktioniert:
 
 ```bash
 bash src/lac.sh
 ```
 
-### Paketmanager wird nicht unterstützt
+### Paketmanager oder Update-Funktion wird nicht unterstützt
 
-Prüfe zunächst die Erkennung:
+Prüfe zunächst:
 
 ```bash
+lac --self-check
 lac --system-info
 ```
 
-Bei Arch-basierten Systemen muss zusätzlich zu Pacman das Programm `checkupdates` vorhanden sein.
+Auf Arch-basierten Systemen reicht `pacman` für die grundlegende Paketmanager-Unterstützung. Für Update-Prüfungen benötigt LAC zusätzlich `checkupdates`. Fehlt `checkupdates`, bleiben beispielsweise Systeminformationen und andere Pacman-basierte Funktionen verfügbar.
 
 ### Pacman-Cache kann nicht bereinigt werden
 
@@ -619,6 +655,16 @@ systemctl --failed
 
 Nicht-systemd-Systeme werden derzeit nicht vollständig unterstützt und deshalb nicht als gesund bewertet.
 
+### Self Check zeigt `warning` oder `failed`
+
+```bash
+lac --self-check
+```
+
+Ein `warning` weist auf eine eingeschränkte Umgebung hin, beispielsweise ein fehlendes Kernwerkzeug, eine nicht lesbare Konfiguration oder einen nicht nutzbaren Paketmanager. Ein `failed` weist auf ein grundlegendes Laufzeitproblem hin, etwa fehlende LAC-Dateien oder unvollständige Launcher.
+
+Optionale Diagnoseprogramme werden separat angezeigt und erzeugen allein keine Warnung.
+
 ### Laufwerksdiagnose zeigt `requires root`
 
 SMART- und NVMe-Gesundheitsdaten sind auf vielen Systemen nur mit administrativen Rechten zugänglich.
@@ -643,10 +689,10 @@ Die Hardwarediagnose führt keine Schreib-, Reparatur- oder Selbsttestbefehle au
 Nach einem Update des Repositorys muss der Installer erneut ausgeführt werden:
 
 ```bash
-cd ~/Projekte/LinuxAdminCenter
+cd ~/projects/LinuxAdminCenter
 git switch main
 git pull --ff-only
-sudo bash install.sh
+sudo ./install.sh
 ```
 
 Der Installer ersetzt die Laufzeitdateien, lässt aber Konfigurationen erhalten.
@@ -662,7 +708,7 @@ sudo lac-uninstall
 Ist LAC bereits entfernt oder unter einem anderen Präfix installiert, erfolgt nur eine entsprechende Meldung. Bei einem benutzerdefinierten Präfix kann aus dem Repository gezielt deinstalliert werden:
 
 ```bash
-sudo bash uninstall.sh --prefix /opt/lac
+sudo ./uninstall.sh --prefix /opt/lac
 ```
 
 ### Debug-Ausgabe aktivieren

@@ -62,7 +62,7 @@ get_vulkan_32bit_loader_status() {
 
 get_vulkan_device_records() {
     printf '%s\n' \
-        "device=NVIDIA GeForce RTX 4070|driver=NVIDIA|api=1.4.303"
+        "device=NVIDIA GeForce RTX 3060|driver=NVIDIA|api=1.4.303"
 }
 
 get_steam_status() {
@@ -75,7 +75,7 @@ get_steam_launch_target() {
 
 get_steam_library_roots() {
     printf '%s\n' \
-        "/home/test/.local/share/Steam" \
+        "/home/example/.local/share/Steam" \
         "/mnt/games/SteamLibrary"
 }
 
@@ -217,10 +217,10 @@ assert_equals \
 
 assert_equals \
     "Device records are parsed" \
-    "NVIDIA GeForce RTX 4070" \
+    "NVIDIA GeForce RTX 3060" \
     "$(
         get_gaming_diagnostic_record_value \
-            "device=NVIDIA GeForce RTX 4070|driver=NVIDIA|api=1.4.303" \
+            "device=NVIDIA GeForce RTX 3060|driver=NVIDIA|api=1.4.303" \
             device
     )"
 
@@ -243,7 +243,7 @@ assert_output_contains \
 
 assert_output_contains \
     "Gaming diagnostics display Vulkan devices" \
-    "NVIDIA GeForce RTX 4070" \
+    "NVIDIA GeForce RTX 3060" \
     "$diagnostics_output"
 
 assert_output_contains \

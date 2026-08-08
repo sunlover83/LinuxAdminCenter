@@ -46,19 +46,19 @@ get_hardware_tool_status() {
 }
 
 get_cpu_temperature() {
-    printf '%s\n' "55.3 °C"
+    printf '%s\n' "47.6 °C"
 }
 
 get_nvidia_gpu_diagnostics() {
     cat <<'OUTPUT'
-GPU 0: NVIDIA GeForce RTX 4070 | 43 °C | 0% | 1430 MiB / 12282 MiB
+GPU 0: NVIDIA GeForce RTX 3060 | 52 °C | 17% | 2048 MiB / 12288 MiB
 OUTPUT
 }
 
 get_storage_diagnostics() {
     cat <<'OUTPUT'
-/dev/sda: Samsung SSD 870 EVO | SMART health: healthy
-/dev/nvme0n1: Samsung SSD 990 PRO | NVMe health: healthy
+/dev/sda: Example SATA SSD 500GB | SMART health: healthy
+/dev/nvme0n1: Example NVMe SSD 1TB | NVMe health: healthy
 OUTPUT
 }
 
@@ -78,22 +78,22 @@ assert_output_contains \
 
 assert_output_contains \
     "Hardware diagnostics display CPU temperature" \
-    "CPU:          55.3 °C" \
+    "CPU:          47.6 °C" \
     "$diagnostics_output"
 
 assert_output_contains \
     "Hardware diagnostics display NVIDIA information" \
-    "GPU 0: NVIDIA GeForce RTX 4070" \
+    "GPU 0: NVIDIA GeForce RTX 3060" \
     "$diagnostics_output"
 
 assert_output_contains \
     "Hardware diagnostics display SATA health" \
-    "/dev/sda: Samsung SSD 870 EVO | SMART health: healthy" \
+    "/dev/sda: Example SATA SSD 500GB | SMART health: healthy" \
     "$diagnostics_output"
 
 assert_output_contains \
     "Hardware diagnostics display NVMe health" \
-    "/dev/nvme0n1: Samsung SSD 990 PRO | NVMe health: healthy" \
+    "/dev/nvme0n1: Example NVMe SSD 1TB | NVMe health: healthy" \
     "$diagnostics_output"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"

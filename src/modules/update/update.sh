@@ -30,8 +30,8 @@ check_for_updates_cli() {
 
     detect_distribution
 
-    if ! is_package_manager_supported; then
-        printf "Error: Package manager '%s' is not supported or unavailable.\n" \
+    if ! is_update_package_manager_supported; then
+        printf "Error: Package manager '%s' is not supported for updates or required update tools are unavailable.\n" \
             "$PKG_MANAGER" >&2
         return 2
     fi
@@ -69,9 +69,9 @@ check_for_updates() {
     detect_distribution
     draw_module_header "Check for Updates"
 
-    if ! is_package_manager_supported; then
+    if ! is_update_package_manager_supported; then
         log_warning \
-            "Package manager '${PKG_MANAGER}' is not supported or unavailable."
+            "Package manager '${PKG_MANAGER}' is not supported for updates or required update tools are unavailable."
         echo
         read -rp "Press Enter to continue..."
         return
@@ -117,9 +117,9 @@ install_updates() {
     detect_distribution
     draw_module_header "Install Updates"
 
-    if ! is_package_manager_supported; then
+    if ! is_update_package_manager_supported; then
         log_warning \
-            "Package manager '${PKG_MANAGER}' is not supported or unavailable."
+            "Package manager '${PKG_MANAGER}' is not supported for updates or required update tools are unavailable."
         echo
         read -rp "Press Enter to continue..."
         return

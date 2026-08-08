@@ -50,9 +50,27 @@ parse_arguments() {
     done
 }
 
+path_contains_dot_component() {
+    local path="$1"
+
+    case "/${path#/}/" in
+        */../*|*/./*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 validate_paths() {
-    PREFIX="${PREFIX%/}"
-    DESTDIR="${DESTDIR%/}"
+    while [[ "$PREFIX" != "/" && "$PREFIX" == */ ]]; do
+        PREFIX="${PREFIX%/}"
+    done
+
+    while [[ -n "$DESTDIR" && "$DESTDIR" != "/" && "$DESTDIR" == */ ]]; do
+        DESTDIR="${DESTDIR%/}"
+    done
 
     [[ -n "$PREFIX" && "$PREFIX" == /* ]] ||
         fail "PREFIX must be an absolute path." 2
@@ -60,8 +78,20 @@ validate_paths() {
     [[ "$PREFIX" != "/" ]] ||
         fail "PREFIX=/ is not supported. Use /usr or /usr/local." 2
 
-    if [[ -n "$DESTDIR" && "$DESTDIR" != /* ]]; then
-        fail "DESTDIR must be an absolute path when set." 2
+    if path_contains_dot_component "$PREFIX"; then
+        fail "PREFIX must not contain '.' or '..' path components." 2
+    fi
+
+    if [[ -n "$DESTDIR" ]]; then
+        [[ "$DESTDIR" == /* ]] ||
+            fail "DESTDIR must be an absolute path when set." 2
+
+        [[ "$DESTDIR" != "/" ]] ||
+            fail "DESTDIR=/ is not supported. Leave DESTDIR unset for a system installation." 2
+
+        if path_contains_dot_component "$DESTDIR"; then
+            fail "DESTDIR must not contain '.' or '..' path components." 2
+        fi
     fi
 }
 
@@ -139,8 +169,9 @@ install_shared_files() {
 
     cp "${PROJECT_ROOT}/README.md" "$DOC_DIR/"
     cp "${PROJECT_ROOT}/CHANGELOG.md" "$DOC_DIR/"
+    cp "${PROJECT_ROOT}/LICENSE" "$DOC_DIR/"
     cp "${PROJECT_ROOT}/docs/"*.md "$DOC_DIR/"
-    chmod 0644 "$DOC_DIR"/*.md
+    chmod 0644 "$DOC_DIR"/*.md "$DOC_DIR/LICENSE"
 }
 
 parse_arguments "$@"

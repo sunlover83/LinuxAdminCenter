@@ -116,7 +116,7 @@ create_mock apt <<'EOF'
 if [[ "${1:-}" == "list" && "${2:-}" == "--upgradable" ]]; then
     printf '%s\n' \
         "Listing..." \
-        "pkg-one/jammy 2.0 amd64 [upgradable from: 1.0]"
+        "pkg-one/stable 2.0 amd64 [upgradable from: 1.0]"
     exit 0
 fi
 
@@ -142,12 +142,6 @@ case "${1:-}" in
 esac
 
 exit 1
-EOF
-
-create_mock checkupdates <<'EOF'
-#!/usr/bin/env bash
-printf '%s\n' "pkg-three 1.0 -> 2.0"
-exit 0
 EOF
 
 create_mock pacman <<'EOF'
@@ -181,6 +175,18 @@ EOF
 # shellcheck source=../src/core/package_manager.sh
 source "${PROJECT_ROOT}/src/core/package_manager.sh"
 
+pacman_base_support_without_checkupdates() (
+    PATH="$MOCK_BIN"
+    PKG_MANAGER="pacman"
+    is_package_manager_supported
+)
+
+pacman_update_support_without_checkupdates() (
+    PATH="$MOCK_BIN"
+    PKG_MANAGER="pacman"
+    is_update_package_manager_supported
+)
+
 printf '%s\n\n' "Running package manager tests..."
 
 PKG_MANAGER="apt"
@@ -189,6 +195,10 @@ assert_command_succeeds \
     "APT is detected as supported" \
     is_package_manager_supported
 
+assert_command_succeeds \
+    "APT update capability is detected" \
+    is_update_package_manager_supported
+
 assert_output_contains \
     "APT refresh uses apt-get update" \
     "apt-get update" \
@@ -196,7 +206,7 @@ assert_output_contains \
 
 assert_output_contains \
     "APT lists available updates" \
-    "pkg-one/jammy" \
+    "pkg-one/stable" \
     list_available_updates
 
 assert_output_contains \
@@ -209,6 +219,10 @@ PKG_MANAGER="dnf"
 assert_command_succeeds \
     "DNF is detected as supported" \
     is_package_manager_supported
+
+assert_command_succeeds \
+    "DNF update capability is detected" \
+    is_update_package_manager_supported
 
 assert_output_contains \
     "DNF refreshes its package cache" \
@@ -225,11 +239,25 @@ assert_output_contains \
     "dnf upgrade --assumeyes" \
     install_available_updates
 
+assert_command_succeeds \
+    "Pacman is supported without checkupdates" \
+    pacman_base_support_without_checkupdates
+
+assert_command_fails \
+    "Pacman update checks require checkupdates" \
+    pacman_update_support_without_checkupdates
+
 PKG_MANAGER="pacman"
 
+create_mock checkupdates <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "pkg-three 1.0 -> 2.0"
+exit 0
+EOF
+
 assert_command_succeeds \
-    "Pacman is detected as supported" \
-    is_package_manager_supported
+    "Pacman update capability is available with checkupdates" \
+    is_update_package_manager_supported
 
 assert_command_succeeds \
     "Pacman refresh step succeeds safely" \
@@ -260,6 +288,10 @@ assert_command_succeeds \
     "Zypper is detected as supported" \
     is_package_manager_supported
 
+assert_command_succeeds \
+    "Zypper update capability is detected" \
+    is_update_package_manager_supported
+
 assert_output_contains \
     "Zypper refreshes repositories" \
     "zypper --non-interactive refresh" \
@@ -289,6 +321,10 @@ PKG_MANAGER="unknown"
 assert_command_fails \
     "Unknown package managers are rejected" \
     is_package_manager_supported
+
+assert_command_fails \
+    "Unknown package managers have no update capability" \
+    is_update_package_manager_supported
 
 assert_exit_status \
     "Unknown package manager refresh returns status 2" \

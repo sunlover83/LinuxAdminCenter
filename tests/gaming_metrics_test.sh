@@ -63,7 +63,7 @@ cat > "${MOCK_BIN}/nvidia-smi" <<'EOF_NVIDIA'
 #!/usr/bin/env bash
 
 if [[ "$*" == "--query-gpu=driver_version --format=csv,noheader" ]]; then
-    printf '%s\n' "575.64.03"
+    printf '%s\n' "550.78"
     exit 0
 fi
 
@@ -124,8 +124,8 @@ assert_equals \
 
 assert_equals \
     "Desktop environments are detected" \
-    "COSMIC" \
-    "$(XDG_CURRENT_DESKTOP=COSMIC get_desktop_environment)"
+    "GNOME" \
+    "$(XDG_CURRENT_DESKTOP=GNOME get_desktop_environment)"
 
 assert_equals \
     "Multiple graphics drivers are reported" \
@@ -134,7 +134,7 @@ assert_equals \
 
 assert_equals \
     "NVIDIA driver version is detected" \
-    "575.64.03" \
+    "550.78" \
     "$(get_nvidia_driver_version)"
 
 assert_equals \

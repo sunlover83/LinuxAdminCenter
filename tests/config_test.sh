@@ -81,6 +81,38 @@ assert_equals \
     "false" \
     "$LAC_DEBUG"
 
+assert_equals \
+    "Explicit user configuration paths take precedence" \
+    "${TEST_TMP_DIR}/explicit.conf" \
+    "$(LAC_USER_CONFIG="${TEST_TMP_DIR}/explicit.conf" get_lac_user_config_path)"
+
+assert_equals \
+    "XDG configuration paths are supported" \
+    "${TEST_TMP_DIR}/xdg/lac/lac.conf" \
+    "$(
+        unset LAC_USER_CONFIG
+        XDG_CONFIG_HOME="${TEST_TMP_DIR}/xdg"
+        HOME="${TEST_TMP_DIR}/home"
+        get_lac_user_config_path
+    )"
+
+assert_equals \
+    "HOME configuration paths are used as fallback" \
+    "${TEST_TMP_DIR}/home/.config/lac/lac.conf" \
+    "$(
+        unset LAC_USER_CONFIG XDG_CONFIG_HOME
+        HOME="${TEST_TMP_DIR}/home"
+        get_lac_user_config_path
+    )"
+
+assert_equals \
+    "Missing HOME and XDG context produces no user config path" \
+    "" \
+    "$(
+        unset LAC_USER_CONFIG XDG_CONFIG_HOME HOME
+        get_lac_user_config_path
+    )"
+
 system_config="${TEST_TMP_DIR}/system.conf"
 
 cat > "$system_config" <<'EOF'

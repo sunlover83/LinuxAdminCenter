@@ -5,13 +5,23 @@
 
 LAC_DEBUG="false"
 
+get_lac_user_config_path() {
+    if [[ -n "${LAC_USER_CONFIG:-}" ]]; then
+        printf '%s\n' "$LAC_USER_CONFIG"
+    elif [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+        printf '%s/lac/lac.conf\n' "$XDG_CONFIG_HOME"
+    elif [[ -n "${HOME:-}" ]]; then
+        printf '%s/.config/lac/lac.conf\n' "$HOME"
+    fi
+}
+
 read_config_file() {
     local config_file="$1"
     local line
     local key
     local value
 
-    [[ -r "$config_file" ]] || return 0
+    [[ -n "$config_file" && -r "$config_file" ]] || return 0
 
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Remove comments and ignore empty lines.
@@ -59,7 +69,7 @@ load_configuration() {
     local user_config
 
     system_config="${LAC_SYSTEM_CONFIG:-/etc/lac/lac.conf}"
-    user_config="${LAC_USER_CONFIG:-${XDG_CONFIG_HOME:-${HOME}/.config}/lac/lac.conf}"
+    user_config="$(get_lac_user_config_path)"
 
     read_config_file "$system_config"
     read_config_file "$user_config"
