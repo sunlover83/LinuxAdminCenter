@@ -14,10 +14,27 @@ get_lac_runtime_root() {
 
 get_lac_installation_type() {
     local runtime_root="${1:-$(get_lac_runtime_root)}"
+    local prefix
+    local package_marker
+    local package_method=""
 
     case "$runtime_root" in
         */lib/linux-admin-center)
-            printf '%s\n' "system-wide"
+            prefix="${runtime_root%/lib/linux-admin-center}"
+            package_marker="${prefix}/share/linux-admin-center/package-manager"
+
+            if [[ -r "$package_marker" ]]; then
+                IFS= read -r package_method < "$package_marker" || true
+            fi
+
+            case "$package_method" in
+                deb)
+                    printf '%s\n' "debian-package"
+                    ;;
+                *)
+                    printf '%s\n' "system-wide"
+                    ;;
+            esac
             ;;
         */src)
             printf '%s\n' "repository"
@@ -93,12 +110,24 @@ get_lac_launcher_status() {
 
     installation_type="$(get_lac_installation_type "$runtime_root")"
 
-    if [[ "$installation_type" != "system-wide" ]]; then
-        printf '%s\n' "not applicable"
+    case "$installation_type" in
+        system-wide|debian-package)
+            prefix="${runtime_root%/lib/linux-admin-center}"
+            ;;
+        *)
+            printf '%s\n' "not applicable"
+            return
+            ;;
+    esac
+
+    if [[ "$installation_type" == "debian-package" ]]; then
+        if [[ -x "${prefix}/bin/lac" ]]; then
+            printf '%s\n' "available"
+        else
+            printf '%s\n' "incomplete"
+        fi
         return
     fi
-
-    prefix="${runtime_root%/lib/linux-admin-center}"
 
     if [[ -x "${prefix}/bin/lac" && -x "${prefix}/bin/lac-uninstall" ]]; then
         printf '%s\n' "available"

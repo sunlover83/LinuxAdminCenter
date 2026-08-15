@@ -1,0 +1,8 @@
+# LAC core files are Bash modules sourced by the main executable. They retain
+# Bash shebangs for tooling clarity but are deliberately installed non-executable.
+script-not-executable [usr/lib/linux-admin-center/core/*.sh]
+script-not-executable [usr/lib/linux-admin-center/modules/*/*.sh]
+
+# This package is distributed directly by the upstream project and is not an
+# initial upload to the Debian archive, so there is no Debian BTS bug to close.
+initial-upload-closes-no-bugs

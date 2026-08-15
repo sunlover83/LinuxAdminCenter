@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+override_dh_auto_test:
+	bash tests/run_tests.sh
+else
+override_dh_auto_test:
+	@echo "Skipping tests because DEB_BUILD_OPTIONS contains nocheck."
+endif
+
+override_dh_auto_install:
+	DESTDIR="$(CURDIR)/debian/linux-admin-center" ./install.sh --prefix /usr
+	rm -f debian/linux-admin-center/usr/bin/lac-uninstall
+	rm -f debian/linux-admin-center/usr/share/linux-admin-center/uninstall.sh
+	printf '%s\n' deb > debian/linux-admin-center/usr/share/linux-admin-center/package-manager
+	rm -f debian/linux-admin-center/usr/share/doc/linux-admin-center/LICENSE
+	rm -f debian/linux-admin-center/usr/share/doc/linux-admin-center/CHANGELOG.md
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGELOG.md

@@ -1,0 +1,15 @@
+linux-admin-center (1.1.0-1) unstable; urgency=medium
+
+  * Add initial Debian and Ubuntu package support.
+  * Build an architecture-independent package from the existing DESTDIR
+    layout.
+  * Keep package removal under apt and dpkg control instead of installing
+    lac-uninstall.
+  * Detect and block conflicting manual /usr/local installations before
+    package installation.
+  * Mark package-managed installations for the LAC Self Check.
+  * Add the lac(1) manual page and Debian package metadata.
+  * Validate build, install, reinstall, removal and configuration preservation
+    in CI and on the development workstation.
+
+ -- sunlover83 <sunlover83@users.noreply.github.com>  Sat, 15 Aug 2026 14:37:00 +0200

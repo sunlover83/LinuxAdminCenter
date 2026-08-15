@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+case "${1:-}" in
+    install|upgrade)
+        if [ -x /usr/local/bin/lac ] &&
+            [ -x /usr/local/bin/lac-uninstall ] &&
+            [ -x /usr/local/lib/linux-admin-center/lac.sh ]; then
+            cat >&2 <<'EOF'
+A manual Linux Admin Center installation was detected under /usr/local.
+
+Remove the manual installation before installing the Debian package:
+  sudo /usr/local/bin/lac-uninstall
+
+Existing configuration under /etc/lac and user configuration under
+~/.config/lac are preserved by the manual uninstaller.
+EOF
+            exit 1
+        fi
+        ;;
+esac
+
+exit 0

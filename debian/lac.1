@@ -1,0 +1,93 @@
+.TH LAC 1 "August 2026" "Linux Admin Center 1.1.0" "User Commands"
+.SH NAME
+lac \- modular Linux desktop administration toolkit
+.SH SYNOPSIS
+.B lac
+.RI [ OPTION ]
+.SH DESCRIPTION
+Linux Admin Center (LAC) provides an interactive terminal interface and
+command-line options for common Linux desktop administration tasks.
+.PP
+Run
+.B lac
+without an option to open the interactive menu. Exactly one command-line option
+may be supplied at a time.
+.SH OPTIONS
+.TP
+.BR \-h , " --help"
+Show command-line help.
+.TP
+.BR \-v , " --version"
+Show version information.
+.TP
+.BR \-i , " --system-info"
+Show system information.
+.TP
+.BR \-n , " --network-info"
+Show network information.
+.TP
+.BR \-r , " --network-diagnostics"
+Show read-only network diagnostics.
+.TP
+.BR \-d , " --hardware-diagnostics"
+Show read-only hardware diagnostics.
+.TP
+.BR \-g , " --gaming-readiness"
+Show the gaming readiness overview.
+.TP
+.BR \-G , " --gaming-diagnostics"
+Show detailed gaming diagnostics.
+.TP
+.BR \-e , " --service-health"
+Show service and boot health information.
+.TP
+.BR \-S , " --self-check"
+Check the LAC runtime, launchers, configuration access and dependencies.
+.TP
+.BR \-u , " --check-updates"
+Check for available system package updates.
+.TP
+.BR \-c , " --cleanup-report"
+Show a read-only system cleanup report.
+.SH CONFIGURATION
+LAC reads system configuration from
+.I /etc/lac/lac.conf
+and user configuration from an explicit
+.B LAC_USER_CONFIG
+path, the XDG configuration directory, or
+.IR ~/.config/lac/lac.conf .
+.PP
+The packaged example configuration is installed under
+.IR /usr/share/linux-admin-center/lac.conf.example .
+.SH PACKAGE MANAGEMENT
+Debian package installations are managed through
+.BR apt (8)
+and
+.BR dpkg (1).
+The package intentionally does not install a
+.B lac-uninstall
+command. Remove it with:
+.PP
+.nf
+sudo apt remove linux-admin-center
+.fi
+.PP
+Configuration under
+.I /etc/lac
+and user configuration are not removed by that operation.
+.SH FILES
+.TP
+.I /usr/bin/lac
+Installed command.
+.TP
+.I /usr/lib/linux-admin-center/
+LAC runtime files.
+.TP
+.I /usr/share/linux-admin-center/
+Shared files and example configuration.
+.TP
+.I /etc/lac/lac.conf
+Optional system-wide configuration.
+.SH SEE ALSO
+.BR apt (8),
+.BR dpkg (1)

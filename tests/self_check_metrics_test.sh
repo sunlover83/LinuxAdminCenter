@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
 TEST_TMP_DIR="$(mktemp -d)"
 RUNTIME_ROOT="${TEST_TMP_DIR}/usr/local/lib/linux-admin-center"
 PREFIX_ROOT="${TEST_TMP_DIR}/usr/local"
+PACKAGE_MARKER="${PREFIX_ROOT}/share/linux-admin-center/package-manager"
 
 trap 'rm -rf "$TEST_TMP_DIR"' EXIT
 
@@ -138,6 +139,30 @@ assert_equals \
     "Missing system-wide launchers are detected" \
     "incomplete" \
     "$(get_lac_launcher_status "$RUNTIME_ROOT")"
+
+mkdir -p "$(dirname "$PACKAGE_MARKER")"
+printf '%s\n' "deb" > "$PACKAGE_MARKER"
+
+assert_equals \
+    "Debian package installations are detected from the package marker" \
+    "debian-package" \
+    "$(get_lac_installation_type "$RUNTIME_ROOT")"
+
+assert_equals \
+    "Debian package installations require only the lac launcher" \
+    "available" \
+    "$(get_lac_launcher_status "$RUNTIME_ROOT")"
+
+rm "${PREFIX_ROOT}/bin/lac"
+
+assert_equals \
+    "Missing lac launcher fails Debian package launcher detection" \
+    "incomplete" \
+    "$(get_lac_launcher_status "$RUNTIME_ROOT")"
+
+: > "${PREFIX_ROOT}/bin/lac"
+chmod +x "${PREFIX_ROOT}/bin/lac"
+rm "$PACKAGE_MARKER"
 
 assert_equals \
     "Repository launchers are not required" \

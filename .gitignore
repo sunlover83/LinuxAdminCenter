@@ -17,5 +17,13 @@ coverage/
 tmp/
 .cache/
 
+# Debian package build output
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/*.debhelper.log
+debian/linux-admin-center/
+
 # Local LAC configuration used during development
 lac.conf

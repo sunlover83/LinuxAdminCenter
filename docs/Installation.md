@@ -2,9 +2,12 @@
 
 ## Status
 
-Ab Version `0.9.0-alpha` kann Linux Admin Center systemweit installiert, aktualisiert und wieder entfernt werden. Die Installation verwendet standardmäßig `/usr/local` und stellt anschließend die Befehle `lac` und `lac-uninstall` bereit.
+Linux Admin Center kann systemweit installiert, aktualisiert und wieder entfernt werden. Seit Version `1.1.0` stehen dafür zwei unterstützte Wege zur Verfügung:
 
-Der aktuelle Stand ist `1.0.0 (Stable)`. Es gibt weiterhin noch keine distributionsspezifischen Pakete wie `.deb`, `.rpm` oder Arch-Pakete. Der Installer verwendet jedoch ein klassisches Linux-Verzeichnislayout und unterstützt `DESTDIR`, sodass spätere Paketformate darauf aufbauen können.
+- Debian-/Ubuntu-Paket über APT/dpkg nach `/usr`
+- manuelle Installation über `install.sh` standardmäßig nach `/usr/local`
+
+Der aktuelle Stand ist `1.1.0 (Packaging)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
 
 ## Voraussetzungen
 
@@ -12,13 +15,14 @@ Erforderlich:
 
 - Linux-System
 - Bash ab Version 4.3
-- Git zum Klonen und Aktualisieren des Repositorys
 - Standardprogramme wie `awk`, `sed`, `find`, `sort`, `tr`, `cp`, `rm`, `uname`, `df`, `du` und `hostname`
 - `ip` für Netzwerkinformationen und Gateway-Erkennung
 - `ping` für Gateway- und Internet-Erreichbarkeitstests
 - `getent` für die DNS-Auflösungsprüfung
-- `sudo` für die systemweite Installation sowie administrative Update- und Cleanup-Befehle
+- `sudo` für systemweite Installation sowie administrative Update- und Cleanup-Befehle
 - ein unterstützter Paketmanager
+
+Für eine manuelle Installation aus dem Repository wird zusätzlich Git benötigt.
 
 Unterstützte Paketmanager:
 
@@ -69,7 +73,107 @@ Auf Debian- und Ubuntu-basierten Systemen können die Hardwarediagnosewerkzeuge 
 sudo apt install lm-sensors smartmontools nvme-cli
 ```
 
+## Installation als Debian-/Ubuntu-Paket
+
+Das Paket für Version 1.1.0 heißt:
+
+```text
+linux-admin-center_1.1.0-1_all.deb
+```
+
+Installation über APT:
+
+```bash
+sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+```
+
+APT übernimmt dabei Registrierung, Abhängigkeiten und spätere Entfernung des Pakets.
+
+### Paketpfade
+
+Die paketverwaltete Installation verwendet:
+
+| Pfad | Zweck |
+|---|---|
+| `/usr/bin/lac` | normaler Programmstart |
+| `/usr/lib/linux-admin-center/` | LAC-Laufzeitdateien |
+| `/usr/share/linux-admin-center/` | Beispielkonfiguration und Paketmarker |
+| `/usr/share/doc/linux-admin-center/` | Dokumentation und Paketinformationen |
+| `/usr/share/man/man1/lac.1.gz` | Manpage |
+
+Eine Paketinstallation enthält bewusst **keinen** Befehl `lac-uninstall`. Paketdateien werden ausschließlich über APT beziehungsweise dpkg verwaltet.
+
+### Wechsel von einer manuellen Installation
+
+Eine bisherige Standardinstallation aus `install.sh` liegt unter `/usr/local`. Sie darf nicht parallel zur Paketinstallation bestehen, weil `/usr/local/bin` üblicherweise vor `/usr/bin` im `PATH` liegt.
+
+Das Paket prüft vor dem Entpacken typische LAC-Pfade unter `/usr/local`. Wird dort eine manuelle Installation erkannt, bricht die Paketinstallation mit einer klaren Migrationsanleitung ab und verändert die manuelle Installation nicht.
+
+Die alte Installation entfernen:
+
+```bash
+sudo /usr/local/bin/lac-uninstall
+```
+
+Die Konfiguration unter `/etc/lac` und `$HOME/.config/lac` bleibt dabei erhalten.
+
+Eine bereits laufende Bash-Sitzung kann den alten Programmpfad `/usr/local/bin/lac` noch zwischengespeichert haben. Deshalb anschließend einmal ausführen:
+
+```bash
+hash -r
+```
+
+Alternativ kann eine neue Shell geöffnet werden.
+
+Danach das Paket installieren:
+
+```bash
+sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+```
+
+Anschließend sollte gelten:
+
+```bash
+command -v lac
+lac --version
+lac --self-check
+```
+
+Erwartet:
+
+```text
+/usr/bin/lac
+Linux Admin Center 1.1.0 (Packaging)
+```
+
+Der Self Check muss den Installationstyp `debian-package` erkennen. Auf einem vollständig verfügbaren System sollte der Gesamtstatus `healthy` sein.
+
+### Paket erneut installieren
+
+```bash
+sudo apt install --reinstall ./linux-admin-center_1.1.0-1_all.deb
+```
+
+Vorhandene aktive LAC-Konfiguration wird dabei nicht überschrieben.
+
+### Paket entfernen
+
+```bash
+sudo apt remove linux-admin-center
+```
+
+APT entfernt die paketverwalteten Dateien. Bewusst erhalten bleiben:
+
+- `/etc/lac`
+- `$HOME/.config/lac`
+
+Dadurch kann LAC später erneut installiert werden, ohne dass die vorhandene Konfiguration verloren geht.
+
+Weitere Details zum Paketbau und zu den automatisierten Paketprüfungen stehen in [Packaging.md](Packaging.md).
+
 ## Repository klonen
+
+Dieser Abschnitt ist nur für die manuelle Installation oder Entwicklung erforderlich.
 
 Ein möglicher Projektpfad ist:
 
@@ -98,7 +202,7 @@ Danach in das Repository wechseln:
 cd ~/projects/LinuxAdminCenter
 ```
 
-## Systemweite Installation
+## Manuelle systemweite Installation
 
 Die Standardinstallation erfolgt nach `/usr/local`:
 
@@ -110,7 +214,7 @@ Der Installer kopiert ausschließlich die für LAC vorgesehenen Laufzeit-, Dokum
 
 ### Standardpfade
 
-Nach einer Standardinstallation existieren folgende Bereiche:
+Nach einer manuellen Standardinstallation existieren folgende Bereiche:
 
 | Pfad | Zweck |
 |---|---|
@@ -136,10 +240,10 @@ Version anzeigen:
 lac --version
 ```
 
-Erwartete Ausgabe für die stabile Version:
+Erwartete Ausgabe für Version 1.1.0:
 
 ```text
-Linux Admin Center 1.0.0 (Stable)
+Linux Admin Center 1.1.0 (Packaging)
 ```
 
 LAC selbst prüfen:
@@ -148,7 +252,7 @@ LAC selbst prüfen:
 lac --self-check
 ```
 
-Der Self Check kontrolliert unter anderem Bash-Version, Runtime-Dateien, Launcher, Konfigurationszugriff, Kernwerkzeuge und den erkannten Paketmanager. Fehlende optionale Diagnosewerkzeuge werden angezeigt, verschlechtern den Gesamtstatus aber nicht.
+Der Self Check kontrolliert unter anderem Bash-Version, Installationstyp, Runtime-Dateien, Launcher, Konfigurationszugriff, Kernwerkzeuge und den erkannten Paketmanager. Fehlende optionale Diagnosewerkzeuge werden angezeigt, verschlechtern den Gesamtstatus aber nicht.
 
 Hilfe anzeigen:
 
@@ -177,6 +281,8 @@ lac --cleanup-report
 ```
 
 ## Benutzerdefiniertes Installationspräfix
+
+Dieser Abschnitt gilt für die manuelle Installation.
 
 Mit `--prefix` kann ein anderes absolutes Ziel gewählt werden:
 
@@ -213,7 +319,7 @@ Dabei entstehen unter anderem:
 /tmp/lac-package-root/usr/lib/linux-admin-center/
 ```
 
-`DESTDIR` wird hauptsächlich für automatisierte Tests und spätere Paketformate verwendet. Ist `DESTDIR` gesetzt, verlangt der Installer keine Root-Rechte, da er nicht in das echte Systemziel schreibt. Relative Staging-Pfade, `/` sowie Pfade mit `.`- oder `..`-Komponenten werden abgelehnt.
+`DESTDIR` wird für automatisierte Tests und den Paketbau verwendet. Ist `DESTDIR` gesetzt, verlangt der Installer keine Root-Rechte, da er nicht in das echte Systemziel schreibt. Relative Staging-Pfade, `/` sowie Pfade mit `.`- oder `..`-Komponenten werden abgelehnt.
 
 ## Konfiguration
 
@@ -237,11 +343,11 @@ EOF
 
 Die Benutzerkonfiguration überschreibt die systemweite Konfiguration.
 
-Der Installer und der Uninstaller behandeln diese Konfigurationsdateien als Benutzerdaten. Sie werden bei Installation, Update und Deinstallation nicht verändert oder gelöscht.
+Sowohl die manuelle Installation als auch die Paketinstallation behandeln diese Konfigurationsdateien als Benutzerdaten. Sie werden bei Installation, Reinstallation, Update und normaler Deinstallation nicht verändert oder gelöscht.
 
-## Anwendung aktualisieren
+## Manuelle Installation aktualisieren
 
-Eine bestehende Installation wird aus dem aktualisierten Repository erneut installiert:
+Eine bestehende manuelle Installation wird aus dem aktualisierten Repository erneut installiert:
 
 ```bash
 cd ~/projects/LinuxAdminCenter
@@ -262,7 +368,7 @@ lac --self-check
 lac --system-info
 ```
 
-## Anwendung entfernen
+## Manuelle Installation entfernen
 
 Die empfohlene Deinstallation erfolgt über den installierten Befehl:
 
@@ -289,9 +395,7 @@ Bewusst erhalten bleiben:
 - `/etc/lac`
 - `$HOME/.config/lac`
 
-Dadurch kann LAC später erneut installiert werden, ohne dass eine vorhandene Konfiguration verloren geht.
-
-Ein mehrfacher Aufruf des Uninstallers ist sicher. Ist LAC bereits entfernt, wird lediglich gemeldet, dass unter dem gewählten Präfix keine Installation vorhanden ist.
+Ein mehrfacher Aufruf des manuellen Uninstallers ist sicher. Ist LAC bereits entfernt, wird lediglich gemeldet, dass unter dem gewählten Präfix keine Installation vorhanden ist.
 
 ## Entwicklung ohne Installation
 
@@ -313,13 +417,20 @@ Portabilitätsprüfungen ausführen:
 bash tests/portability_test.sh
 ```
 
+Debian-Paket lokal bauen:
+
+```bash
+bash scripts/build_debian_package.sh
+```
+
 ShellCheck ausführen:
 
 ```bash
-shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh \
+    src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
-Der Installationstest verwendet ein temporäres `DESTDIR` und verändert das echte System nicht.
+Der Installationstest verwendet ein temporäres `DESTDIR` und verändert das echte System nicht. Der Paket-Lifecycle-Test läuft in einem isolierten Debian-Container.
 
 ## Diagnosewerkzeuge prüfen
 

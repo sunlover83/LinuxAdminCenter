@@ -8,6 +8,50 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.1.0] - 2026-08-15
+
+### Added
+
+- Architecture-independent Debian/Ubuntu package `linux-admin-center_1.1.0-1_all.deb`
+- Debian package metadata and build rules under `debian/`
+- `lac(1)` manual page for package-managed installations
+- Package marker used by the LAC Self Check to identify Debian package installations
+- Safe pre-installation detection of conflicting manual LAC installations under `/usr/local`
+- Reusable `scripts/build_debian_package.sh` helper for local and CI package builds
+- Dedicated Debian/Ubuntu packaging documentation
+- Automated Debian package build validation
+- Automated APT/dpkg lifecycle validation in a clean Debian stable container
+- Lintian validation with Error and Warning findings treated as failures
+- GitHub Actions upload of the validated `.deb` as a workflow artifact
+
+### Changed
+
+- Version and codename promoted to `1.1.0 (Packaging)`
+- Debian package version promoted to `1.1.0-1`
+- Package-managed installations use `/usr` and are removed exclusively through APT/dpkg
+- Package-managed installations intentionally omit `lac-uninstall`
+- Self Check now distinguishes Debian package installations from manual system-wide installs and validates the appropriate launcher set
+- Debian package builds reuse the existing `DESTDIR` installer with `/usr` as the package prefix
+- Debian package builds respect `DEB_BUILD_OPTIONS=nocheck` so CI can avoid redundant execution of the full test suite
+- README and installation documentation now describe both package-managed and manual installation paths
+- Migration documentation now includes `hash -r` for already-running Bash sessions that cached the former `/usr/local/bin/lac` path
+
+### Validation
+
+- Package build, extraction, metadata, runtime contents, package marker, version output and Self Check are validated automatically
+- APT lifecycle validation covers manual-install conflict detection, package install, reinstall, execution, Self Check, removal and configuration preservation
+- Lintian completes without Error or Warning findings after documented package-specific overrides
+- ShellCheck covers the Debian maintainer script and reusable package build helper
+- Existing Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed portability jobs remain green
+- The `1.1.0-alpha1` package lifecycle was additionally validated on a real APT-based desktop system, including migration from the manual 1.0.0 installation, healthy package Self Check, removal/reinstallation and preservation of user configuration
+
+### Security
+
+- The package never deletes an existing manual `/usr/local` installation automatically
+- Package installation aborts before unpacking if a conflicting manual LAC installation is detected
+- Existing `/etc/lac` and user configuration remain outside package-managed runtime files and are preserved during migration, reinstall and normal package removal
+- Package removal stays under APT/dpkg control instead of exposing a separate package uninstaller
+
 ## [1.0.0] - 2026-08-15
 
 ### Changed

@@ -21,16 +21,37 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install ShellCheck
+      - name: Install quality and packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes shellcheck
+          sudo apt-get install --yes shellcheck build-essential debhelper dpkg-dev lintian
 
       - name: Run tests
         run: bash tests/run_tests.sh
 
+      - name: Build and validate Debian package
+        run: bash tests/debian_package_build.sh
+
+      - name: Validate Debian package lifecycle
+        run: bash tests/debian_package_lifecycle.sh
+
+      - name: Run Lintian
+        run: bash tests/debian_package_lint.sh
+
       - name: Run ShellCheck
-        run: shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+        run: shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+
+      - name: Build Debian package artifact
+        env:
+          DEB_BUILD_OPTIONS: nocheck
+        run: bash scripts/build_debian_package.sh dist
+
+      - name: Upload Debian package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-admin-center-debian
+          path: dist/linux-admin-center_*_all.deb
+          if-no-files-found: error
 
   portability:
     name: Portability (${{ matrix.name }})

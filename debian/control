@@ -1,0 +1,21 @@
+Source: linux-admin-center
+Section: admin
+Priority: optional
+Maintainer: sunlover83 <sunlover83@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/sunlover83/LinuxAdminCenter
+
+Package: linux-admin-center
+Architecture: all
+Depends: ${misc:Depends}, bash (>= 4.3), apt, mawk | gawk
+Recommends: iproute2, iputils-ping, pciutils, procps
+Suggests: lm-sensors, smartmontools, nvme-cli, vulkan-tools, flatpak, gamemode, mangohud, gamescope
+Description: modular Linux desktop administration toolkit
+ Linux Admin Center (LAC) provides an interactive terminal interface and
+ command-line options for common Linux desktop administration tasks.
+ .
+ It includes update management, system and network information, read-only
+ diagnostics, gaming compatibility checks, service health, cleanup reporting
+ and a self-check for the installed runtime.

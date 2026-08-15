@@ -4,18 +4,23 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **1.0.0 (Stable)**
+Current version: **1.1.0 (Packaging)**
 
-Version 1.0.0 is the first stable Linux Admin Center release. It promotes the validated 1.0.0-rc1 baseline without adding new features or changing functional runtime behavior.
+Version 1.1.0 adds the first Debian/Ubuntu package workflow on top of the stable 1.0.0 runtime. The package integrates LAC with APT/dpkg, preserves existing configuration, blocks unsafe overlap with an older manual `/usr/local` installation and is validated through automated package lifecycle tests plus real-system migration testing.
 
 ## Current features
 
-- System-wide installer and uninstaller
-- Standard `/usr/local` installation layout
-- Installed `lac` and `lac-uninstall` commands
+- Debian/Ubuntu `.deb` package support (`Architecture: all`)
+- Package-managed installation and removal through APT/dpkg
+- Safe migration guard for existing manual `/usr/local` installations
+- Package-aware Self Check reporting `debian-package`
+- `lac(1)` manual page for Debian package installations
+- System-wide manual installer and uninstaller remain available
+- Standard `/usr/local` manual installation layout
+- Installed `lac` and, for manual installs, `lac-uninstall` commands
 - Configurable installation prefix and `DESTDIR` staging support
 - Safe reinstall workflow that replaces stale runtime files
-- Configuration preservation during uninstall
+- Configuration preservation during uninstall and package removal
 - Bash 4.3 minimum-version enforcement before the full runtime is loaded
 - Distribution-family detection through `ID` and `ID_LIKE`
 - Interactive main menu
@@ -67,6 +72,7 @@ Version 1.0.0 is the first stable Linux Admin Center release. It promotes the va
 - System-wide and user-specific configuration
 - Debug logging
 - Automated shell tests
+- Automated Debian package build, lifecycle and Lintian validation
 - Automated GitHub Actions quality checks
 - Cross-distribution portability checks for Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed
 
@@ -96,7 +102,66 @@ The multi-distribution CI verifies this mapping on Debian stable, Fedora, Arch L
 
 ## Installation
 
-Clone the repository and install LAC system-wide:
+### Debian / Ubuntu package
+
+Version 1.1.0 provides an architecture-independent Debian package:
+
+```text
+linux-admin-center_1.1.0-1_all.deb
+```
+
+Install it with APT:
+
+```bash
+sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+```
+
+A package-managed installation uses:
+
+```text
+/usr/bin/lac
+/usr/lib/linux-admin-center/
+/usr/share/linux-admin-center/
+/usr/share/doc/linux-admin-center/
+```
+
+It deliberately does **not** install `lac-uninstall`; removal stays under APT/dpkg control:
+
+```bash
+sudo apt remove linux-admin-center
+```
+
+If a previous manual LAC installation exists under `/usr/local`, the package installation stops before unpacking and tells the administrator to remove the manual installation first:
+
+```bash
+sudo /usr/local/bin/lac-uninstall
+hash -r
+sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+```
+
+`hash -r` clears a possible cached `/usr/local/bin/lac` path in an already-running Bash session. Opening a new shell has the same effect. Existing configuration under `/etc/lac` and user configuration under `$HOME/.config/lac` are preserved during migration, reinstall and package removal.
+
+After installation:
+
+```bash
+command -v lac
+lac --version
+lac --self-check
+```
+
+Expected version output:
+
+```text
+Linux Admin Center 1.1.0 (Packaging)
+```
+
+The Self Check should identify the installation as `debian-package`.
+
+See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
+
+### Manual installation
+
+The existing manual installation remains supported. Clone the repository and install LAC system-wide:
 
 ```bash
 git clone git@github.com:sunlover83/LinuxAdminCenter.git
@@ -104,7 +169,7 @@ cd LinuxAdminCenter
 sudo ./install.sh
 ```
 
-The default installation creates:
+The default manual installation creates:
 
 ```text
 /usr/local/bin/lac
@@ -122,7 +187,7 @@ lac --version
 lac --self-check
 ```
 
-Update an installed copy by updating the repository and running the installer again:
+Update a manual installation by updating the repository and running the installer again:
 
 ```bash
 git switch main
@@ -130,7 +195,7 @@ git pull --ff-only
 sudo ./install.sh
 ```
 
-Remove the installed application with:
+Remove a manual installation with:
 
 ```bash
 sudo lac-uninstall
@@ -151,8 +216,6 @@ DESTDIR=/tmp/lac-package-root ./install.sh --prefix /usr
 ```
 
 Unsafe installation targets are rejected before file operations. Relative paths, filesystem-root targets and `.` / `..` path components are not accepted for the protected prefix/staging values.
-
-Distribution-specific `.deb`, `.rpm` or similar package files are not yet provided in 1.0.0. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
 
 ## Usage
 
@@ -236,17 +299,17 @@ Currently supported:
 DEBUG=false
 ```
 
-The installer does not create or overwrite either configuration file. An example is installed at:
+Neither installation method creates or overwrites an active configuration file. The example configuration is installed under the selected application prefix:
 
 ```text
-/usr/local/share/linux-admin-center/lac.conf.example
+/usr/share/linux-admin-center/lac.conf.example        # Debian package
+/usr/local/share/linux-admin-center/lac.conf.example  # default manual install
 ```
-
-when the default prefix is used.
 
 ## Documentation
 
 - [Installation](docs/Installation.md)
+- [Debian and Ubuntu packaging](docs/Packaging.md)
 - [User manual](docs/Benutzerhandbuch.md)
 - [Architecture](docs/Architektur.md)
 - [Developer guide](docs/Entwicklerhandbuch.md)
@@ -268,13 +331,20 @@ Run the distribution-independent portability subset:
 bash tests/portability_test.sh
 ```
 
+Build the Debian package:
+
+```bash
+bash scripts/build_debian_package.sh
+```
+
 Run ShellCheck:
 
 ```bash
-shellcheck install.sh uninstall.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh \
+    src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
-GitHub Actions runs the complete test suite and ShellCheck on Ubuntu for pull requests and pushes to `main`. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
+GitHub Actions runs the complete test suite, Debian package build validation, an APT/dpkg lifecycle test, Lintian and ShellCheck on Ubuntu for pull requests and pushes to `main`. Successful pull-request builds also upload the generated `.deb` as an Actions artifact. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
 
 Test fixtures use neutral example values. Personal home paths, hostnames and real development-machine hardware fingerprints are intentionally not used as fixtures or documentation examples.
 
@@ -282,8 +352,10 @@ Test fixtures use neutral example values. Personal home paths, hostnames and rea
 
 ```text
 .github/workflows/                  Automated quality and portability checks
-install.sh                          System installation and staged packaging
-uninstall.sh                        Safe system removal workflow
+debian/                             Debian package metadata and maintainer files
+scripts/build_debian_package.sh     Reusable Debian package builder
+install.sh                          Manual system installation and staged packaging
+uninstall.sh                        Safe manual system removal workflow
 src/lac.sh                          Application entry point
 src/core/                           Shared CLI, configuration and metrics code
 src/modules/update/                 Update management
@@ -296,23 +368,25 @@ src/modules/gaming_readiness/       Gaming readiness view
 src/modules/gaming_diagnostics/     Detailed gaming compatibility diagnostics
 src/modules/service_health/         Service health view
 src/modules/self_check/             LAC runtime and dependency self-check
-tests/                              Automated shell and portability tests
+tests/                              Automated shell, package and portability tests
 docs/                               Project documentation
 ```
 
 ## Roadmap
 
-Version `0.9.0-alpha` introduced a reproducible installation, update and removal workflow with standard Linux filesystem locations and `DESTDIR` support for future packaging.
+Version `1.0.0` established the first stable LAC baseline.
 
-Version `1.0.0-rc1` established the validated release-candidate baseline for the first stable release, including runtime/deployment hardening, Self Check, cross-distribution portability coverage, code and consistency reviews, neutral test fixtures and real-system validation.
+Version `1.1.0` adds Debian/Ubuntu packaging, package-aware Self Check behavior, safe migration from manual `/usr/local` installations, package lifecycle validation, Lintian checks and reusable package build tooling.
 
-Version `1.0.0` is the first stable release and promotes that validated RC1 baseline without functional feature changes.
+Planned next milestones:
 
-Planned areas for later development include:
+- `1.2.0` – release automation and automated package publication
+- `1.3.0` – storage analysis
+- `1.4.0` – boot and system diagnostics
+- `1.5.0` – expanded update management across supported application/package sources
+- `1.6.0` – user-interface and UX improvements; exact UI technology to be decided later
 
-- Distribution-specific package formats and release automation
-- Additional cleanup categories after separate safety reviews
-- Further diagnostic modules where they provide clear administrative value
+Patch releases in the `1.0.x`, `1.1.x` and later lines are reserved for compatible fixes rather than feature milestones.
 
 ## License
 

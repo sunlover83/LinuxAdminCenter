@@ -1,0 +1,20 @@
+Linux Admin Center for Debian and Ubuntu
+=========================================
+
+The Debian package installs Linux Admin Center below /usr and is managed by
+apt and dpkg.
+
+Package-managed installations intentionally do not install the lac-uninstall
+command. Removing package files outside apt or dpkg would leave the package
+database inconsistent.
+
+Install a local package with:
+
+  sudo apt install ./linux-admin-center_<version>_all.deb
+
+Remove it with:
+
+  sudo apt remove linux-admin-center
+
+Configuration under /etc/lac and user configuration under ~/.config/lac are
+not package-managed and are therefore preserved when the package is removed.
