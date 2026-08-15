@@ -4,9 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **1.1.0 (Packaging)**
+Current development version: **1.2.0-alpha1 (Release Automation)**
 
-Version 1.1.0 adds the first Debian/Ubuntu package workflow on top of the stable 1.0.0 runtime. The package integrates LAC with APT/dpkg, preserves existing configuration, blocks unsafe overlap with an older manual `/usr/local` installation and is validated through automated package lifecycle tests plus real-system migration testing.
+Latest stable release: **1.1.0 (Packaging)**
+
+Version 1.2.0 adds automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit.
 
 ## Current features
 
@@ -15,6 +17,11 @@ Version 1.1.0 adds the first Debian/Ubuntu package workflow on top of the stable
 - Safe migration guard for existing manual `/usr/local` installations
 - Package-aware Self Check reporting `debian-package`
 - `lac(1)` manual page for Debian package installations
+- Tag-triggered GitHub release automation
+- Cross-checking of Git tag, runtime, Debian, changelog and manpage release metadata
+- Automated release notes generated from `CHANGELOG.md`
+- SHA256 checksum publication alongside release packages
+- Least-privilege release workflow with write permission scoped to the release job
 - System-wide manual installer and uninstaller remain available
 - Standard `/usr/local` manual installation layout
 - Installed `lac` and, for manual installs, `lac-uninstall` commands
@@ -104,7 +111,7 @@ The multi-distribution CI verifies this mapping on Debian stable, Fedora, Arch L
 
 ### Debian / Ubuntu package
 
-Version 1.1.0 provides an architecture-independent Debian package:
+The latest stable release, version 1.1.0, provides an architecture-independent Debian package:
 
 ```text
 linux-admin-center_1.1.0-1_all.deb
@@ -149,7 +156,7 @@ lac --version
 lac --self-check
 ```
 
-Expected version output:
+Expected version output for the published 1.1.0 package:
 
 ```text
 Linux Admin Center 1.1.0 (Packaging)
@@ -310,6 +317,7 @@ Neither installation method creates or overwrites an active configuration file. 
 
 - [Installation](docs/Installation.md)
 - [Debian and Ubuntu packaging](docs/Packaging.md)
+- [Release automation](docs/ReleaseAutomation.md)
 - [User manual](docs/Benutzerhandbuch.md)
 - [Architecture](docs/Architektur.md)
 - [Developer guide](docs/Entwicklerhandbuch.md)
@@ -337,6 +345,18 @@ Build the Debian package:
 bash scripts/build_debian_package.sh
 ```
 
+Validate the current release metadata contract:
+
+```bash
+bash scripts/validate_release_metadata.sh v1.2.0-alpha1
+```
+
+Generate local release notes from the changelog:
+
+```bash
+bash scripts/generate_release_notes.sh v1.2.0-alpha1 release-notes.md
+```
+
 Run ShellCheck:
 
 ```bash
@@ -346,14 +366,19 @@ shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh \
 
 GitHub Actions runs the complete test suite, Debian package build validation, an APT/dpkg lifecycle test, Lintian and ShellCheck on Ubuntu for pull requests and pushes to `main`. Successful pull-request builds also upload the generated `.deb` as an Actions artifact. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
 
+Release tags additionally trigger the dedicated release workflow. It re-validates release metadata and the package quality gates, creates the final Debian package and `SHA256SUMS`, generates notes from `CHANGELOG.md`, and publishes the assets only for an existing validated tag.
+
 Test fixtures use neutral example values. Personal home paths, hostnames and real development-machine hardware fingerprints are intentionally not used as fixtures or documentation examples.
 
 ## Project structure
 
 ```text
-.github/workflows/                  Automated quality and portability checks
+.github/workflows/quality.yml       Automated quality and portability checks
+.github/workflows/release.yml       Tag-triggered release publication
 debian/                             Debian package metadata and maintainer files
 scripts/build_debian_package.sh     Reusable Debian package builder
+scripts/validate_release_metadata.sh Release metadata contract validation
+scripts/generate_release_notes.sh   Changelog-based release-note generation
 install.sh                          Manual system installation and staged packaging
 uninstall.sh                        Safe manual system removal workflow
 src/lac.sh                          Application entry point
@@ -368,7 +393,7 @@ src/modules/gaming_readiness/       Gaming readiness view
 src/modules/gaming_diagnostics/     Detailed gaming compatibility diagnostics
 src/modules/service_health/         Service health view
 src/modules/self_check/             LAC runtime and dependency self-check
-tests/                              Automated shell, package and portability tests
+tests/                              Automated shell, package, release and portability tests
 docs/                               Project documentation
 ```
 
@@ -378,9 +403,11 @@ Version `1.0.0` established the first stable LAC baseline.
 
 Version `1.1.0` adds Debian/Ubuntu packaging, package-aware Self Check behavior, safe migration from manual `/usr/local` installations, package lifecycle validation, Lintian checks and reusable package build tooling.
 
+Version `1.2.0-alpha1` starts automated release publication with strict tag/metadata validation, repeatable quality gates, changelog-based release notes and SHA256 release assets.
+
 Planned next milestones:
 
-- `1.2.0` – release automation and automated package publication
+- `1.2.0` – complete and validate automated release publication
 - `1.3.0` – storage analysis
 - `1.4.0` – boot and system diagnostics
 - `1.5.0` – expanded update management across supported application/package sources

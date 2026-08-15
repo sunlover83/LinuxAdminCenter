@@ -8,6 +8,39 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.2.0-alpha1] - 2026-08-15
+
+### Added
+
+- Tag-triggered GitHub Actions release workflow for automated package publication
+- Release metadata validation across Git tag, runtime version, Debian version, project changelog and manpage
+- Automatic release-note generation from the matching `CHANGELOG.md` section
+- Automatic `SHA256SUMS` generation for the published Debian package
+- Release automation tests for metadata contracts, release-note extraction and workflow safety invariants
+- Dedicated release automation documentation
+
+### Changed
+
+- Version and codename updated to `1.2.0-alpha1 (Release Automation)`
+- Debian package version updated to `1.2.0~alpha1-1`
+- Release publication now repeats the full regression suite, Debian package build validation, APT/dpkg lifecycle validation, Lintian and ShellCheck before creating a GitHub Release
+- Semantic pre-release tags are published as GitHub pre-releases and are not marked as `Latest`
+- Stable releases remain eligible to become the GitHub `Latest` release
+
+### Validation
+
+- Release metadata fixture tests cover matching stable and pre-release versions plus deliberate tag, runtime, Debian, changelog and manpage mismatches
+- Release-note tests verify that only the requested changelog section is published
+- Workflow-invariant tests verify least-privilege permissions, exact-main tag checks, package lifecycle validation, checksum generation and `--verify-tag`
+- The release automation foundation completed the full GitHub quality and portability matrix after resolving the initial ShellCheck formatting finding
+
+### Security
+
+- Release tags must already exist and must point to the exact current `main` commit before publication
+- `gh release create --verify-tag` prevents the workflow from silently creating a missing tag
+- Workflow-wide permissions remain `contents: read`; only the release job receives `contents: write`
+- Release automation never deletes, moves or repairs a Git tag automatically after a validation failure
+
 ## [1.1.0] - 2026-08-15
 
 ### Added

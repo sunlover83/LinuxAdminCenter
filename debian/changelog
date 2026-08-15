@@ -1,3 +1,12 @@
+linux-admin-center (1.2.0~alpha1-1) unstable; urgency=medium
+
+  * Start automated GitHub release publication.
+  * Validate release tags against runtime, Debian, changelog and manpage
+    metadata.
+  * Generate release notes and SHA256 checksums automatically.
+
+ -- sunlover83 <sunlover83@users.noreply.github.com>  Sat, 15 Aug 2026 20:47:00 +0200
+
 linux-admin-center (1.1.0-1) unstable; urgency=medium
 
   * Add initial Debian and Ubuntu package support.

@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag points at current main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_commit="$(git rev-list -n 1 "$GITHUB_REF_NAME")"
+          main_commit="$(
+            gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha
+          )"
+
+          if [[ "$tag_commit" != "$main_commit" ]]; then
+            printf 'Release tag %s points to %s, but current main is %s.\n' \
+              "$GITHUB_REF_NAME" "$tag_commit" "$main_commit" >&2
+            exit 1
+          fi
+
+      - name: Install quality and packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck build-essential debhelper dpkg-dev lintian
+
+      - name: Validate release metadata
+        run: bash scripts/validate_release_metadata.sh "$GITHUB_REF_NAME"
+
+      - name: Run tests
+        run: bash tests/run_tests.sh
+
+      - name: Build and validate Debian package
+        run: bash tests/debian_package_build.sh
+
+      - name: Validate Debian package lifecycle
+        run: bash tests/debian_package_lifecycle.sh
+
+      - name: Run Lintian
+        run: bash tests/debian_package_lint.sh
+
+      - name: Run ShellCheck
+        run: shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
+
+      - name: Build release package
+        env:
+          DEB_BUILD_OPTIONS: nocheck
+        run: bash scripts/build_debian_package.sh dist
+
+      - name: Create SHA256 checksum
+        run: |
+          cd dist
+          sha256sum linux-admin-center_*_all.deb > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Generate release notes
+        run: bash scripts/generate_release_notes.sh "$GITHUB_REF_NAME" release-notes.md
+
+      - name: Determine release properties
+        id: release
+        run: |
+          release_version="${GITHUB_REF_NAME#v}"
+          codename="$(sed -n 's/^readonly LAC_CODENAME="\([^"]*\)"$/\1/p' src/core/common.sh | head -n 1)"
+
+          printf 'title=Linux Admin Center %s (%s)\n' \
+            "$release_version" "$codename" >> "$GITHUB_OUTPUT"
+
+          if [[ "$release_version" == *-* ]]; then
+            printf '%s\n' 'prerelease=true' >> "$GITHUB_OUTPUT"
+          else
+            printf '%s\n' 'prerelease=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
+          RELEASE_PRERELEASE: ${{ steps.release.outputs.prerelease }}
+        run: |
+          release_args=(
+            release create "$GITHUB_REF_NAME"
+            dist/linux-admin-center_*_all.deb
+            dist/SHA256SUMS
+            --verify-tag
+            --title "$RELEASE_TITLE"
+            --notes-file release-notes.md
+          )
+
+          if [[ "$RELEASE_PRERELEASE" == "true" ]]; then
+            release_args+=(--prerelease --latest=false)
+          else
+            release_args+=(--latest)
+          fi
+
+          gh "${release_args[@]}"
+
+      - name: Verify published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" \
+            --json tagName,name,isDraft,isPrerelease,assets

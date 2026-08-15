@@ -3,8 +3,8 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="1.1.0"
-readonly LAC_CODENAME="Packaging"
+readonly LAC_VERSION="1.2.0-alpha1"
+readonly LAC_CODENAME="Release Automation"
 readonly LAC_MIN_BASH_MAJOR=4
 readonly LAC_MIN_BASH_MINOR=3
 
