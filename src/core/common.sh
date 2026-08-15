@@ -3,7 +3,7 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="1.0.0-rc1"
+readonly LAC_VERSION="1.0.0"
 readonly LAC_CODENAME="Stable"
 readonly LAC_MIN_BASH_MAJOR=4
 readonly LAC_MIN_BASH_MINOR=3

@@ -4,7 +4,7 @@
 
 Ab Version `0.9.0-alpha` kann Linux Admin Center systemweit installiert, aktualisiert und wieder entfernt werden. Die Installation verwendet standardmäßig `/usr/local` und stellt anschließend die Befehle `lac` und `lac-uninstall` bereit.
 
-Der aktuelle Stand ist `1.0.0-rc1 (Stable)`. Es gibt weiterhin noch keine distributionsspezifischen Pakete wie `.deb`, `.rpm` oder Arch-Pakete. Der Installer verwendet jedoch ein klassisches Linux-Verzeichnislayout und unterstützt `DESTDIR`, sodass spätere Paketformate darauf aufbauen können.
+Der aktuelle Stand ist `1.0.0 (Stable)`. Es gibt weiterhin noch keine distributionsspezifischen Pakete wie `.deb`, `.rpm` oder Arch-Pakete. Der Installer verwendet jedoch ein klassisches Linux-Verzeichnislayout und unterstützt `DESTDIR`, sodass spätere Paketformate darauf aufbauen können.
 
 ## Voraussetzungen
 
@@ -136,10 +136,10 @@ Version anzeigen:
 lac --version
 ```
 
-Erwartete Ausgabe für den aktuellen Release Candidate:
+Erwartete Ausgabe für die stabile Version:
 
 ```text
-Linux Admin Center 1.0.0-rc1 (Stable)
+Linux Admin Center 1.0.0 (Stable)
 ```
 
 LAC selbst prüfen:

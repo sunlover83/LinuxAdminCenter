@@ -8,6 +8,19 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.0.0] - 2026-08-15
+
+### Changed
+
+- Version and codename promoted to `1.0.0 (Stable)`
+- Stable release promotes the validated `1.0.0-rc1` baseline without functional runtime changes
+- CLI version regression tests now require the stable version string
+- README and installation documentation now describe `1.0.0 (Stable)` as the current release
+
+### Validation
+
+- The RC1 baseline completed the full automated quality and portability matrix, installation lifecycle validation and subsequent normal-use testing without observed release-blocking defects before stable promotion
+
 ## [1.0.0-rc1] - 2026-08-08
 
 ### Added

@@ -4,9 +4,9 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current version: **1.0.0-rc1 (Stable)**
+Current version: **1.0.0 (Stable)**
 
-This is the first 1.0 release candidate. The feature scope is frozen; changes before the final 1.0 release are limited to release blockers, validation findings and release documentation.
+Version 1.0.0 is the first stable Linux Admin Center release. It promotes the validated 1.0.0-rc1 baseline without adding new features or changing functional runtime behavior.
 
 ## Current features
 
@@ -152,7 +152,7 @@ DESTDIR=/tmp/lac-package-root ./install.sh --prefix /usr
 
 Unsafe installation targets are rejected before file operations. Relative paths, filesystem-root targets and `.` / `..` path components are not accepted for the protected prefix/staging values.
 
-Distribution-specific `.deb`, `.rpm` or similar package files are not yet provided in 1.0.0-rc1. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
+Distribution-specific `.deb`, `.rpm` or similar package files are not yet provided in 1.0.0. The installation layout and `DESTDIR` support are intended as the foundation for those formats.
 
 ## Usage
 
@@ -304,7 +304,9 @@ docs/                               Project documentation
 
 Version `0.9.0-alpha` introduced a reproducible installation, update and removal workflow with standard Linux filesystem locations and `DESTDIR` support for future packaging.
 
-Version `1.0.0-rc1` is the release-candidate baseline for the first stable release. It combines runtime/deployment hardening, Self Check, cross-distribution portability coverage, code and consistency reviews, neutral test fixtures and completed real-system validation. The RC is intentionally feature-frozen before `1.0.0`.
+Version `1.0.0-rc1` established the validated release-candidate baseline for the first stable release, including runtime/deployment hardening, Self Check, cross-distribution portability coverage, code and consistency reviews, neutral test fixtures and real-system validation.
+
+Version `1.0.0` is the first stable release and promotes that validated RC1 baseline without functional feature changes.
 
 Planned areas for later development include:
 
