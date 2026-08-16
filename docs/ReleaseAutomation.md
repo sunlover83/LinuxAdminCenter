@@ -21,7 +21,7 @@ Beispiele:
 
 ```text
 v1.2.0
-v1.2.0-alpha1
+v1.2.0-alpha2
 v1.2.0-rc1
 ```
 
@@ -48,9 +48,9 @@ Debian-Version:  1.2.0-1
 Für Pre-Releases wird die Debian-Tilde verwendet, damit die Vorabversion korrekt vor der finalen Version sortiert:
 
 ```text
-Tag:             v1.2.0-alpha1
-LAC_VERSION:     1.2.0-alpha1
-Debian-Version:  1.2.0~alpha1-1
+Tag:             v1.2.0-alpha2
+LAC_VERSION:     1.2.0-alpha2
+Debian-Version:  1.2.0~alpha2-1
 ```
 
 Stimmt einer dieser Werte nicht, endet der Workflow vor der Release-Erstellung.
@@ -70,20 +70,30 @@ Dadurch hängt ein Release nicht ausschließlich davon ab, dass ein früherer CI
 
 ## Release-Artefakte
 
-Der Workflow erzeugt im Verzeichnis `dist/`:
+Der Debian-Build selbst behält die native Debian-Dateibenennung. Für ein Pre-Release kann sie beispielsweise so aussehen:
 
 ```text
-linux-admin-center_<Debian-Version>_all.deb
+linux-admin-center_1.2.0~alpha2-1_all.deb
+```
+
+GitHub normalisiert Sonderzeichen in Release-Asset-Dateinamen. Deshalb bereitet `scripts/prepare_release_assets.sh` das Paket **vor** dem Upload auf einen GitHub-sicheren, deterministischen Namen vor:
+
+```text
+linux-admin-center_1.2.0-alpha2-1_all.deb
 SHA256SUMS
 ```
 
-`SHA256SUMS` enthält die SHA256-Prüfsumme des exakt veröffentlichten Debian-Pakets.
+Dabei wird ausschließlich der Dateiname des Release-Artefakts geändert. Die Paketmetadaten enthalten weiterhin die Debian-Version `1.2.0~alpha2-1`.
+
+`SHA256SUMS` wird erst nach dieser Umbenennung erzeugt und referenziert deshalb exakt den Dateinamen, den Benutzer aus dem GitHub Release herunterladen. Ein normales `sha256sum -c SHA256SUMS` funktioniert damit direkt mit den heruntergeladenen Dateien.
+
+Stabile Paketnamen enthalten keine Tilde und bleiben unverändert.
 
 ## Release-Notes
 
 `scripts/generate_release_notes.sh` extrahiert ausschließlich den Abschnitt der zu veröffentlichenden Version aus `CHANGELOG.md`.
 
-Zusätzlich werden die erwarteten Release-Artefakte aufgeführt. Damit bleibt `CHANGELOG.md` die maßgebliche Quelle für die fachlichen Release-Informationen und Release-Notes werden nicht unabhängig davon manuell gepflegt.
+Zusätzlich werden die tatsächlich erwarteten, GitHub-sicheren Release-Artefakte aufgeführt. Damit bleibt `CHANGELOG.md` die maßgebliche Quelle für die fachlichen Release-Informationen und Release-Notes werden nicht unabhängig davon manuell gepflegt.
 
 ## Veröffentlichung
 
@@ -95,7 +105,9 @@ gh release create
 
 Der Workflow verwendet `--verify-tag`. Dadurch bricht GitHub CLI ab, wenn der Tag nicht bereits im Remote-Repository existiert. Der Release-Workflow erzeugt daher auch indirekt keinen fehlenden Tag.
 
-Pre-Release-Tags wie `v1.2.0-alpha1` werden als GitHub Pre-Release veröffentlicht und ausdrücklich nicht als `Latest` markiert. Ein stabiler Tag wie `v1.2.0` wird als normaler Release veröffentlicht.
+Pre-Release-Tags wie `v1.2.0-alpha2` werden als GitHub Pre-Release veröffentlicht und ausdrücklich nicht als `Latest` markiert. Ein stabiler Tag wie `v1.2.0` wird als normaler Release veröffentlicht.
+
+Nach der Veröffentlichung prüft der Workflow aktiv, dass genau das vorbereitete Debian-Paket und `SHA256SUMS` unter den erwarteten Namen vorhanden sind und dass der Pre-Release-Status dem Tag entspricht. Eine bloße erfolgreiche Upload-Antwort reicht damit nicht mehr als Release-Verifikation aus.
 
 ## Berechtigungen
 
@@ -130,10 +142,13 @@ Der Workflow veröffentlicht keinen Release, wenn unter anderem:
 - der Changelog-Eintrag fehlt
 - die Manpage eine andere Version nennt
 - Tests, Paket-Lifecycle, Lintian oder ShellCheck fehlschlagen
+- das Release-Paket vor dem Upload nicht eindeutig bestimmt werden kann
 - der Remote-Tag für `gh release create --verify-tag` nicht existiert
+
+Nach einem erfolgreichen Upload schlägt die Verifikation zusätzlich fehl, wenn GitHub andere Assetnamen zurückliefert oder der erwartete Pre-Release-Status nicht gesetzt ist.
 
 Eine fehlgeschlagene Release-Automation soll nicht durch Löschen oder automatisches Verschieben eines Tags selbst repariert werden. Tag-Korrekturen bleiben eine bewusste Administratorentscheidung.
 
-## Noch nicht Bestandteil von 1.2.0-alpha1
+## Noch nicht Bestandteil von 1.2.0-alpha2
 
-Kryptografisch signierte Git-Tags oder Release-Artefakt-Attestierungen sind nicht Teil der ersten Ausbaustufe. Die Architektur lässt diese Erweiterungen später zu, ohne den grundlegenden Tag- und Paket-Workflow neu zu entwerfen.
+Kryptografisch signierte Git-Tags oder Release-Artefakt-Attestierungen sind nicht Teil der aktuellen Ausbaustufe. Die Architektur lässt diese Erweiterungen später zu, ohne den grundlegenden Tag- und Paket-Workflow neu zu entwerfen.

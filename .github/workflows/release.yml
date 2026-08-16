@@ -68,11 +68,8 @@ jobs:
           DEB_BUILD_OPTIONS: nocheck
         run: bash scripts/build_debian_package.sh dist
 
-      - name: Create SHA256 checksum
-        run: |
-          cd dist
-          sha256sum linux-admin-center_*_all.deb > SHA256SUMS
-          cat SHA256SUMS
+      - name: Prepare release assets
+        run: bash scripts/prepare_release_assets.sh dist
 
       - name: Generate release notes
         run: bash scripts/generate_release_notes.sh "$GITHUB_REF_NAME" release-notes.md
@@ -118,6 +115,54 @@ jobs:
       - name: Verify published release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_PRERELEASE: ${{ steps.release.outputs.prerelease }}
         run: |
+          expected_package="$(
+            find dist \
+              -maxdepth 1 \
+              -type f \
+              -name 'linux-admin-center_*_all.deb' \
+              -printf '%f\n' \
+              -quit
+          )"
+
+          if [[ -z "$expected_package" ]]; then
+            printf '%s\n' 'Published release verification could not find the local package asset.' >&2
+            exit 1
+          fi
+
+          mapfile -t published_assets < <(
+            gh release view "$GITHUB_REF_NAME" \
+              --json assets \
+              --jq '.assets[].name'
+          )
+
+          if (( ${#published_assets[@]} != 2 )); then
+            printf 'Expected exactly 2 release assets, found %s.\n' \
+              "${#published_assets[@]}" >&2
+            printf '  %s\n' "${published_assets[@]}" >&2
+            exit 1
+          fi
+
+          for expected_asset in "$expected_package" SHA256SUMS; do
+            if ! printf '%s\n' "${published_assets[@]}" | grep -Fxq "$expected_asset"; then
+              printf 'Expected release asset is missing: %s\n' "$expected_asset" >&2
+              printf '  %s\n' "${published_assets[@]}" >&2
+              exit 1
+            fi
+          done
+
+          actual_prerelease="$(
+            gh release view "$GITHUB_REF_NAME" \
+              --json isPrerelease \
+              --jq '.isPrerelease'
+          )"
+
+          if [[ "$actual_prerelease" != "$RELEASE_PRERELEASE" ]]; then
+            printf 'Release prerelease state mismatch: expected %s, got %s.\n' \
+              "$RELEASE_PRERELEASE" "$actual_prerelease" >&2
+            exit 1
+          fi
+
           gh release view "$GITHUB_REF_NAME" \
             --json tagName,name,isDraft,isPrerelease,assets

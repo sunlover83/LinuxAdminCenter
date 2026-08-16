@@ -101,7 +101,7 @@ if [[ "$(dpkg-query -W -f='${Status}' linux-admin-center)" != "install ok instal
 fi
 pass "Package installs successfully through apt"
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.2.0-alpha1 (Release Automation)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.2.0-alpha2 (Release Automation)" ]]; then
     fail "Installed package must expose the expected LAC version"
 fi
 pass "Installed lac command reports the packaged version"
@@ -124,7 +124,7 @@ pass "Package removal remains under apt/dpkg control"
 
 apt-get install --reinstall --yes /tmp/linux-admin-center.deb >/dev/null
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.2.0-alpha1 (Release Automation)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.2.0-alpha2 (Release Automation)" ]]; then
     fail "Reinstalled package must remain executable"
 fi
 if [[ "$(cat /etc/lac/lac.conf)" != "DEBUG=true" ]]; then

@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.2.0-alpha1 (Release Automation)**
+Current development version: **1.2.0-alpha2 (Release Automation)**
 
 Latest stable release: **1.1.0 (Packaging)**
 
-Version 1.2.0 adds automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit.
+Version 1.2.0 adds automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit. Alpha2 additionally normalizes prerelease package filenames before upload so GitHub release assets, `SHA256SUMS` and release notes use the same download name.
 
 ## Current features
 
@@ -21,6 +21,8 @@ Version 1.2.0 adds automated GitHub release publication on top of the 1.1.0 Debi
 - Cross-checking of Git tag, runtime, Debian, changelog and manpage release metadata
 - Automated release notes generated from `CHANGELOG.md`
 - SHA256 checksum publication alongside release packages
+- GitHub-safe prerelease asset filenames with checksum/name consistency
+- Post-publication verification of release asset names and prerelease state
 - Least-privilege release workflow with write permission scoped to the release job
 - System-wide manual installer and uninstaller remain available
 - Standard `/usr/local` manual installation layout
@@ -348,13 +350,19 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.2.0-alpha1
+bash scripts/validate_release_metadata.sh v1.2.0-alpha2
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.2.0-alpha1 release-notes.md
+bash scripts/generate_release_notes.sh v1.2.0-alpha2 release-notes.md
+```
+
+Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
+
+```bash
+bash scripts/prepare_release_assets.sh dist
 ```
 
 Run ShellCheck:
@@ -366,7 +374,7 @@ shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh \
 
 GitHub Actions runs the complete test suite, Debian package build validation, an APT/dpkg lifecycle test, Lintian and ShellCheck on Ubuntu for pull requests and pushes to `main`. Successful pull-request builds also upload the generated `.deb` as an Actions artifact. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
 
-Release tags additionally trigger the dedicated release workflow. It re-validates release metadata and the package quality gates, creates the final Debian package and `SHA256SUMS`, generates notes from `CHANGELOG.md`, and publishes the assets only for an existing validated tag.
+Release tags additionally trigger the dedicated release workflow. It re-validates release metadata and the package quality gates, creates the final Debian package, normalizes the release asset filename, creates `SHA256SUMS` for that published name, generates notes from `CHANGELOG.md`, publishes the assets only for an existing validated tag and verifies the returned asset names and prerelease state.
 
 Test fixtures use neutral example values. Personal home paths, hostnames and real development-machine hardware fingerprints are intentionally not used as fixtures or documentation examples.
 
@@ -377,6 +385,7 @@ Test fixtures use neutral example values. Personal home paths, hostnames and rea
 .github/workflows/release.yml       Tag-triggered release publication
 debian/                             Debian package metadata and maintainer files
 scripts/build_debian_package.sh     Reusable Debian package builder
+scripts/prepare_release_assets.sh   GitHub-safe release asset preparation
 scripts/validate_release_metadata.sh Release metadata contract validation
 scripts/generate_release_notes.sh   Changelog-based release-note generation
 install.sh                          Manual system installation and staged packaging
@@ -403,7 +412,9 @@ Version `1.0.0` established the first stable LAC baseline.
 
 Version `1.1.0` adds Debian/Ubuntu packaging, package-aware Self Check behavior, safe migration from manual `/usr/local` installations, package lifecycle validation, Lintian checks and reusable package build tooling.
 
-Version `1.2.0-alpha1` starts automated release publication with strict tag/metadata validation, repeatable quality gates, changelog-based release notes and SHA256 release assets.
+Version `1.2.0-alpha1` established the first complete automated GitHub release run. That real release exposed GitHub's filename normalization of Debian prerelease filenames containing `~`.
+
+Version `1.2.0-alpha2` fixes that end-to-end finding by preparing GitHub-safe asset names before upload, generating checksums afterward and actively verifying published asset names.
 
 Planned next milestones:
 

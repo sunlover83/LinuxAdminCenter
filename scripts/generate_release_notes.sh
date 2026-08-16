@@ -22,7 +22,8 @@ project_changelog="${PROJECT_ROOT}/CHANGELOG.md"
 
 codename="$(sed -n 's/^readonly LAC_CODENAME="\([^"]*\)"$/\1/p' "$runtime_file" | head -n 1)"
 debian_version="$(sed -n '1s/^[^(]*(\([^)]*\)).*/\1/p' "$debian_changelog")"
-package_name="linux-admin-center_${debian_version}_all.deb"
+release_debian_version="${debian_version//\~/-}"
+package_name="linux-admin-center_${release_debian_version}_all.deb"
 
 section_file="$(mktemp)"
 trap 'rm -f "$section_file"' EXIT

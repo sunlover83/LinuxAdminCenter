@@ -1,3 +1,11 @@
+linux-admin-center (1.2.0~alpha2-1) unstable; urgency=medium
+
+  * Normalize prerelease GitHub asset filenames before upload.
+  * Generate SHA256SUMS after release-asset name normalization.
+  * Verify published asset names and prerelease state explicitly.
+
+ -- sunlover83 <sunlover83@users.noreply.github.com>  Sun, 16 Aug 2026 15:18:00 +0200
+
 linux-admin-center (1.2.0~alpha1-1) unstable; urgency=medium
 
   * Start automated GitHub release publication.

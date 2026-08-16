@@ -8,6 +8,33 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.2.0-alpha2] - 2026-08-16
+
+### Added
+
+- Dedicated release-asset preparation test covering prerelease filename normalization and stable filename preservation
+- Active post-publication verification of the exact GitHub release asset names and prerelease state
+
+### Changed
+
+- Version and codename promoted to `1.2.0-alpha2 (Release Automation)`
+- Debian package version promoted to `1.2.0~alpha2-1`
+- Prerelease Debian package files are renamed only for GitHub publication, for example from `linux-admin-center_1.2.0~alpha2-1_all.deb` to `linux-admin-center_1.2.0-alpha2-1_all.deb`
+- `SHA256SUMS` is now generated after release-asset filename normalization and therefore references the exact published download name
+- Generated release notes now list the GitHub-safe published package name rather than the internal Debian build filename
+
+### Fixed
+
+- The first real `v1.2.0-alpha1` release exposed GitHub's normalization of `~` in uploaded asset filenames, which caused the published package name to differ from both `SHA256SUMS` and the generated release notes
+- Direct `sha256sum -c SHA256SUMS` verification of downloaded prerelease assets is restored by normalizing the filename before checksum generation and upload
+
+### Validation
+
+- Release-asset tests verify that prerelease `~` filenames become deterministic `-` filenames while stable package filenames remain unchanged
+- Release-note tests verify that prerelease notes contain the published filename and never expose the GitHub-unsafe `~` build filename
+- Workflow-invariant tests require release-asset preparation before publication and reject the previous pre-normalization checksum command
+- Post-publication workflow verification now fails if the expected package asset, `SHA256SUMS`, exact asset count or prerelease state differs from the prepared release
+
 ## [1.2.0-alpha1] - 2026-08-15
 
 ### Added

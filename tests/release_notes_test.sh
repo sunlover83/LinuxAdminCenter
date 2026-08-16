@@ -62,13 +62,18 @@ for expected in \
     "# Linux Admin Center 1.2.0-alpha1 (Release Automation)" \
     "Automated release workflow." \
     "Existing tags are verified before release publication." \
-    'linux-admin-center_1.2.0~alpha1-1_all.deb' \
+    'linux-admin-center_1.2.0-alpha1-1_all.deb' \
     'SHA256SUMS'; do
     if [[ "$output" != *"$expected"* ]]; then
         printf '[FAIL] Release notes are missing: %s\n' "$expected" >&2
         exit 1
     fi
 done
+
+if [[ "$output" == *'linux-admin-center_1.2.0~alpha1-1_all.deb'* ]]; then
+    printf '%s\n' "[FAIL] Release notes expose the GitHub-unsafe Debian build filename." >&2
+    exit 1
+fi
 
 if [[ "$output" == *"Previous release content"* ]]; then
     printf '%s\n' "[FAIL] Release notes include content from the previous release." >&2
