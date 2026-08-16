@@ -7,7 +7,7 @@ Linux Admin Center kann systemweit installiert, aktualisiert und wieder entfernt
 - Debian-/Ubuntu-Paket über APT/dpkg nach `/usr`
 - manuelle Installation über `install.sh` standardmäßig nach `/usr/local`
 
-Der aktuelle Stand ist `1.1.0 (Packaging)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
+Der aktuelle Stand ist `1.2.0 (Release Automation)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
 
 ## Voraussetzungen
 
@@ -75,16 +75,16 @@ sudo apt install lm-sensors smartmontools nvme-cli
 
 ## Installation als Debian-/Ubuntu-Paket
 
-Das Paket für Version 1.1.0 heißt:
+Das Paket für Version 1.2.0 heißt:
 
 ```text
-linux-admin-center_1.1.0-1_all.deb
+linux-admin-center_1.2.0-1_all.deb
 ```
 
 Installation über APT:
 
 ```bash
-sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+sudo apt install ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 APT übernimmt dabei Registrierung, Abhängigkeiten und spätere Entfernung des Pakets.
@@ -128,7 +128,7 @@ Alternativ kann eine neue Shell geöffnet werden.
 Danach das Paket installieren:
 
 ```bash
-sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+sudo apt install ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 Anschließend sollte gelten:
@@ -143,7 +143,7 @@ Erwartet:
 
 ```text
 /usr/bin/lac
-Linux Admin Center 1.1.0 (Packaging)
+Linux Admin Center 1.2.0 (Release Automation)
 ```
 
 Der Self Check muss den Installationstyp `debian-package` erkennen. Auf einem vollständig verfügbaren System sollte der Gesamtstatus `healthy` sein.
@@ -151,7 +151,7 @@ Der Self Check muss den Installationstyp `debian-package` erkennen. Auf einem vo
 ### Paket erneut installieren
 
 ```bash
-sudo apt install --reinstall ./linux-admin-center_1.1.0-1_all.deb
+sudo apt install --reinstall ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 Vorhandene aktive LAC-Konfiguration wird dabei nicht überschrieben.
@@ -240,10 +240,10 @@ Version anzeigen:
 lac --version
 ```
 
-Erwartete Ausgabe für Version 1.1.0:
+Erwartete Ausgabe für Version 1.2.0:
 
 ```text
-Linux Admin Center 1.1.0 (Packaging)
+Linux Admin Center 1.2.0 (Release Automation)
 ```
 
 LAC selbst prüfen:

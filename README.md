@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.2.0-alpha2 (Release Automation)**
+Current development version: **1.2.0 (Release Automation)**
 
-Latest stable release: **1.1.0 (Packaging)**
+Latest stable release: **1.2.0 (Release Automation)**
 
-Version 1.2.0 adds automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit. Alpha2 additionally normalizes prerelease package filenames before upload so GitHub release assets, `SHA256SUMS` and release notes use the same download name.
+Version 1.2.0 adds validated, automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit. Prerelease package filenames are normalized before upload so GitHub release assets, `SHA256SUMS` and release notes use the same download name; the successful Alpha2 release verified that behavior end to end.
 
 ## Current features
 
@@ -113,16 +113,16 @@ The multi-distribution CI verifies this mapping on Debian stable, Fedora, Arch L
 
 ### Debian / Ubuntu package
 
-The latest stable release, version 1.1.0, provides an architecture-independent Debian package:
+The latest stable release, version 1.2.0, provides an architecture-independent Debian package:
 
 ```text
-linux-admin-center_1.1.0-1_all.deb
+linux-admin-center_1.2.0-1_all.deb
 ```
 
 Install it with APT:
 
 ```bash
-sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+sudo apt install ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 A package-managed installation uses:
@@ -145,7 +145,7 @@ If a previous manual LAC installation exists under `/usr/local`, the package ins
 ```bash
 sudo /usr/local/bin/lac-uninstall
 hash -r
-sudo apt install ./linux-admin-center_1.1.0-1_all.deb
+sudo apt install ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 `hash -r` clears a possible cached `/usr/local/bin/lac` path in an already-running Bash session. Opening a new shell has the same effect. Existing configuration under `/etc/lac` and user configuration under `$HOME/.config/lac` are preserved during migration, reinstall and package removal.
@@ -158,10 +158,10 @@ lac --version
 lac --self-check
 ```
 
-Expected version output for the published 1.1.0 package:
+Expected version output for the published 1.2.0 package:
 
 ```text
-Linux Admin Center 1.1.0 (Packaging)
+Linux Admin Center 1.2.0 (Release Automation)
 ```
 
 The Self Check should identify the installation as `debian-package`.
@@ -350,13 +350,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.2.0-alpha2
+bash scripts/validate_release_metadata.sh v1.2.0
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.2.0-alpha2 release-notes.md
+bash scripts/generate_release_notes.sh v1.2.0 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -416,9 +416,10 @@ Version `1.2.0-alpha1` established the first complete automated GitHub release r
 
 Version `1.2.0-alpha2` fixes that end-to-end finding by preparing GitHub-safe asset names before upload, generating checksums afterward and actively verifying published asset names.
 
+Version `1.2.0` promotes the validated release-automation baseline to stable without functional runtime changes.
+
 Planned next milestones:
 
-- `1.2.0` – complete and validate automated release publication
 - `1.3.0` – storage analysis
 - `1.4.0` – boot and system diagnostics
 - `1.5.0` – expanded update management across supported application/package sources

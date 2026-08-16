@@ -149,6 +149,6 @@ Nach einem erfolgreichen Upload schlägt die Verifikation zusätzlich fehl, wenn
 
 Eine fehlgeschlagene Release-Automation soll nicht durch Löschen oder automatisches Verschieben eines Tags selbst repariert werden. Tag-Korrekturen bleiben eine bewusste Administratorentscheidung.
 
-## Noch nicht Bestandteil von 1.2.0-alpha2
+## Noch nicht Bestandteil von 1.2.0
 
 Kryptografisch signierte Git-Tags oder Release-Artefakt-Attestierungen sind nicht Teil der aktuellen Ausbaustufe. Die Architektur lässt diese Erweiterungen später zu, ohne den grundlegenden Tag- und Paket-Workflow neu zu entwerfen.

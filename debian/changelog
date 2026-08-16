@@ -1,3 +1,11 @@
+linux-admin-center (1.2.0-1) unstable; urgency=medium
+
+  * Promote the validated GitHub release automation to stable.
+  * Keep the stable Debian and GitHub package filename unchanged.
+  * Generate SHA256SUMS for the published asset and verify release properties.
+
+ -- sunlover83 <sunlover83@users.noreply.github.com>  Sun, 16 Aug 2026 15:58:40 +0200
+
 linux-admin-center (1.2.0~alpha2-1) unstable; urgency=medium
 
   * Normalize prerelease GitHub asset filenames before upload.

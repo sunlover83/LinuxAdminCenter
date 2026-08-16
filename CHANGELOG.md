@@ -8,6 +8,22 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.2.0] - 2026-08-16
+
+### Changed
+
+- Version and codename promoted to `1.2.0 (Release Automation)`
+- Debian package version promoted to `1.2.0-1`
+- Stable release promotes the validated `1.2.0-alpha2` release-automation baseline without functional runtime changes
+- README, installation guidance and release-automation documentation now describe the completed stable release
+
+### Validation
+
+- The real `v1.2.0-alpha2` release completed the full release workflow, including tests, Debian package build and lifecycle validation, Lintian, ShellCheck, asset preparation, publication and post-publication verification
+- The published `linux-admin-center_1.2.0-alpha2-1_all.deb` digest matched `SHA256SUMS`, while the package retained the internal Debian version `1.2.0~alpha2-1`
+- The published Alpha2 package was downloaded and installed successfully through APT on Pop!_OS; its runtime reported the expected version and the packaged Self Check completed with status `healthy`
+- Existing stable-release metadata, asset-name preservation and GitHub `Latest` behavior remain covered by the release test and workflow contracts
+
 ## [1.2.0-alpha2] - 2026-08-16
 
 ### Added
