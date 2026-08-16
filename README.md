@@ -323,6 +323,8 @@ Neither installation method creates or overwrites an active configuration file. 
 - [User manual](docs/Benutzerhandbuch.md)
 - [Architecture](docs/Architektur.md)
 - [Developer guide](docs/Entwicklerhandbuch.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
 
 The detailed project documentation is currently maintained in German.

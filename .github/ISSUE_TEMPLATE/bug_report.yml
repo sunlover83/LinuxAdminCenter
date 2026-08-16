@@ -1,0 +1,99 @@
+name: Bug report
+description: Report reproducible incorrect behavior in Linux Admin Center
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a problem.
+
+        Do not include passwords, tokens, private keys, personal paths, public IP addresses, hostnames, or other sensitive information. Security vulnerabilities must be reported privately according to `SECURITY.md`.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checks
+      options:
+        - label: I searched existing issues and did not find a matching report.
+          required: true
+        - label: This report does not disclose a security vulnerability or sensitive information.
+          required: true
+
+  - type: input
+    id: lac-version
+    attributes:
+      label: Linux Admin Center version
+      description: Copy the output of `lac --version`.
+      placeholder: Linux Admin Center 1.2.0 (Release Automation)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Debian or Ubuntu package
+        - Manual system-wide installation
+        - Directly from a source checkout
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: distribution
+    attributes:
+      label: Distribution and version
+      placeholder: Debian 13, Ubuntu 24.04, Fedora 43, Arch Linux, openSUSE Tumbleweed
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command or module
+      description: Which command, option, or interactive module shows the problem?
+      placeholder: lac --self-check
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence that reproduces the problem.
+      placeholder: |
+        1. Run ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized output or logs
+      description: Remove all sensitive information before pasting output. Use a fenced code block when possible.
+      render: shell
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other relevant, non-sensitive information.

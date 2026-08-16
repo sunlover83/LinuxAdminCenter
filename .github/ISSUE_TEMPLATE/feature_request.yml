@@ -1,0 +1,60 @@
+name: Feature request
+description: Propose an improvement or new capability for Linux Admin Center
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement. Describe the user problem first so the proposal can be evaluated independently of a specific implementation.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checks
+      options:
+        - label: I searched existing issues and the roadmap for a matching proposal.
+          required: true
+        - label: This request is within the scope of Linux desktop administration.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What user problem should Linux Admin Center solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the expected user-visible behavior without requiring a specific implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Which existing commands, tools, or workarounds have you considered?
+
+  - type: textarea
+    id: distributions
+    attributes:
+      label: Distribution considerations
+      description: Note any known differences between Debian, Ubuntu, Fedora, Arch Linux, or openSUSE.
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and privilege considerations
+      description: Could this require root privileges, modify files, remove data, or change package or service state?
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add mockups, examples, or other non-sensitive context if useful.
