@@ -69,12 +69,38 @@ if [[ "${LC_ALL:-}" != "C" ]]; then
     exit 90
 fi
 
-expected_arguments="--all --local --block-size=1024 --output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target"
+expected_arguments=(
+    --all
+    --local
+    --block-size=1024
+    "--output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target"
+)
+actual_arguments=("$@")
 
-if [[ "$*" != "$expected_arguments" ]]; then
+excluded_filesystem_types=(
+    proc sysfs devtmpfs devpts tmpfs ramfs cgroup cgroup2 pstore
+    securityfs debugfs tracefs configfs fusectl mqueue hugetlbfs
+    rpc_pipefs autofs binfmt_misc efivarfs nsfs bpf selinuxfs
+    fuse.portal fuse.gvfsd-fuse fuse.sshfs fuse.rclone squashfs
+    iso9660 udf erofs romfs cramfs
+)
+
+for filesystem_type in "${excluded_filesystem_types[@]}"; do
+    expected_arguments+=("--exclude-type=${filesystem_type}")
+done
+
+if (( $# != ${#expected_arguments[@]} )); then
     printf 'Unexpected df arguments: %s\n' "$*" >&2
     exit 91
 fi
+
+for argument_index in "${!expected_arguments[@]}"; do
+    if [[ "${actual_arguments[argument_index]}" != \
+        "${expected_arguments[argument_index]}" ]]; then
+        printf 'Unexpected df arguments: %s\n' "$*" >&2
+        exit 91
+    fi
+done
 
 case "${MOCK_DF_MODE:-success}" in
     success)
@@ -104,6 +130,17 @@ OUTPUT
 Filesystem Type 1K-blocks Used Available Use% Inodes IUsed IFree IUse% Mounted on
 /dev/disk/by-label/data|archive%2026 ext4 104857600 41943040 62914560 40% 6553600 1310720 5242880 20% /srv/data|archive%2026
 OUTPUT
+        ;;
+    inaccessible_excluded_mount)
+        cat <<'OUTPUT'
+Filesystem Type 1K-blocks Used Available Use% Inodes IUsed IFree IUse% Mounted on
+/dev/mapper/vg-root ext4 104857600 81788928 23068672 78% 6553600 1376256 5177344 21% /
+OUTPUT
+
+        if [[ "$*" != *"--exclude-type=fuse.portal"* ]]; then
+            printf '%s\n' "/run/user/1000/doc: Operation not permitted" >&2
+            exit 1
+        fi
         ;;
     failure)
         exit 1
@@ -177,6 +214,13 @@ export MOCK_DF_MODE=delimiters
 assert_equals \
     "Record delimiters in filesystem names cannot shift metric fields" \
     "/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026" \
+    "$(get_storage_filesystem_records)"
+
+export MOCK_DF_MODE=inaccessible_excluded_mount
+
+assert_equals \
+    "Excluded inaccessible mounts do not discard persistent records" \
+    "/dev/mapper/vg-root|ext4|104857600|81788928|23068672|78|6553600|1376256|5177344|21|/" \
     "$(get_storage_filesystem_records)"
 
 export MOCK_DF_MODE=empty

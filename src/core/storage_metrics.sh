@@ -1,5 +1,41 @@
 #!/usr/bin/env bash
 
+readonly -a STORAGE_EXCLUDED_FILESYSTEM_TYPES=(
+    proc
+    sysfs
+    devtmpfs
+    devpts
+    tmpfs
+    ramfs
+    cgroup
+    cgroup2
+    pstore
+    securityfs
+    debugfs
+    tracefs
+    configfs
+    fusectl
+    mqueue
+    hugetlbfs
+    rpc_pipefs
+    autofs
+    binfmt_misc
+    efivarfs
+    nsfs
+    bpf
+    selinuxfs
+    fuse.portal
+    fuse.gvfsd-fuse
+    fuse.sshfs
+    fuse.rclone
+    squashfs
+    iso9660
+    udf
+    erofs
+    romfs
+    cramfs
+)
+
 is_storage_tool_available() {
     local tool_name="$1"
 
@@ -8,19 +44,20 @@ is_storage_tool_available() {
 
 is_storage_filesystem_excluded() {
     local filesystem_type="${1,,}"
+    local excluded_filesystem_type
 
-    case "$filesystem_type" in
-        ""|proc|sysfs|devtmpfs|devpts|tmpfs|ramfs|cgroup|cgroup2|pstore|\
-            securityfs|debugfs|tracefs|configfs|fusectl|mqueue|hugetlbfs|\
-            rpc_pipefs|autofs|binfmt_misc|efivarfs|nsfs|bpf|selinuxfs|\
-            fuse.portal|fuse.gvfsd-fuse|fuse.sshfs|fuse.rclone|squashfs|\
-            iso9660|udf|erofs|romfs|cramfs)
+    if [[ -z "$filesystem_type" ]]; then
+        return 0
+    fi
+
+    for excluded_filesystem_type in \
+        "${STORAGE_EXCLUDED_FILESYSTEM_TYPES[@]}"; do
+        if [[ "$filesystem_type" == "$excluded_filesystem_type" ]]; then
             return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
+        fi
+    done
+
+    return 1
 }
 
 normalize_storage_percentage() {
@@ -64,7 +101,14 @@ get_storage_filesystem_records() {
     local inode_available
     local inode_percentage
     local mountpoint
+    local excluded_filesystem_type
     local line_number=0
+    local -a df_arguments=(
+        --all
+        --local
+        --block-size=1024
+        "--output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target"
+    )
     local -a records=()
 
     if ! is_storage_tool_available df; then
@@ -72,14 +116,12 @@ get_storage_filesystem_records() {
         return
     fi
 
-    if ! storage_output="$(
-        LC_ALL=C df \
-            --all \
-            --local \
-            --block-size=1024 \
-            --output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target \
-            2>/dev/null
-    )"; then
+    for excluded_filesystem_type in \
+        "${STORAGE_EXCLUDED_FILESYSTEM_TYPES[@]}"; do
+        df_arguments+=("--exclude-type=${excluded_filesystem_type}")
+    done
+
+    if ! storage_output="$(LC_ALL=C df "${df_arguments[@]}" 2>/dev/null)"; then
         printf '%s\n' "unknown"
         return
     fi
