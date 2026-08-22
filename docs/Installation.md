@@ -7,7 +7,7 @@ Linux Admin Center kann systemweit installiert, aktualisiert und wieder entfernt
 - Debian-/Ubuntu-Paket über APT/dpkg nach `/usr`
 - manuelle Installation über `install.sh` standardmäßig nach `/usr/local`
 
-Der aktuelle Stand ist `1.2.0 (Release Automation)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
+Der aktuelle Entwicklungsstand ist `1.3.0-alpha1 (Storage Analysis)`. Die neueste stabile Version bleibt `1.2.0 (Release Automation)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
 
 ## Voraussetzungen
 
@@ -75,7 +75,7 @@ sudo apt install lm-sensors smartmontools nvme-cli
 
 ## Installation als Debian-/Ubuntu-Paket
 
-Das Paket für Version 1.2.0 heißt:
+Das neueste stabile Paket für Version 1.2.0 heißt:
 
 ```text
 linux-admin-center_1.2.0-1_all.deb
@@ -88,6 +88,14 @@ sudo apt install ./linux-admin-center_1.2.0-1_all.deb
 ```
 
 APT übernimmt dabei Registrierung, Abhängigkeiten und spätere Entfernung des Pakets.
+
+Der aktuelle Quellstand erzeugt für die Alpha1-Validierung lokal stattdessen:
+
+```text
+linux-admin-center_1.3.0~alpha1-1_all.deb
+```
+
+Bei einer späteren Veröffentlichung wird ausschließlich der GitHub-Assetname als `linux-admin-center_1.3.0-alpha1-1_all.deb` normalisiert. Die internen Paketmetadaten behalten die Debian-Version `1.3.0~alpha1-1`. Bis die Vorabversion ihre Release-Prüfungen abgeschlossen hat, bleibt `1.2.0` die stabile Installationsreferenz.
 
 ### Paketpfade
 
@@ -240,10 +248,10 @@ Version anzeigen:
 lac --version
 ```
 
-Erwartete Ausgabe für Version 1.2.0:
+Erwartete Ausgabe für den aktuellen Entwicklungsstand:
 
 ```text
-Linux Admin Center 1.2.0 (Release Automation)
+Linux Admin Center 1.3.0-alpha1 (Storage Analysis)
 ```
 
 LAC selbst prüfen:
@@ -270,6 +278,7 @@ Einzelne Funktionen prüfen:
 
 ```bash
 lac --system-info
+lac --storage-analysis
 lac --network-info
 lac --network-diagnostics
 lac --hardware-diagnostics

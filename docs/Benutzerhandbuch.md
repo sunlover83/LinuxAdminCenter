@@ -73,6 +73,7 @@ Weitere Installationsdetails, benutzerdefinierte Präfixe und `DESTDIR` sind in 
 8) Service Health
 9) Gaming Diagnostics
 10) LAC Self Check
+11) Storage Analysis
 
 0) Exit
 ```
@@ -119,6 +120,43 @@ Die Systemübersicht zeigt:
 - erforderlichen Neustartstatus
 
 Netzwerkdaten werden bewusst nicht wiederholt. Sie stehen im Bereich „Network Information“ zur Verfügung.
+
+### Storage Analysis
+
+Storage Analysis zeigt die Belegung der eingehängten lokalen persistenten Dateisysteme. Der Bericht kann über Menüpunkt 11 oder direkt aufgerufen werden:
+
+```bash
+lac --storage-analysis
+```
+
+Für jedes berücksichtigte Dateisystem zeigt LAC:
+
+- Einhängepunkt, Dateisystemtyp und Quelle
+- belegte und gesamte Kapazität
+- prozentuale Belegung und noch verfügbare Kapazität
+- belegte und gesamte Inodes sowie deren prozentuale Belegung, sofern der Dateisystemtyp aussagekräftige Inode-Werte liefert
+- Einzelstatus des Dateisystems
+
+Kapazität und Inodes werden unabhängig mit denselben Standardgrenzen bewertet:
+
+| Belegung | Status |
+|---:|---|
+| unter 80% | `healthy` |
+| ab 80% | `warning` |
+| ab 90% | `critical` |
+
+Der jeweils schwerwiegendere Kapazitäts- oder Inode-Status bestimmt den Status eines Dateisystems. Der schwerwiegendste Einzelstatus bestimmt anschließend die Gesamtbewertung. Nicht verfügbare Inode-Werte erscheinen als `not applicable` und verschlechtern die Bewertung allein nicht. Kann `df` nicht ausgeführt werden, können die Dateisystemdaten nicht gelesen werden oder existiert kein auswertbares lokales persistentes Dateisystem, lautet die Gesamtbewertung `incomplete`.
+
+LAC berücksichtigt nur bereits eingehängte lokale Dateisysteme. Pseudo- und RAM-Dateisysteme wie `proc`, `sysfs` oder `tmpfs`, entfernte Dateisysteme, bekannte schreibgeschützte Image-Dateisysteme wie `squashfs` und ausgewählte virtuelle FUSE-Dateisysteme werden ausgefiltert. Die Ermittlung verwendet die GNU-Coreutils-Ausgabe von `df`, die auf den unterstützten Zielsystemen Debian, Fedora, Arch Linux und openSUSE verfügbar ist. Andere `df`-Implementierungen mit abweichenden Optionen gehören nicht zum zugesicherten Portabilitätsumfang.
+
+Storage Analysis führt ausschließlich `df` lesend aus. Die Funktion verwendet kein `sudo`, hängt keine Dateisysteme ein oder aus, startet weder `fsck` noch Trim-, Resize- oder Reparaturbefehle und löscht oder schreibt keine Daten.
+
+Die Funktionsgrenzen sind bewusst klar:
+
+- Hardware Diagnostics bewertet physische Laufwerke und deren SMART- beziehungsweise NVMe-Gesundheitsdaten.
+- System Cleanup zeigt Cache- und Journalbelegung und bietet ausschließlich nach Bestätigung begrenzte Cleanup-Aktionen an.
+- Storage Analysis bewertet nur Kapazitäts- und Inode-Druck bereits eingehängter lokaler Dateisysteme.
+- Verzeichnis-Hotspots, Dateisuche und mögliche spätere Speicherwartung sind nicht Bestandteil dieser Version.
 
 ### Network Information
 
@@ -413,6 +451,7 @@ Die Einstufung stammt vom jeweiligen Paketmanager. Trotzdem sollte die Liste vor
 -h, --help                   Hilfe anzeigen
 -v, --version                Version und Codename anzeigen
 -i, --system-info            Systeminformationen anzeigen
+-s, --storage-analysis       Schreibgeschützte Speicheranalyse anzeigen
 -n, --network-info           Netzwerkinformationen anzeigen
 -r, --network-diagnostics    Netzwerkdiagnose anzeigen
 -d, --hardware-diagnostics   Hardwarediagnose anzeigen
@@ -429,6 +468,7 @@ Beispiele mit einer installierten LAC-Version:
 ```bash
 lac --version
 lac --system-info
+lac --storage-analysis
 lac --network-info
 lac --network-diagnostics
 lac --hardware-diagnostics
@@ -581,6 +621,24 @@ Typische Fälle:
 - DNS funktioniert, aber das externe Ping-Ziel antwortet nicht: Das Ziel oder eine Firewall blockiert möglicherweise ICMP.
 - externe IP erreichbar, aber DNS fehlgeschlagen: Die IP-Verbindung funktioniert, die Namensauflösung jedoch nicht.
 - kein Standard-Gateway: Es ist keine verwendbare IPv4-Standardroute konfiguriert.
+
+### Storage Analysis zeigt `warning`, `critical` oder `incomplete`
+
+```bash
+lac --storage-analysis
+```
+
+`warning` bedeutet, dass mindestens ein berücksichtigtes Dateisystem bei Kapazität oder Inodes 80% erreicht hat. `critical` bedeutet, dass mindestens ein Wert 90% erreicht hat. Ein hoher Inode-Verbrauch kann auftreten, obwohl noch ausreichend Datenkapazität verfügbar ist.
+
+`incomplete` bedeutet, dass keine vollständige Bewertung möglich war. Prüfe in diesem Fall zunächst die rein lesenden Grundlagen:
+
+```bash
+command -v df
+df --local --human-readable
+df --local --inodes
+```
+
+Storage Analysis führt selbst keine Bereinigung oder Reparatur aus. Vor manuellen Änderungen sollte geprüft werden, welches Dateisystem betroffen ist und ob die Kapazitäts- oder die Inode-Grenze ausgelöst wurde.
 
 ### Gaming Readiness zeigt `limited`
 

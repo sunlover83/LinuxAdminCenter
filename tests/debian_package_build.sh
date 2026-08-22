@@ -121,8 +121,8 @@ assert_equals \
     "$(dpkg-deb -f "$PACKAGE_FILE" Architecture)"
 
 assert_equals \
-    "Package uses the 1.2.0 stable Debian version" \
-    "1.2.0-1" \
+    "Package uses the 1.3.0-alpha1 Debian version" \
+    "1.3.0~alpha1-1" \
     "$(dpkg-deb -f "$PACKAGE_FILE" Version)"
 
 dpkg-deb -x "$PACKAGE_FILE" "$EXTRACT_ROOT"
@@ -149,6 +149,14 @@ assert_true \
     test -x "${EXTRACT_ROOT}/usr/lib/linux-admin-center/lac.sh"
 
 assert_true \
+    "Package installs storage metrics" \
+    test -f "${EXTRACT_ROOT}/usr/lib/linux-admin-center/core/storage_metrics.sh"
+
+assert_true \
+    "Package installs the storage analysis module" \
+    test -f "${EXTRACT_ROOT}/usr/lib/linux-admin-center/modules/storage_analysis/storage_analysis.sh"
+
+assert_true \
     "Package installs Debian copyright metadata" \
     test -s "${EXTRACT_ROOT}/usr/share/doc/linux-admin-center/copyright"
 
@@ -163,9 +171,20 @@ version_output="$(
 )"
 
 assert_equals \
-    "Extracted package runs the 1.2.0 stable LAC version" \
-    "Linux Admin Center 1.2.0 (Release Automation)" \
+    "Extracted package runs the 1.3.0-alpha1 LAC version" \
+    "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" \
     "$version_output"
+
+storage_output="$(
+    HOME="$TEST_HOME" \
+    LAC_SYSTEM_CONFIG="${TEST_TMP_DIR}/system.conf" \
+    "${EXTRACT_ROOT}/usr/bin/lac" --storage-analysis
+)"
+
+assert_contains \
+    "Extracted package runs read-only storage analysis" \
+    "Overall storage assessment:" \
+    "$storage_output"
 
 self_check_output="$(
     HOME="$TEST_HOME" \

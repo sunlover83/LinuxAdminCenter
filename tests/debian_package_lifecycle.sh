@@ -101,7 +101,7 @@ if [[ "$(dpkg-query -W -f='${Status}' linux-admin-center)" != "install ok instal
 fi
 pass "Package installs successfully through apt"
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.2.0 (Release Automation)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" ]]; then
     fail "Installed package must expose the expected LAC version"
 fi
 pass "Installed lac command reports the packaged version"
@@ -117,6 +117,13 @@ if [[ "$self_check_output" != *"Status:                 healthy"* ]]; then
 fi
 pass "Installed package Self Check is healthy"
 
+storage_output="$(lac --storage-analysis)"
+if [[ "$storage_output" != *"Overall storage assessment:"* ]]; then
+    printf '%s\n' "$storage_output" >&2
+    fail "Installed package must run read-only storage analysis"
+fi
+pass "Installed package runs read-only storage analysis"
+
 if [[ -e /usr/bin/lac-uninstall ]]; then
     fail "Package must not install lac-uninstall"
 fi
@@ -124,7 +131,7 @@ pass "Package removal remains under apt/dpkg control"
 
 apt-get install --reinstall --yes /tmp/linux-admin-center.deb >/dev/null
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.2.0 (Release Automation)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" ]]; then
     fail "Reinstalled package must remain executable"
 fi
 if [[ "$(cat /etc/lac/lac.conf)" != "DEBUG=true" ]]; then

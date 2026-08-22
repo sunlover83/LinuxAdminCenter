@@ -1,4 +1,4 @@
-.TH LAC 1 "August 2026" "Linux Admin Center 1.2.0" "User Commands"
+.TH LAC 1 "August 2026" "Linux Admin Center 1.3.0-alpha1" "User Commands"
 .SH NAME
 lac \- modular Linux desktop administration toolkit
 .SH SYNOPSIS
@@ -22,6 +22,9 @@ Show version information.
 .TP
 .BR \-i , " --system-info"
 Show system information.
+.TP
+.BR \-s , " --storage-analysis"
+Show read-only capacity and inode analysis for local persistent filesystems.
 .TP
 .BR \-n , " --network-info"
 Show network information.
@@ -49,6 +52,39 @@ Check for available system package updates.
 .TP
 .BR \-c , " --cleanup-report"
 Show a read-only system cleanup report.
+.SH STORAGE ANALYSIS
+The
+.BR \-s , " --storage-analysis"
+option reads mounted local filesystem statistics through
+.BR df (1).
+For every included filesystem it reports the source, type, mount point, used,
+total and available capacity, capacity percentage, and inode usage when that
+measurement is applicable.
+.PP
+Capacity and inode usage are assessed independently. Usage below 80 percent is
+.BR healthy ,
+usage from 80 percent is a
+.BR warning ,
+and usage from 90 percent is
+.BR critical .
+The most severe filesystem result determines the overall assessment. Missing
+inode measurements are shown as not applicable. Missing or unreadable
+filesystem data, or no analyzable persistent local filesystem, produces an
+.B incomplete
+assessment.
+.PP
+Pseudo-filesystems, remote mounts, known read-only image filesystems and
+selected virtual FUSE filesystems are excluded. The implementation relies on
+the GNU Coreutils output options of
+.BR df (1)
+available on the supported Debian, Fedora, Arch Linux and openSUSE targets.
+.PP
+Storage Analysis does not use
+.BR sudo (8),
+mount or unmount filesystems, run repair, trim or resize commands, calculate
+directory hotspots, delete data or perform storage maintenance. Physical drive
+health remains part of Hardware Diagnostics. Confirmed cleanup actions remain
+part of System Cleanup.
 .SH CONFIGURATION
 LAC reads system configuration from
 .I /etc/lac/lac.conf
@@ -90,4 +126,5 @@ Shared files and example configuration.
 Optional system-wide configuration.
 .SH SEE ALSO
 .BR apt (8),
+.BR df (1),
 .BR dpkg (1)

@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.2.0 (Release Automation)**
+Current development version: **1.3.0-alpha1 (Storage Analysis)**
 
 Latest stable release: **1.2.0 (Release Automation)**
 
-Version 1.2.0 adds validated, automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit. Prerelease package filenames are normalized before upload so GitHub release assets, `SHA256SUMS` and release notes use the same download name; the successful Alpha2 release verified that behavior end to end.
+Version 1.3.0-alpha1 prepares the first validation release of Storage Analysis. It adds a strictly read-only report for capacity and inode pressure on mounted local persistent filesystems, integrates the report into the CLI and interactive menu, and extends runtime, installation, package and multi-distribution test coverage. Version 1.2.0 remains the latest stable release while Alpha1 completes the full release quality gates.
 
 ## Current features
 
@@ -41,6 +41,10 @@ Version 1.2.0 adds validated, automated GitHub release publication on top of the
 - Update checks and update installation
 - Support for APT, DNF, Pacman and Zypper
 - System and hardware information
+- Read-only storage analysis for mounted local persistent filesystems
+- Capacity and inode-pressure reporting with 80% warning and 90% critical thresholds
+- Overall storage assessment using `healthy`, `warning`, `critical` and `incomplete`
+- Filtering of pseudo-filesystems, remote mounts and known read-only image filesystems
 - Dedicated network information
 - Read-only network diagnostics
 - Gateway, DNS and external connectivity checks
@@ -166,6 +170,14 @@ Linux Admin Center 1.2.0 (Release Automation)
 
 The Self Check should identify the installation as `debian-package`.
 
+The current source tree prepares the `1.3.0-alpha1` validation package. A local Debian build uses the native package filename:
+
+```text
+linux-admin-center_1.3.0~alpha1-1_all.deb
+```
+
+Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha1-1_all.deb`; the internal Debian version remains `1.3.0~alpha1-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
+
 See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
 
 ### Manual installation
@@ -246,6 +258,7 @@ Available command-line options:
 -h, --help                   Show help
 -v, --version                Show version information
 -i, --system-info            Show system information
+-s, --storage-analysis       Show read-only storage analysis
 -n, --network-info           Show network information
 -r, --network-diagnostics    Show network diagnostics
 -d, --hardware-diagnostics   Show hardware diagnostics
@@ -264,6 +277,10 @@ The update check returns status `10` when updates are available. This allows scr
 The cleanup report never changes the system. Destructive cleanup actions are available only in the interactive menu and require explicit confirmation.
 
 Hardware diagnostics are read-only. CPU, GPU and storage information is displayed only when the required tools are available. Drive-health checks may require root privileges; LAC does not request those privileges automatically.
+
+Storage Analysis is a separate, fully read-only capacity report for mounted local persistent filesystems. It uses `df` to show used, total and available capacity plus inode usage where the filesystem provides meaningful inode values. A filesystem becomes `warning` at 80% usage and `critical` at 90%; the most severe capacity or inode result determines the overall assessment. Missing inode values are shown as not applicable, while an unavailable `df` result or the absence of analyzable filesystems produces `incomplete`.
+
+Pseudo-filesystems, remote mounts, known read-only image filesystems and selected virtual FUSE mounts are excluded. The report does not use `sudo`, mount or unmount filesystems, run repair or trim commands, delete data, calculate directory hotspots or perform storage maintenance. Hardware Diagnostics remains responsible for physical drive-health information, while System Cleanup remains the only area that can offer explicitly confirmed cleanup actions.
 
 Network diagnostics are also read-only. LAC checks the IPv4 default gateway, DNS resolution and external IP reachability without modifying network interfaces, routes or DNS settings. Configurable test targets are validated before they are passed to `ping` or `getent`. Non-responsive ICMP targets are reported carefully because ping traffic may be blocked even when other network functions work.
 
@@ -352,13 +369,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.2.0
+bash scripts/validate_release_metadata.sh v1.3.0-alpha1
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.2.0 release-notes.md
+bash scripts/generate_release_notes.sh v1.3.0-alpha1 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -374,7 +391,7 @@ shellcheck install.sh uninstall.sh debian/preinst scripts/*.sh \
     src/lac.sh src/core/*.sh src/modules/*/*.sh tests/*.sh
 ```
 
-GitHub Actions runs the complete test suite, Debian package build validation, an APT/dpkg lifecycle test, Lintian and ShellCheck on Ubuntu for pull requests and pushes to `main`. Successful pull-request builds also upload the generated `.deb` as an Actions artifact. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
+GitHub Actions runs the complete test suite, Debian package build validation, an APT/dpkg lifecycle test, Lintian and ShellCheck on Ubuntu for pull requests and pushes to `main`. Successful pull-request builds also upload the generated `.deb` as an Actions artifact. A separate portability matrix runs Bash syntax checks, validates the actual container distribution/package-manager mapping, and executes distribution-independent configuration, installation, network-hardening, package-manager, storage-analysis and Self Check tests inside Debian stable, Fedora, Arch Linux and openSUSE Tumbleweed containers.
 
 Release tags additionally trigger the dedicated release workflow. It re-validates release metadata and the package quality gates, creates the final Debian package, normalizes the release asset filename, creates `SHA256SUMS` for that published name, generates notes from `CHANGELOG.md`, publishes the assets only for an existing validated tag and verifies the returned asset names and prerelease state.
 
@@ -397,6 +414,7 @@ src/core/                           Shared CLI, configuration and metrics code
 src/modules/update/                 Update management
 src/modules/cleanup/                Safe system cleanup workflow
 src/modules/system_info/            System information view
+src/modules/storage_analysis/       Local filesystem capacity and inode analysis
 src/modules/network_info/           Network information view
 src/modules/network_diagnostics/    Network diagnostics view
 src/modules/hardware_diagnostics/   Hardware diagnostics view
@@ -420,9 +438,11 @@ Version `1.2.0-alpha2` fixes that end-to-end finding by preparing GitHub-safe as
 
 Version `1.2.0` promotes the validated release-automation baseline to stable without functional runtime changes.
 
+Version `1.3.0-alpha1` is the validation candidate for read-only capacity and inode analysis across local persistent filesystems.
+
 Planned next milestones:
 
-- `1.3.0` – storage analysis
+- `1.3.0` – promote the validated Storage Analysis baseline to stable
 - `1.4.0` – boot and system diagnostics
 - `1.5.0` – expanded update management across supported application/package sources
 - `1.6.0` – user-interface and UX improvements; exact UI technology to be decided later

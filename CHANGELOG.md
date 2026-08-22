@@ -8,6 +8,38 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.3.0-alpha1] - 2026-08-22
+
+### Added
+
+- Portable local-filesystem collector using deterministic GNU `df` output for capacity and inode metrics
+- Read-only Storage Analysis report with per-filesystem and overall `healthy`, `warning`, `critical` and `incomplete` assessments
+- `-s` and `--storage-analysis` CLI options plus interactive menu integration
+- Automated Storage Analysis tests covering ext4, XFS, Btrfs, vfat, LUKS/LVM-style sources, filtering, missing inode data, error handling and threshold boundaries
+
+### Changed
+
+- Version and codename updated to `1.3.0-alpha1 (Storage Analysis)`
+- Debian package version updated to `1.3.0~alpha1-1`
+- LAC Self Check, manual installation and Debian package tests include the Storage Analysis runtime files and installed CLI path
+- Debian, Fedora, Arch Linux and openSUSE portability selection now includes the storage metric and assessment tests
+- README, user manual, architecture, developer guidance and `lac(1)` document Storage Analysis behavior, portability and interpretation
+
+### Fixed
+
+- Filesystem sources, types and mountpoints containing `|` or `%` are encoded inside storage records and restored before display, preventing delimiter collisions from shifting metrics or assessments
+
+### Validation
+
+- Storage metrics use neutral mocked fixtures alongside installed-runtime checks against the local `df` implementation
+- CLI, menu, Self Check, manual installation and Debian package expectations cover the complete Storage Analysis runtime path
+- Release metadata validation covers the `1.3.0-alpha1` runtime, Debian package, changelog and manpage contract
+
+### Security
+
+- Storage Analysis is strictly read-only, uses no `sudo` or modifying storage commands, and is separated from confirmed System Cleanup actions and any future storage-maintenance feature
+- Pseudo-filesystems, remote mounts, known read-only image filesystems and selected virtual FUSE mounts are excluded from the capacity assessment
+
 ## [1.2.0] - 2026-08-16
 
 ### Changed

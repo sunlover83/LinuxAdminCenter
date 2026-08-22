@@ -72,6 +72,10 @@ show_lac_self_check() {
     printf '%s\n' "self check selected"
 }
 
+show_storage_analysis() {
+    printf '%s\n' "storage analysis selected"
+}
+
 printf '%s\n\n' "Running UI tests..."
 
 assert_output_contains \
@@ -102,6 +106,11 @@ assert_output_contains \
 assert_output_contains \
     "Main menu displays LAC self check" \
     "10) LAC Self Check" \
+    "$(draw_main_menu)"
+
+assert_output_contains \
+    "Main menu displays storage analysis" \
+    "11) Storage Analysis" \
     "$(draw_main_menu)"
 
 assert_output_contains \
@@ -138,6 +147,11 @@ assert_equals \
     "Menu option 10 starts LAC self check" \
     "self check selected" \
     "$(read_choice <<< "10")"
+
+assert_equals \
+    "Menu option 11 starts storage analysis" \
+    "storage analysis selected" \
+    "$(read_choice <<< "11")"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
 

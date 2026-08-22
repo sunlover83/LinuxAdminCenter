@@ -230,6 +230,31 @@ Diese Variablen verändern keine dauerhafte Systemkonfiguration und gelten nur f
 
 `system_metrics.sh` ermittelt einzelne Messwerte. `system_info.sh` sammelt diese Werte und formatiert die Ausgabe. Der Neustartstatus wird separat über `is_reboot_required` bestimmt.
 
+### Storage Analysis
+
+Storage Analysis trennt die Ermittlung lokaler Dateisystemdaten von Formatierung und Bewertung:
+
+1. `src/core/storage_metrics.sh` prüft die Verfügbarkeit von `df`.
+2. `df` wird mit `LC_ALL=C`, lokaler Einschränkung, einer festen Blockgröße von 1024 Byte und einer expliziten GNU-Ausgabespaltenliste aufgerufen.
+3. Die Core-Schicht normalisiert jeden Datensatz in Quelle, Dateisystemtyp, gesamte, belegte und verfügbare KiB, Kapazitätsprozent, gesamte, belegte und verfügbare Inodes, Inode-Prozent und Einhängepunkt. Die drei Textfelder werden intern prozentkodiert, sodass die pipe-getrennten Feldgrenzen auch bei einem zulässigen `|` oder `%` im Dateisystemnamen erhalten bleiben.
+4. Kernel-, Pseudo-, RAM- und Steuerdateisysteme, bekannte schreibgeschützte Image-Dateisysteme sowie ausgewählte virtuelle FUSE-Dateisysteme werden anhand ihres Typs ausgeschlossen. `df --local` schließt zusätzlich entfernte Dateisysteme aus.
+5. Kapazitätsdatensätze ohne numerische oder sinnvolle Gesamtwerte werden verworfen. Liefert ein ansonsten gültiges Dateisystem keine aussagekräftigen Inode-Werte, werden nur seine Inode-Felder als `not-applicable` normalisiert.
+6. Die Datensätze werden mit `LC_ALL=C` deterministisch nach Einhängepunkt und Quelle sortiert.
+7. `src/modules/storage_analysis/storage_analysis.sh` bewertet Kapazität und Inodes getrennt, dekodiert die Textfelder vor der Anzeige, formatiert Größen und erzeugt den Gesamtbericht.
+
+Die Bewertung verwendet feste Standardgrenzen:
+
+- `healthy`: alle verfügbaren Prozentwerte liegen unter 80%
+- `warning`: mindestens ein Kapazitäts- oder Inode-Wert liegt bei mindestens 80%, aber unter 90%
+- `critical`: mindestens ein Kapazitäts- oder Inode-Wert liegt bei mindestens 90%
+- `incomplete`: `df` fehlt oder ist fehlgeschlagen, es existiert kein auswertbarer Datensatz oder ein übergebener Bewertungswert ist unvollständig
+
+Die Statuspriorität lautet `critical`, `warning`, `incomplete`, `healthy`. Nicht anwendbare Inode-Werte führen allein nicht zu `incomplete`.
+
+CLI-Option `-s` beziehungsweise `--storage-analysis` und Menüpunkt 11 verwenden dieselben Core- und Modulfunktionen. Der Collector basiert bewusst auf den GNU-Coreutils-Optionen von `df`, die auf Debian, Fedora, Arch Linux und openSUSE zum unterstützten Systemumfang gehören. Andere `df`-Implementierungen werden nicht zugesichert.
+
+Storage Analysis ist fachlich von anderen Bereichen getrennt: Hardware Diagnostics prüft physische Laufwerksgesundheit, System Cleanup verwaltet eng begrenzte und bestätigungspflichtige Bereinigungen. Verzeichnis-Hotspots, Dateisuche, Dateisystemreparatur und andere mögliche spätere Speicherwartung gehören nicht zum Analysemodul.
+
 ### Netzwerkinformationen
 
 `network_metrics.sh` liest die verfügbaren Netzwerkdaten. `network_info.sh` stellt sie unabhängig von der allgemeinen Systemübersicht dar.
@@ -412,6 +437,16 @@ Die CLI-Option `--cleanup-report` ruft ausschließlich den schreibgeschützten B
 - Paketentfernung erst nach Eingabe des exakten Wortes `REMOVE`
 - Pacman behält zwei Cache-Versionen pro Paket
 
+### Storage Analysis
+
+- vollständig schreibgeschützt und ohne automatische Verwendung von `sudo`
+- ausschließlich lesender Aufruf von `df`
+- keine Mount-, Unmount-, Remount-, Resize-, Trim-, Repair- oder `fsck`-Befehle
+- keine Datei- oder Verzeichnissuche zur Ermittlung von Speicher-Hotspots
+- keine Löschung, Verschiebung oder Änderung von Daten
+- keine automatische Übergabe erkannter Dateisysteme an System Cleanup
+- fehlende Messwerte werden gemeldet und nicht durch zustandsverändernde Prüfungen erzwungen
+
 ### Hardwarediagnose
 
 - keine SMART-Selbsttests
@@ -512,6 +547,16 @@ Für Gaming Diagnostics werden unter anderem geprüft:
 - Gamescope-Versionsausgabe
 - CLI- und Menüintegration
 
+Für Storage Analysis werden unter anderem geprüft:
+
+- GNU-`df`-Aufruf mit festem Locale und explizitem Spaltenschema
+- Normalisierung von ext4-, XFS-, Btrfs-, vfat- sowie LUKS-/LVM-Beispieldaten
+- getrennte Kapazitäts- und Inode-Bewertung an den Grenzen 80% und 90%
+- Statuspriorität und Behandlung nicht anwendbarer Inode-Werte
+- Filterung von Pseudo-, Image- und ausgewählten FUSE-Dateisystemen
+- deterministische Sortierung und Fehlerzustände bei fehlendem oder fehlschlagendem `df`
+- CLI-, Menü-, Self-Check-, Installations- und Paketintegration
+
 `tests/common_test.sh` prüft die Bash-Mindestversion sowie die direkte und über `ID_LIKE` abgeleitete Paketmanager-Zuordnung. `tests/config_test.sh` prüft auch Umgebungen ohne `HOME`. `tests/package_manager_test.sh` trennt grundlegende Paketmanager-Fähigkeiten von update-spezifischen Helfern.
 
 Die gesamte Testsuite wird mit `tests/run_tests.sh` ausgeführt. ShellCheck prüft `install.sh`, `uninstall.sh`, Einstiegspunkt, Core-Schicht, Module und Tests.
@@ -521,7 +566,7 @@ GitHub Actions verwendet zwei Ebenen:
 1. Ubuntu führt die vollständige Testsuite und ShellCheck aus.
 2. Debian stable, Fedora, Arch Linux und openSUSE Tumbleweed führen `tests/portability_test.sh` in Containern aus.
 
-Der Portabilitätstest prüft zusätzlich die tatsächlich laufende Distribution und verifiziert, dass LAC sie einem vorhandenen unterstützten Paketmanager zuordnet. Danach folgen Bash-Syntaxprüfung und ein distributionsunabhängiger Testumfang für Konfiguration, Installation, Netzwerk-Hardening, Paketmanager-Abstraktion und Self Check.
+Der Portabilitätstest prüft zusätzlich die tatsächlich laufende Distribution und verifiziert, dass LAC sie einem vorhandenen unterstützten Paketmanager zuordnet. Danach folgen Bash-Syntaxprüfung und ein distributionsunabhängiger Testumfang für Konfiguration, Installation, Netzwerk-Hardening, Paketmanager-Abstraktion, Storage Analysis und Self Check. Der Installationstest ruft dabei den installierten Storage-Analysis-CLI-Pfad gegen das reale `df` des jeweiligen Containers auf; ergänzende Mocks decken reproduzierbar unterstützte Dateisystemvarianten und Fehlerzustände ab.
 
 ## Erweiterung der Anwendung
 

@@ -74,13 +74,13 @@ printf '%s\n\n' "Running CLI tests..."
 
 assert_output_contains \
     "Long version option displays the LAC version" \
-    "Linux Admin Center 1.2.0 (Release Automation)" \
+    "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" \
     "$LAC_SCRIPT" \
     --version
 
 assert_output_contains \
     "Short version option displays the LAC version" \
-    "Linux Admin Center 1.2.0 (Release Automation)" \
+    "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" \
     "$LAC_SCRIPT" \
     -v
 
@@ -95,6 +95,18 @@ assert_output_contains \
     "Restart required:" \
     "$LAC_SCRIPT" \
     -i
+
+assert_output_contains \
+    "Long storage analysis option displays the overall assessment" \
+    "Overall storage assessment:" \
+    "$LAC_SCRIPT" \
+    --storage-analysis
+
+assert_output_contains \
+    "Short storage analysis option displays filesystems" \
+    "Filesystems:" \
+    "$LAC_SCRIPT" \
+    -s
 
 assert_output_contains \
     "Long network information option displays IPv4 addresses" \
@@ -207,6 +219,12 @@ assert_output_contains \
 assert_output_contains \
     "Help displays the self-check option" \
     "--self-check" \
+    "$LAC_SCRIPT" \
+    --help
+
+assert_output_contains \
+    "Help displays the storage analysis option" \
+    "--storage-analysis" \
     "$LAC_SCRIPT" \
     --help
 
