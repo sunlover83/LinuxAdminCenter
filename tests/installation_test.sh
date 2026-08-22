@@ -127,8 +127,16 @@ assert_true \
     test -f "${RUNTIME_DIR}/core/common.sh"
 
 assert_true \
+    "Installer copies storage metrics" \
+    test -f "${RUNTIME_DIR}/core/storage_metrics.sh"
+
+assert_true \
     "Installer copies feature modules" \
     test -f "${RUNTIME_DIR}/modules/gaming_diagnostics/gaming_diagnostics.sh"
+
+assert_true \
+    "Installer copies the storage analysis module" \
+    test -f "${RUNTIME_DIR}/modules/storage_analysis/storage_analysis.sh"
 
 assert_true \
     "Installer copies the example configuration" \
@@ -166,6 +174,17 @@ assert_equals \
     "Installed launcher runs the installed application" \
     "$expected_version" \
     "$installed_version"
+
+installed_storage_output="$(
+    HOME="$TEST_HOME" \
+    LAC_SYSTEM_CONFIG="${TEST_ROOT}/etc/lac/lac.conf" \
+    "$LAC_BIN" --storage-analysis
+)"
+
+assert_true \
+    "Installed launcher runs read-only storage analysis" \
+    grep -Fq "Overall storage assessment:" \
+    <<< "$installed_storage_output"
 
 touch "${RUNTIME_DIR}/stale-runtime-file"
 

@@ -117,6 +117,13 @@ if [[ "$self_check_output" != *"Status:                 healthy"* ]]; then
 fi
 pass "Installed package Self Check is healthy"
 
+storage_output="$(lac --storage-analysis)"
+if [[ "$storage_output" != *"Overall storage assessment:"* ]]; then
+    printf '%s\n' "$storage_output" >&2
+    fail "Installed package must run read-only storage analysis"
+fi
+pass "Installed package runs read-only storage analysis"
+
 if [[ -e /usr/bin/lac-uninstall ]]; then
     fail "Package must not install lac-uninstall"
 fi

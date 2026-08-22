@@ -23,6 +23,7 @@ draw_main_menu() {
     echo "8) Service Health"
     echo "9) Gaming Diagnostics"
     echo "10) LAC Self Check"
+    echo "11) Storage Analysis"
     echo
     echo "0) Exit"
     echo
@@ -63,6 +64,9 @@ read_choice() {
             ;;
         10)
             show_lac_self_check
+            ;;
+        11)
+            show_storage_analysis
             ;;
         0)
             echo

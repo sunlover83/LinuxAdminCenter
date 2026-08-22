@@ -14,6 +14,9 @@ source "${SCRIPT_DIR}/core/config.sh"
 # shellcheck source=core/system_metrics.sh
 source "${SCRIPT_DIR}/core/system_metrics.sh"
 
+# shellcheck source=core/storage_metrics.sh
+source "${SCRIPT_DIR}/core/storage_metrics.sh"
+
 # shellcheck source=core/network_metrics.sh
 source "${SCRIPT_DIR}/core/network_metrics.sh"
 
@@ -58,6 +61,9 @@ source "${SCRIPT_DIR}/modules/network_info/network_info.sh"
 
 # shellcheck source=modules/system_info/system_info.sh
 source "${SCRIPT_DIR}/modules/system_info/system_info.sh"
+
+# shellcheck source=modules/storage_analysis/storage_analysis.sh
+source "${SCRIPT_DIR}/modules/storage_analysis/storage_analysis.sh"
 
 # shellcheck source=modules/hardware_diagnostics/hardware_diagnostics.sh
 source "${SCRIPT_DIR}/modules/hardware_diagnostics/hardware_diagnostics.sh"

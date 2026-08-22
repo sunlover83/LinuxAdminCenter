@@ -82,6 +82,7 @@ required_files=(
     core/common.sh
     core/config.sh
     core/system_metrics.sh
+    core/storage_metrics.sh
     core/network_metrics.sh
     core/network_diagnostics_metrics.sh
     core/cleanup_metrics.sh
@@ -97,6 +98,7 @@ required_files=(
     modules/cleanup/cleanup.sh
     modules/network_info/network_info.sh
     modules/system_info/system_info.sh
+    modules/storage_analysis/storage_analysis.sh
     modules/hardware_diagnostics/hardware_diagnostics.sh
     modules/network_diagnostics/network_diagnostics.sh
     modules/gaming_readiness/gaming_readiness.sh

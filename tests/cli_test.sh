@@ -97,6 +97,18 @@ assert_output_contains \
     -i
 
 assert_output_contains \
+    "Long storage analysis option displays the overall assessment" \
+    "Overall storage assessment:" \
+    "$LAC_SCRIPT" \
+    --storage-analysis
+
+assert_output_contains \
+    "Short storage analysis option displays filesystems" \
+    "Filesystems:" \
+    "$LAC_SCRIPT" \
+    -s
+
+assert_output_contains \
     "Long network information option displays IPv4 addresses" \
     "IPv4 addresses:" \
     "$LAC_SCRIPT" \
@@ -207,6 +219,12 @@ assert_output_contains \
 assert_output_contains \
     "Help displays the self-check option" \
     "--self-check" \
+    "$LAC_SCRIPT" \
+    --help
+
+assert_output_contains \
+    "Help displays the storage analysis option" \
+    "--storage-analysis" \
     "$LAC_SCRIPT" \
     --help
 

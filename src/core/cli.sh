@@ -12,6 +12,7 @@ Options:
   -h, --help                   Show this help message
   -v, --version                Show version information
   -i, --system-info            Show system information
+  -s, --storage-analysis       Show read-only storage analysis
   -n, --network-info           Show network information
   -r, --network-diagnostics    Show network diagnostics
   -d, --hardware-diagnostics   Show hardware diagnostics
@@ -37,6 +38,10 @@ show_cli_system_information() {
 
     print_system_information
     print_reboot_status
+}
+
+show_cli_storage_analysis() {
+    print_storage_analysis
 }
 
 show_cli_network_information() {
@@ -91,6 +96,9 @@ handle_cli_arguments() {
             ;;
         -i|--system-info)
             show_cli_system_information
+            ;;
+        -s|--storage-analysis)
+            show_cli_storage_analysis
             ;;
         -n|--network-info)
             show_cli_network_information
