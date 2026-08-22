@@ -50,6 +50,8 @@ portable_tests=(
     installation_test.sh
     network_diagnostics_metrics_test.sh
     package_manager_test.sh
+    storage_metrics_test.sh
+    storage_analysis_test.sh
     self_check_test.sh
 )
 
