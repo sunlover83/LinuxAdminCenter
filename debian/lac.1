@@ -73,6 +73,13 @@ filesystem data, or no analyzable persistent local filesystem, produces an
 .B incomplete
 assessment.
 .PP
+The report explains every assessment state and displays state-specific next
+steps. Recommendations distinguish capacity pressure from inode pressure,
+refer to the read-only
+.B lac --cleanup-report
+output where applicable, and advise creating a backup before cleanup, resizing
+or storage expansion. Recommendations do not perform any modifying action.
+.PP
 Pseudo-filesystems, remote mounts, known read-only image filesystems and
 selected virtual FUSE filesystems are excluded. The implementation relies on
 the GNU Coreutils output options of

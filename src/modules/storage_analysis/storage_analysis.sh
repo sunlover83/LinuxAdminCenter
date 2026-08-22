@@ -161,6 +161,65 @@ get_storage_analysis_summary_message() {
     esac
 }
 
+print_storage_status_legend() {
+    printf '%s\n' "Status meanings:"
+    printf '  %-12s %s\n' \
+        "healthy:" \
+        "All evaluated capacity and inode values are below 80%."
+    printf '  %-12s %s\n' \
+        "warning:" \
+        "At least one value is between 80% and 89%; none is critical."
+    printf '  %-12s %s\n' \
+        "critical:" \
+        "At least one value is 90% or higher."
+    printf '  %-12s %s\n' \
+        "incomplete:" \
+        "Available data is insufficient for a complete assessment."
+}
+
+print_storage_recommendations() {
+    local status="$1"
+
+    printf '%s\n' "Recommended next steps:"
+
+    case "$status" in
+        healthy)
+            printf '%s\n' \
+                "  - No immediate action is required; continue monitoring."
+            ;;
+        warning)
+            printf '%s\n' \
+                "  - Review filesystems marked warning and identify the triggering metric."
+            printf '%s\n' \
+                "  - Run lac --cleanup-report for a read-only review of cleanup candidates."
+            printf '%s\n' \
+                "  - Back up important data before cleanup, resizing or storage expansion."
+            printf '%s\n' \
+                "  - For capacity pressure, archive or remove only verified unnecessary data."
+            printf '%s\n' \
+                "  - For inode pressure, investigate directories containing many small files."
+            ;;
+        critical)
+            printf '%s\n' \
+                "  - Act promptly and identify the metric on filesystems marked critical."
+            printf '%s\n' \
+                "  - Run lac --cleanup-report for a read-only review of cleanup candidates."
+            printf '%s\n' \
+                "  - Back up important data before cleanup, resizing or storage expansion."
+            printf '%s\n' \
+                "  - For capacity pressure, archive or remove only verified unnecessary data."
+            printf '%s\n' \
+                "  - For inode pressure, investigate directories containing many small files."
+            ;;
+        incomplete|*)
+            printf '%s\n' \
+                "  - Check df availability, filesystem access and expected mount state."
+            printf '%s\n' \
+                "  - Do not treat an incomplete assessment as healthy."
+            ;;
+    esac
+}
+
 print_storage_filesystem_record() {
     local source="$1"
     local filesystem_type="$2"
@@ -227,6 +286,9 @@ print_storage_analysis() {
     printf '  %-12s %s%%\n' "Critical:" "$STORAGE_CRITICAL_PERCENTAGE"
     echo
 
+    print_storage_status_legend
+    echo
+
     printf '%s\n' "Filesystems:"
 
     case "$records" in
@@ -281,6 +343,8 @@ print_storage_analysis() {
     printf '%s\n' "Overall storage assessment:"
     printf '  %-12s %s\n' "Status:" "$overall_status"
     printf '  %-12s %s\n' "Details:" "$details"
+    echo
+    print_storage_recommendations "$overall_status"
 }
 
 show_storage_analysis() {
