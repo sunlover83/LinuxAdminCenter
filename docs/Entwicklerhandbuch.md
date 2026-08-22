@@ -285,7 +285,7 @@ Für Erweiterungen gelten folgende Grenzen:
 - Kapazitäts- und Inode-Grenzen bleiben getrennt testbar; Änderungen an den Standardwerten 80% und 90% benötigen Grenzwerttests und Dokumentationsanpassungen.
 - Nicht anwendbare Inode-Werte sind kein Fehler und dürfen eine ansonsten vollständige Bewertung nicht verschlechtern.
 - Neue Ausschlüsse von Dateisystemtypen benötigen positive und negative Filtertests.
-- Kontextregeln für besondere Einhängepunkte dürfen Messwert und Status nicht verändern. Die Recovery-Regel gilt ausschließlich für `/recovery`; ähnlich benannte Pfade benötigen einen negativen Test.
+- Kontextregeln für besondere Einhängepunkte dürfen Messwert und Status nicht verändern. Die Recovery-Kapazitätsregel gilt ausschließlich für `/recovery`; Inode-Druck und ähnlich benannte Pfade benötigen negative Tests.
 - Das GNU-Coreutils-Spaltenschema von `df` muss auf Debian, Fedora, Arch Linux und openSUSE über den Portabilitätstest abgesichert bleiben.
 - Reale Quellen, Einhängepunkte oder Hardwaredaten eines Entwicklungsrechners dürfen nicht als Fixtures übernommen werden.
 - Verzeichnis-Hotspots oder Dateisuche benötigen eine eigene Messschicht und ein separates Feature-Design; sie dürfen nicht stillschweigend den aktuellen Dateisystembericht erweitern.

@@ -84,9 +84,10 @@ An elevated
 .I /recovery
 filesystem retains its measured assessment, but the report explains that high
 usage can be expected when recovery installation media is stored there. If
-only this filesystem triggers a warning or critical result, generic cleanup
-and archival guidance is replaced with advice to use the distribution's
-supported recovery or update tools and never delete recovery files manually.
+elevated capacity on this filesystem is the only pressure, generic cleanup and
+archival guidance is replaced with advice to use the distribution's supported
+recovery or update tools and never delete recovery files manually. Inode
+pressure retains the general recommendations.
 .PP
 Pseudo-filesystems, remote mounts, known read-only image filesystems and
 selected virtual FUSE filesystems are excluded. The implementation relies on

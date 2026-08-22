@@ -133,6 +133,8 @@ critical_records="${warning_records}"$'\n''/dev/archive|btrfs|524288000|47185920
 incomplete_records='/dev/root|ext4|104857600|41943040|62914560|unknown|6553600|1310720|5242880|20|/'
 recovery_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3858759|335545|92|not-applicable|not-applicable|not-applicable|not-applicable|/recovery'
 recovery_warning_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3439329|754975|82|not-applicable|not-applicable|not-applicable|not-applicable|/recovery'
+recovery_inode_records="${healthy_records}"$'\n''/dev/recovery|ext4|4194304|1677722|2516582|40|262144|241172|20972|92|/recovery'
+recovery_capacity_inode_records="${healthy_records}"$'\n''/dev/recovery|ext4|4194304|3858759|335545|92|262144|241172|20972|92|/recovery'
 
 assert_equals \
     "Healthy records produce a healthy summary" \
@@ -160,7 +162,7 @@ assert_equals \
     "$(get_storage_analysis_summary unavailable)"
 
 assert_equals \
-    "Recovery-only pressure is identified without changing its status" \
+    "Recovery-only capacity pressure is identified without changing its status" \
     "recovery-only" \
     "$(get_storage_pressure_scope "$recovery_records")"
 
@@ -173,6 +175,16 @@ assert_equals \
     "Similar mountpoint names are not treated as the recovery filesystem" \
     "general" \
     "$(get_storage_pressure_scope '/dev/archive|ext4|4194304|3858759|335545|92|262144|131072|131072|50|/srv/recovery')"
+
+assert_equals \
+    "Recovery inode-only pressure retains general guidance" \
+    "general" \
+    "$(get_storage_pressure_scope "$recovery_inode_records")"
+
+assert_equals \
+    "Combined recovery capacity and inode pressure is mixed" \
+    "mixed" \
+    "$(get_storage_pressure_scope "$recovery_capacity_inode_records")"
 
 MOCK_STORAGE_RECORDS="${healthy_records}"$'\n''/dev/efi|vfat|1048576|524288|524288|50|not-applicable|not-applicable|not-applicable|not-applicable|/boot/efi'$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
 
@@ -316,6 +328,19 @@ assert_output_contains \
     "Recovery-only warning recommendations use supported management tools" \
     "Review the recovery filesystem marked warning with its supported management tools." \
     "$recovery_warning_output"
+
+MOCK_STORAGE_RECORDS="$recovery_inode_records"
+recovery_inode_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Recovery inode-only pressure retains inode investigation guidance" \
+    "For inode pressure, investigate directories containing many small files." \
+    "$recovery_inode_output"
+
+assert_output_not_contains \
+    "Recovery inode-only pressure does not display capacity context" \
+    "High usage can be expected" \
+    "$recovery_inode_output"
 
 MOCK_STORAGE_RECORDS="${recovery_records}"$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
 mixed_output="$(print_storage_analysis)"

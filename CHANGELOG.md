@@ -17,14 +17,14 @@ No changes yet.
 
 ### Changed
 
-- Recovery capacity and its measured status remain visible, while generic cleanup and archival guidance is omitted when `/recovery` is the only filesystem under pressure
-- Mixed recovery and general-purpose filesystem pressure retains the general recommendations and adds the safer recovery guidance
+- Recovery capacity and its measured status remain visible, while generic cleanup and archival guidance is omitted when elevated `/recovery` capacity is the only pressure
+- Inode pressure on `/recovery` retains the general recommendations, while mixed recovery-capacity and other pressure adds the safer recovery guidance to them
 - Version and codename updated to `1.3.0-alpha4 (Storage Analysis)`
 - Debian package version updated to `1.3.0~alpha4-1`
 
 ### Validation
 
-- Automated Storage Analysis coverage verifies recovery-only pressure, mixed pressure and similarly named non-recovery mountpoints without using host-specific fixtures
+- Automated Storage Analysis coverage verifies recovery-only capacity pressure, inode-only pressure, mixed pressure and similarly named non-recovery mountpoints without using host-specific fixtures
 - Release metadata, package and multi-distribution quality gates target the `v1.3.0-alpha4` release contract
 
 ### Security

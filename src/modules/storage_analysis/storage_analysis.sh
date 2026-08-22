@@ -197,6 +197,8 @@ get_storage_pressure_scope() {
     local inode_percentage
     local mountpoint
     local record_status
+    local capacity_status
+    local inode_status
     local recovery_pressure=false
     local general_pressure=false
 
@@ -228,12 +230,29 @@ get_storage_pressure_scope() {
                 "$inode_percentage"
         )"
 
+        capacity_status="$(get_storage_usage_status "$capacity_percentage")"
+        inode_status="not-applicable"
+
+        if [[ "$inode_percentage" != "not-applicable" ]]; then
+            inode_status="$(get_storage_usage_status "$inode_percentage")"
+        fi
+
         case "$record_status" in
             warning|critical)
                 mountpoint="$(decode_storage_record_field "$mountpoint")"
 
                 if is_storage_recovery_mountpoint "$mountpoint"; then
-                    recovery_pressure=true
+                    case "$capacity_status" in
+                        warning|critical)
+                            recovery_pressure=true
+                            ;;
+                    esac
+
+                    case "$inode_status" in
+                        warning|critical)
+                            general_pressure=true
+                            ;;
+                    esac
                 else
                     general_pressure=true
                 fi
@@ -342,12 +361,14 @@ print_storage_filesystem_record() {
     local inode_percentage="$9"
     local mountpoint="${10}"
     local record_status
+    local capacity_status
 
     record_status="$(
         get_storage_record_status \
             "$capacity_percentage" \
             "$inode_percentage"
     )"
+    capacity_status="$(get_storage_usage_status "$capacity_percentage")"
 
     printf '  %s (%s)\n' "$mountpoint" "$filesystem_type"
     printf '    %-12s %s\n' "Source:" "$source"
@@ -371,7 +392,7 @@ print_storage_filesystem_record() {
     printf '    %-12s %s\n' "Status:" "$record_status"
 
     if is_storage_recovery_mountpoint "$mountpoint" &&
-        [[ "$record_status" == "warning" || "$record_status" == "critical" ]]; then
+        [[ "$capacity_status" == "warning" || "$capacity_status" == "critical" ]]; then
         printf '    %-12s %s\n' \
             "Context:" \
             "High usage can be expected for recovery installation media."
