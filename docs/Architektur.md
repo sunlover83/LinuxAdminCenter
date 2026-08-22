@@ -241,6 +241,7 @@ Storage Analysis trennt die Ermittlung lokaler Dateisystemdaten von Formatierung
 5. Kapazitätsdatensätze ohne numerische oder sinnvolle Gesamtwerte werden verworfen. Liefert ein ansonsten gültiges Dateisystem keine aussagekräftigen Inode-Werte, werden nur seine Inode-Felder als `not-applicable` normalisiert.
 6. Die Datensätze werden mit `LC_ALL=C` deterministisch nach Einhängepunkt und Quelle sortiert.
 7. `src/modules/storage_analysis/storage_analysis.sh` bewertet Kapazität und Inodes getrennt, dekodiert die Textfelder vor der Anzeige, formatiert Größen und erzeugt den Gesamtbericht.
+8. Für den exakten Einhängepunkt `/recovery` ermittelt das Modul, ob nur dessen Kapazität oder zusätzlich ein Inode-Wert beziehungsweise ein allgemeines Dateisystem einen erhöhten Status auslöst. Diese Einordnung verändert weder Messwert noch Status, sondern steuert ausschließlich die sichtbaren Sicherheitshinweise.
 
 Die Bewertung verwendet feste Standardgrenzen:
 
@@ -250,6 +251,8 @@ Die Bewertung verwendet feste Standardgrenzen:
 - `incomplete`: `df` fehlt oder ist fehlgeschlagen, es existiert kein auswertbarer Datensatz oder ein übergebener Bewertungswert ist unvollständig
 
 Die Statuspriorität lautet `critical`, `warning`, `incomplete`, `healthy`. Nicht anwendbare Inode-Werte führen allein nicht zu `incomplete`.
+
+Eine erhöhte Kapazitätsbelegung von `/recovery` bleibt damit `warning` beziehungsweise `critical`. Bei reinem Recovery-Kapazitätsdruck ersetzt das Modul die allgemeinen Cleanup-, Archivierungs- und Erweiterungshinweise durch den Hinweis, distributionsunterstützte Recovery- oder Update-Werkzeuge zu verwenden und keine Recovery-Dateien manuell zu löschen. Inode-Druck auf `/recovery` bleibt allgemeiner Druck; bei gleichzeitig erhöhter Recovery-Kapazität werden beide Hinweisgruppen ausgegeben. Ähnlich benannte Pfade wie `/srv/recovery` erhalten keine Sonderbehandlung.
 
 CLI-Option `-s` beziehungsweise `--storage-analysis` und Menüpunkt 11 verwenden dieselben Core- und Modulfunktionen. Der Collector basiert bewusst auf den GNU-Coreutils-Optionen von `df`, die auf Debian, Fedora, Arch Linux und openSUSE zum unterstützten Systemumfang gehören. Andere `df`-Implementierungen werden nicht zugesichert.
 
@@ -553,6 +556,7 @@ Für Storage Analysis werden unter anderem geprüft:
 - Normalisierung von ext4-, XFS-, Btrfs-, vfat- sowie LUKS-/LVM-Beispieldaten
 - getrennte Kapazitäts- und Inode-Bewertung an den Grenzen 80% und 90%
 - Statuspriorität und Behandlung nicht anwendbarer Inode-Werte
+- Recovery-spezifischer Kontext für reinen und gemischten Druck ohne Statusänderung sowie die exakte Abgrenzung ähnlich benannter Mountpoints
 - Filterung von Pseudo-, Image- und ausgewählten FUSE-Dateisystemen
 - deterministische Sortierung und Fehlerzustände bei fehlendem oder fehlschlagendem `df`
 - CLI-, Menü-, Self-Check-, Installations- und Paketintegration

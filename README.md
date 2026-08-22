@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.3.0-alpha3 (Storage Analysis)**
+Current development version: **1.3.0-alpha4 (Storage Analysis)**
 
 Latest stable release: **1.2.0 (Release Automation)**
 
-Version 1.3.0-alpha3 prepares the next validation release of Storage Analysis. It explains every assessment state directly in the report and adds status-dependent, informational next steps for capacity and inode pressure without performing storage changes. Version 1.2.0 remains the latest stable release while Alpha3 completes the full release quality gates.
+Version 1.3.0-alpha4 prepares the next validation release of Storage Analysis. It keeps measured recovery-filesystem capacity pressure visible while explaining that high usage can be expected for recovery installation media and replacing unrelated cleanup advice with distribution-supported recovery guidance when elevated `/recovery` capacity is the only pressure. Version 1.2.0 remains the latest stable release while Alpha4 completes the full release quality gates.
 
 ## Current features
 
@@ -170,13 +170,13 @@ Linux Admin Center 1.2.0 (Release Automation)
 
 The Self Check should identify the installation as `debian-package`.
 
-The current source tree prepares the `1.3.0-alpha3` validation package. A local Debian build uses the native package filename:
+The current source tree prepares the `1.3.0-alpha4` validation package. A local Debian build uses the native package filename:
 
 ```text
-linux-admin-center_1.3.0~alpha3-1_all.deb
+linux-admin-center_1.3.0~alpha4-1_all.deb
 ```
 
-Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha3-1_all.deb`; the internal Debian version remains `1.3.0~alpha3-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
+Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha4-1_all.deb`; the internal Debian version remains `1.3.0~alpha4-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
 
 See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
 
@@ -282,6 +282,8 @@ Storage Analysis is a separate, fully read-only capacity report for mounted loca
 
 The report also displays safe next steps based on the overall state. It distinguishes capacity pressure from inode pressure, points to `lac --cleanup-report` for a read-only review of supported cleanup candidates, and recommends backing up important data before cleanup, resizing or storage expansion. These recommendations never perform a storage or cleanup action automatically.
 
+An elevated `/recovery` filesystem keeps its measured status, but the report explains that recovery installation media can be expected to use most of a dedicated partition. If elevated `/recovery` capacity is the only pressure, LAC omits unrelated cleanup and archival advice, prohibits manual deletion of recovery files and directs the user to the distribution's supported recovery or update tools. Inode pressure on `/recovery`, pressure on other filesystems or a combination of those values retains the applicable general guidance.
+
 Pseudo-filesystems, remote mounts, known read-only image filesystems and selected virtual FUSE mounts are excluded. The report does not use `sudo`, mount or unmount filesystems, run repair or trim commands, delete data, calculate directory hotspots or perform storage maintenance. Hardware Diagnostics remains responsible for physical drive-health information, while System Cleanup remains the only area that can offer explicitly confirmed cleanup actions.
 
 Network diagnostics are also read-only. LAC checks the IPv4 default gateway, DNS resolution and external IP reachability without modifying network interfaces, routes or DNS settings. Configurable test targets are validated before they are passed to `ping` or `getent`. Non-responsive ICMP targets are reported carefully because ping traffic may be blocked even when other network functions work.
@@ -371,13 +373,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.3.0-alpha3
+bash scripts/validate_release_metadata.sh v1.3.0-alpha4
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.3.0-alpha3 release-notes.md
+bash scripts/generate_release_notes.sh v1.3.0-alpha4 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -445,6 +447,8 @@ Version `1.3.0-alpha1` is the validation candidate for read-only capacity and in
 Version `1.3.0-alpha2` preserves that read-only baseline while preventing inaccessible excluded mounts from invalidating usable filesystem data.
 
 Version `1.3.0-alpha3` explains the assessment states in the report and adds safe, status-dependent guidance without performing storage changes.
+
+Version `1.3.0-alpha4` retains measured recovery-filesystem pressure while replacing unrelated cleanup advice with safe, distribution-supported recovery guidance.
 
 Planned next milestones:
 

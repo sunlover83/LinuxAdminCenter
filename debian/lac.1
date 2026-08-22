@@ -1,4 +1,4 @@
-.TH LAC 1 "August 2026" "Linux Admin Center 1.3.0-alpha3" "User Commands"
+.TH LAC 1 "August 2026" "Linux Admin Center 1.3.0-alpha4" "User Commands"
 .SH NAME
 lac \- modular Linux desktop administration toolkit
 .SH SYNOPSIS
@@ -79,6 +79,15 @@ refer to the read-only
 .B lac --cleanup-report
 output where applicable, and advise creating a backup before cleanup, resizing
 or storage expansion. Recommendations do not perform any modifying action.
+.PP
+An elevated
+.I /recovery
+filesystem retains its measured assessment, but the report explains that high
+usage can be expected when recovery installation media is stored there. If
+elevated capacity on this filesystem is the only pressure, generic cleanup and
+archival guidance is replaced with advice to use the distribution's supported
+recovery or update tools and never delete recovery files manually. Inode
+pressure retains the general recommendations.
 .PP
 Pseudo-filesystems, remote mounts, known read-only image filesystems and
 selected virtual FUSE filesystems are excluded. The implementation relies on

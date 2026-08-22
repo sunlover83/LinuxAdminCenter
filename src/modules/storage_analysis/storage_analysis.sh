@@ -177,8 +177,115 @@ print_storage_status_legend() {
         "Available data is insufficient for a complete assessment."
 }
 
+is_storage_recovery_mountpoint() {
+    local mountpoint="$1"
+
+    [[ "$mountpoint" == "/recovery" ]]
+}
+
+get_storage_pressure_scope() {
+    local records="$1"
+    local _source
+    local _filesystem_type
+    local _total_kib
+    local _used_kib
+    local _available_kib
+    local capacity_percentage
+    local _inode_total
+    local _inode_used
+    local _inode_available
+    local inode_percentage
+    local mountpoint
+    local record_status
+    local capacity_status
+    local inode_status
+    local recovery_pressure=false
+    local general_pressure=false
+
+    case "$records" in
+        unavailable|unknown|none|"")
+            printf '%s\n' "general"
+            return
+            ;;
+    esac
+
+    while IFS='|' read -r \
+        _source \
+        _filesystem_type \
+        _total_kib \
+        _used_kib \
+        _available_kib \
+        capacity_percentage \
+        _inode_total \
+        _inode_used \
+        _inode_available \
+        inode_percentage \
+        mountpoint; do
+
+        [[ -n "$mountpoint" ]] || continue
+
+        record_status="$(
+            get_storage_record_status \
+                "$capacity_percentage" \
+                "$inode_percentage"
+        )"
+
+        capacity_status="$(get_storage_usage_status "$capacity_percentage")"
+        inode_status="not-applicable"
+
+        if [[ "$inode_percentage" != "not-applicable" ]]; then
+            inode_status="$(get_storage_usage_status "$inode_percentage")"
+        fi
+
+        case "$record_status" in
+            warning|critical)
+                mountpoint="$(decode_storage_record_field "$mountpoint")"
+
+                if is_storage_recovery_mountpoint "$mountpoint"; then
+                    case "$capacity_status" in
+                        warning|critical)
+                            recovery_pressure=true
+                            ;;
+                    esac
+
+                    case "$inode_status" in
+                        warning|critical)
+                            general_pressure=true
+                            ;;
+                    esac
+                else
+                    general_pressure=true
+                fi
+                ;;
+        esac
+    done <<< "$records"
+
+    if [[ "$recovery_pressure" == true && "$general_pressure" == false ]]; then
+        printf '%s\n' "recovery-only"
+    elif [[ "$recovery_pressure" == true ]]; then
+        printf '%s\n' "mixed"
+    else
+        printf '%s\n' "general"
+    fi
+}
+
+print_storage_recovery_guidance() {
+    printf '%s\n' \
+        "  - High usage can be expected when a recovery filesystem stores installation media."
+    printf '%s\n' \
+        "  - Do not manually delete recovery files; use the distribution's supported recovery or update tools."
+    printf '%s\n' \
+        "  - Investigate further if the supported recovery operation reports insufficient space or fails."
+}
+
 print_storage_recommendations() {
     local status="$1"
+    local records="${2:-}"
+    local pressure_scope="general"
+
+    if [[ "$status" == "warning" || "$status" == "critical" ]]; then
+        pressure_scope="$(get_storage_pressure_scope "$records")"
+    fi
 
     printf '%s\n' "Recommended next steps:"
 
@@ -188,6 +295,13 @@ print_storage_recommendations() {
                 "  - No immediate action is required; continue monitoring."
             ;;
         warning)
+            if [[ "$pressure_scope" == "recovery-only" ]]; then
+                printf '%s\n' \
+                    "  - Review the recovery filesystem marked warning with its supported management tools."
+                print_storage_recovery_guidance
+                return
+            fi
+
             printf '%s\n' \
                 "  - Review filesystems marked warning and identify the triggering metric."
             printf '%s\n' \
@@ -198,8 +312,19 @@ print_storage_recommendations() {
                 "  - For capacity pressure, archive or remove only verified unnecessary data."
             printf '%s\n' \
                 "  - For inode pressure, investigate directories containing many small files."
+
+            if [[ "$pressure_scope" == "mixed" ]]; then
+                print_storage_recovery_guidance
+            fi
             ;;
         critical)
+            if [[ "$pressure_scope" == "recovery-only" ]]; then
+                printf '%s\n' \
+                    "  - Review the recovery filesystem marked critical with its supported management tools."
+                print_storage_recovery_guidance
+                return
+            fi
+
             printf '%s\n' \
                 "  - Act promptly and identify the metric on filesystems marked critical."
             printf '%s\n' \
@@ -210,6 +335,10 @@ print_storage_recommendations() {
                 "  - For capacity pressure, archive or remove only verified unnecessary data."
             printf '%s\n' \
                 "  - For inode pressure, investigate directories containing many small files."
+
+            if [[ "$pressure_scope" == "mixed" ]]; then
+                print_storage_recovery_guidance
+            fi
             ;;
         incomplete|*)
             printf '%s\n' \
@@ -232,12 +361,14 @@ print_storage_filesystem_record() {
     local inode_percentage="$9"
     local mountpoint="${10}"
     local record_status
+    local capacity_status
 
     record_status="$(
         get_storage_record_status \
             "$capacity_percentage" \
             "$inode_percentage"
     )"
+    capacity_status="$(get_storage_usage_status "$capacity_percentage")"
 
     printf '  %s (%s)\n' "$mountpoint" "$filesystem_type"
     printf '    %-12s %s\n' "Source:" "$source"
@@ -259,6 +390,13 @@ print_storage_filesystem_record() {
     fi
 
     printf '    %-12s %s\n' "Status:" "$record_status"
+
+    if is_storage_recovery_mountpoint "$mountpoint" &&
+        [[ "$capacity_status" == "warning" || "$capacity_status" == "critical" ]]; then
+        printf '    %-12s %s\n' \
+            "Context:" \
+            "High usage can be expected for recovery installation media."
+    fi
 }
 
 print_storage_analysis() {
@@ -344,7 +482,7 @@ print_storage_analysis() {
     printf '  %-12s %s\n' "Status:" "$overall_status"
     printf '  %-12s %s\n' "Details:" "$details"
     echo
-    print_storage_recommendations "$overall_status"
+    print_storage_recommendations "$overall_status" "$records"
 }
 
 show_storage_analysis() {
