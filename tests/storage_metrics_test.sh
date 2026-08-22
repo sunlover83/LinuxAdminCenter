@@ -69,7 +69,7 @@ if [[ "${LC_ALL:-}" != "C" ]]; then
     exit 90
 fi
 
-expected_arguments="--local --block-size=1024 --output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target"
+expected_arguments="--all --local --block-size=1024 --output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target"
 
 if [[ "$*" != "$expected_arguments" ]]; then
     printf 'Unexpected df arguments: %s\n' "$*" >&2
@@ -168,7 +168,7 @@ expected_records="$({
 export MOCK_DF_MODE=success
 
 assert_equals \
-    "Persistent filesystem records are normalized, filtered and sorted" \
+    "Persistent and duplicate mount records are normalized, filtered and sorted" \
     "$expected_records" \
     "$(get_storage_filesystem_records)"
 

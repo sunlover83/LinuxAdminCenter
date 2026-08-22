@@ -74,6 +74,7 @@ get_storage_filesystem_records() {
 
     if ! storage_output="$(
         LC_ALL=C df \
+            --all \
             --local \
             --block-size=1024 \
             --output=source,fstype,size,used,avail,pcent,itotal,iused,iavail,ipcent,target \
