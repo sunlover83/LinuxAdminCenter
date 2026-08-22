@@ -45,6 +45,19 @@ assert_output_contains() {
     fi
 }
 
+assert_output_not_contains() {
+    local description="$1"
+    local unexpected="$2"
+    local actual="$3"
+
+    if [[ "$actual" != *"$unexpected"* ]]; then
+        pass_test "$description"
+    else
+        fail_test "$description"
+        printf '       Unexpected: %s\n' "$unexpected"
+    fi
+}
+
 # shellcheck source=../src/core/storage_metrics.sh
 source "${PROJECT_ROOT}/src/core/storage_metrics.sh"
 
@@ -118,6 +131,8 @@ healthy_records='/dev/root|ext4|104857600|41943040|62914560|40|6553600|1310720|5
 warning_records="${healthy_records}"$'\n''/dev/data|xfs|209715200|167772160|41943040|80|104857600|62914560|41943040|60|/srv/data'
 critical_records="${warning_records}"$'\n''/dev/archive|btrfs|524288000|471859200|52428800|90|not-applicable|not-applicable|not-applicable|not-applicable|/srv/archive'
 incomplete_records='/dev/root|ext4|104857600|41943040|62914560|unknown|6553600|1310720|5242880|20|/'
+recovery_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3858759|335545|92|not-applicable|not-applicable|not-applicable|not-applicable|/recovery'
+recovery_warning_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3439329|754975|82|not-applicable|not-applicable|not-applicable|not-applicable|/recovery'
 
 assert_equals \
     "Healthy records produce a healthy summary" \
@@ -143,6 +158,21 @@ assert_equals \
     "Unavailable collection data produces an incomplete summary" \
     "incomplete" \
     "$(get_storage_analysis_summary unavailable)"
+
+assert_equals \
+    "Recovery-only pressure is identified without changing its status" \
+    "recovery-only" \
+    "$(get_storage_pressure_scope "$recovery_records")"
+
+assert_equals \
+    "Critical recovery pressure remains critical in the summary" \
+    "critical" \
+    "$(get_storage_analysis_summary "$recovery_records")"
+
+assert_equals \
+    "Similar mountpoint names are not treated as the recovery filesystem" \
+    "general" \
+    "$(get_storage_pressure_scope '/dev/archive|ext4|4194304|3858759|335545|92|262144|131072|131072|50|/srv/recovery')"
 
 MOCK_STORAGE_RECORDS="${healthy_records}"$'\n''/dev/efi|vfat|1048576|524288|524288|50|not-applicable|not-applicable|not-applicable|not-applicable|/boot/efi'$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
 
@@ -245,6 +275,60 @@ assert_output_contains \
     "Warning recommendations require a backup before modifications" \
     "Back up important data before cleanup, resizing or storage expansion." \
     "$warning_output"
+
+MOCK_STORAGE_RECORDS="$recovery_records"
+recovery_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Recovery filesystems retain their measured critical status" \
+    "Status:      critical" \
+    "$recovery_output"
+
+assert_output_contains \
+    "Recovery filesystems display expected-use context" \
+    "Context:     High usage can be expected for recovery installation media." \
+    "$recovery_output"
+
+assert_output_contains \
+    "Recovery-only recommendations use supported management tools" \
+    "Review the recovery filesystem marked critical with its supported management tools." \
+    "$recovery_output"
+
+assert_output_contains \
+    "Recovery-only recommendations prohibit manual file deletion" \
+    "Do not manually delete recovery files; use the distribution's supported recovery or update tools." \
+    "$recovery_output"
+
+assert_output_not_contains \
+    "Recovery-only recommendations omit the unrelated cleanup report" \
+    "Run lac --cleanup-report" \
+    "$recovery_output"
+
+assert_output_not_contains \
+    "Recovery-only recommendations omit generic archival advice" \
+    "archive or remove" \
+    "$recovery_output"
+
+MOCK_STORAGE_RECORDS="$recovery_warning_records"
+recovery_warning_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Recovery-only warning recommendations use supported management tools" \
+    "Review the recovery filesystem marked warning with its supported management tools." \
+    "$recovery_warning_output"
+
+MOCK_STORAGE_RECORDS="${recovery_records}"$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
+mixed_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Mixed pressure retains general cleanup guidance" \
+    "Run lac --cleanup-report for a read-only review of cleanup candidates." \
+    "$mixed_output"
+
+assert_output_contains \
+    "Mixed pressure also displays recovery-specific guidance" \
+    "High usage can be expected when a recovery filesystem stores installation media." \
+    "$mixed_output"
 
 MOCK_STORAGE_RECORDS='/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026'
 delimiter_output="$(print_storage_analysis)"

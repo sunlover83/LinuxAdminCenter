@@ -150,6 +150,8 @@ Der jeweils schwerwiegendere Kapazitäts- oder Inode-Status bestimmt den Status 
 
 Nach der Gesamtbewertung zeigt LAC sichere, statusabhängige Empfehlungen. Bei Kapazitätsdruck wird auf das Archivieren oder Entfernen ausschließlich geprüfter unnötiger Daten hingewiesen; bei Inode-Druck auf Verzeichnisse mit sehr vielen kleinen Dateien. `lac --cleanup-report` bietet dafür zunächst eine rein lesende Übersicht der unterstützten Cleanup-Kandidaten. Bei `warning` und `critical` empfiehlt LAC vor Bereinigung, Größenänderung oder Speichererweiterung ausdrücklich eine Sicherung wichtiger Daten. Die Empfehlungen führen selbst keine Änderung aus.
 
+Ein hoch belegtes Dateisystem am Einhängepunkt `/recovery` behält seinen gemessenen Status. LAC erklärt jedoch direkt am Datensatz, dass eine hohe Belegung normal sein kann, wenn die Partition ein Recovery-Installationsmedium enthält. Löst ausschließlich `/recovery` einen erhöhten Status aus, entfallen die dafür ungeeigneten Cleanup- und Archivierungshinweise. Stattdessen verweist der Bericht auf die unterstützten Recovery- oder Update-Werkzeuge der jeweiligen Distribution und warnt ausdrücklich davor, Recovery-Dateien manuell zu löschen. Sind gleichzeitig andere Dateisysteme betroffen, bleiben für diese die allgemeinen Hinweise sichtbar.
+
 LAC berücksichtigt nur bereits eingehängte lokale Dateisysteme. Pseudo- und RAM-Dateisysteme wie `proc`, `sysfs` oder `tmpfs`, entfernte Dateisysteme, bekannte schreibgeschützte Image-Dateisysteme wie `squashfs` und ausgewählte virtuelle FUSE-Dateisysteme werden ausgefiltert. Die Ermittlung verwendet die GNU-Coreutils-Ausgabe von `df`, die auf den unterstützten Zielsystemen Debian, Fedora, Arch Linux und openSUSE verfügbar ist. Andere `df`-Implementierungen mit abweichenden Optionen gehören nicht zum zugesicherten Portabilitätsumfang.
 
 Storage Analysis führt ausschließlich `df` lesend aus. Die Funktion verwendet kein `sudo`, hängt keine Dateisysteme ein oder aus, startet weder `fsck` noch Trim-, Resize- oder Reparaturbefehle und löscht oder schreibt keine Daten.
@@ -642,6 +644,8 @@ df --local --inodes
 ```
 
 Storage Analysis führt selbst keine Bereinigung oder Reparatur aus. Vor manuellen Änderungen sollte geprüft werden, welches Dateisystem betroffen ist und ob die Kapazitäts- oder die Inode-Grenze ausgelöst wurde.
+
+Ist ausschließlich `/recovery` betroffen, kann die hohe Belegung bei einer dedizierten Partition mit Recovery-Installationsmedium erwartet sein. Dateien dort nicht manuell löschen. Stattdessen mit den von der Distribution vorgesehenen Recovery- oder Update-Werkzeugen prüfen, ob das Medium aktuell und nutzbar ist. Weiterer Kapazitätsbedarf ist insbesondere dann zu untersuchen, wenn dieser unterstützte Vorgang unzureichenden Speicher meldet oder fehlschlägt.
 
 ### Gaming Readiness zeigt `limited`
 

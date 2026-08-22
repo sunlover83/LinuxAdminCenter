@@ -8,6 +8,29 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.3.0-alpha4] - 2026-08-22
+
+### Added
+
+- Elevated `/recovery` filesystems now display context that high utilization can be expected when they contain recovery installation media
+- Recovery-specific next steps direct users to distribution-supported recovery or update tools and explicitly prohibit manual deletion of recovery files
+
+### Changed
+
+- Recovery capacity and its measured status remain visible, while generic cleanup and archival guidance is omitted when `/recovery` is the only filesystem under pressure
+- Mixed recovery and general-purpose filesystem pressure retains the general recommendations and adds the safer recovery guidance
+- Version and codename updated to `1.3.0-alpha4 (Storage Analysis)`
+- Debian package version updated to `1.3.0~alpha4-1`
+
+### Validation
+
+- Automated Storage Analysis coverage verifies recovery-only pressure, mixed pressure and similarly named non-recovery mountpoints without using host-specific fixtures
+- Release metadata, package and multi-distribution quality gates target the `v1.3.0-alpha4` release contract
+
+### Security
+
+- Storage Analysis remains read-only and no recovery files are inspected, deleted, resized or otherwise modified
+
 ## [1.3.0-alpha3] - 2026-08-22
 
 ### Added
