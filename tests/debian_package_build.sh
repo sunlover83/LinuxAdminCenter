@@ -121,8 +121,8 @@ assert_equals \
     "$(dpkg-deb -f "$PACKAGE_FILE" Architecture)"
 
 assert_equals \
-    "Package uses the 1.2.0 stable Debian version" \
-    "1.2.0-1" \
+    "Package uses the 1.3.0-alpha1 Debian version" \
+    "1.3.0~alpha1-1" \
     "$(dpkg-deb -f "$PACKAGE_FILE" Version)"
 
 dpkg-deb -x "$PACKAGE_FILE" "$EXTRACT_ROOT"
@@ -171,8 +171,8 @@ version_output="$(
 )"
 
 assert_equals \
-    "Extracted package runs the 1.2.0 stable LAC version" \
-    "Linux Admin Center 1.2.0 (Release Automation)" \
+    "Extracted package runs the 1.3.0-alpha1 LAC version" \
+    "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" \
     "$version_output"
 
 storage_output="$(

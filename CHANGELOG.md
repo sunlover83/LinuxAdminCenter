@@ -6,6 +6,10 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.3.0-alpha1] - 2026-08-22
+
 ### Added
 
 - Portable local-filesystem collector using deterministic GNU `df` output for capacity and inode metrics
@@ -15,9 +19,17 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ### Changed
 
+- Version and codename updated to `1.3.0-alpha1 (Storage Analysis)`
+- Debian package version updated to `1.3.0~alpha1-1`
 - LAC Self Check, manual installation and Debian package tests include the Storage Analysis runtime files and installed CLI path
 - Debian, Fedora, Arch Linux and openSUSE portability selection now includes the storage metric and assessment tests
 - README, user manual, architecture, developer guidance and `lac(1)` document Storage Analysis behavior, portability and interpretation
+
+### Validation
+
+- Storage metrics use neutral mocked fixtures alongside installed-runtime checks against the local `df` implementation
+- CLI, menu, Self Check, manual installation and Debian package expectations cover the complete Storage Analysis runtime path
+- Release metadata validation covers the `1.3.0-alpha1` runtime, Debian package, changelog and manpage contract
 
 ### Security
 

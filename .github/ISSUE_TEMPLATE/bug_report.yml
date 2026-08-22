@@ -26,7 +26,7 @@ body:
     attributes:
       label: Linux Admin Center version
       description: Copy the output of `lac --version`.
-      placeholder: Linux Admin Center 1.2.0 (Release Automation)
+      placeholder: Linux Admin Center 1.3.0-alpha1 (Storage Analysis)
     validations:
       required: true
 

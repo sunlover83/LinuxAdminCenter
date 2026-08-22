@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.2.0 (Release Automation)**
+Current development version: **1.3.0-alpha1 (Storage Analysis)**
 
 Latest stable release: **1.2.0 (Release Automation)**
 
-Version 1.2.0 adds validated, automated GitHub release publication on top of the 1.1.0 Debian/Ubuntu packaging baseline. The release workflow validates version metadata, repeats the package quality gates, generates release notes and SHA256 checksums, and publishes only an already-existing release tag that points to the exact current `main` commit. Prerelease package filenames are normalized before upload so GitHub release assets, `SHA256SUMS` and release notes use the same download name; the successful Alpha2 release verified that behavior end to end.
+Version 1.3.0-alpha1 prepares the first validation release of Storage Analysis. It adds a strictly read-only report for capacity and inode pressure on mounted local persistent filesystems, integrates the report into the CLI and interactive menu, and extends runtime, installation, package and multi-distribution test coverage. Version 1.2.0 remains the latest stable release while Alpha1 completes the full release quality gates.
 
 ## Current features
 
@@ -169,6 +169,14 @@ Linux Admin Center 1.2.0 (Release Automation)
 ```
 
 The Self Check should identify the installation as `debian-package`.
+
+The current source tree prepares the `1.3.0-alpha1` validation package. A local Debian build uses the native package filename:
+
+```text
+linux-admin-center_1.3.0~alpha1-1_all.deb
+```
+
+Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha1-1_all.deb`; the internal Debian version remains `1.3.0~alpha1-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
 
 See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
 
@@ -361,13 +369,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.2.0
+bash scripts/validate_release_metadata.sh v1.3.0-alpha1
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.2.0 release-notes.md
+bash scripts/generate_release_notes.sh v1.3.0-alpha1 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -430,9 +438,11 @@ Version `1.2.0-alpha2` fixes that end-to-end finding by preparing GitHub-safe as
 
 Version `1.2.0` promotes the validated release-automation baseline to stable without functional runtime changes.
 
+Version `1.3.0-alpha1` is the validation candidate for read-only capacity and inode analysis across local persistent filesystems.
+
 Planned next milestones:
 
-- `1.3.0` – read-only capacity and inode analysis for local persistent filesystems
+- `1.3.0` – promote the validated Storage Analysis baseline to stable
 - `1.4.0` – boot and system diagnostics
 - `1.5.0` – expanded update management across supported application/package sources
 - `1.6.0` – user-interface and UX improvements; exact UI technology to be decided later

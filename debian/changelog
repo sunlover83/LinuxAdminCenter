@@ -1,3 +1,12 @@
+linux-admin-center (1.3.0~alpha1-1) unstable; urgency=medium
+
+  * Add read-only capacity and inode analysis for local persistent
+    filesystems.
+  * Integrate Storage Analysis into the CLI, menu, Self Check and packages.
+  * Add automated portability tests and document the strict safety boundary.
+
+ -- sunlover83 <308776759+sunlover83@users.noreply.github.com>  Sat, 22 Aug 2026 10:04:55 +0200
+
 linux-admin-center (1.2.0-1) unstable; urgency=medium
 
   * Promote the validated GitHub release automation to stable.
