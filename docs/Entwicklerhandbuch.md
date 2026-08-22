@@ -151,6 +151,8 @@ Der Portabilitätstest prüft unter anderem:
 - Installation und Deinstallation
 - Netzwerkziel-Hardening
 - Paketmanager-Abstraktion
+- Storage-Metriken und Storage-Analysis-Bewertung
+- Ausführung von `--storage-analysis` über den temporär installierten Launcher
 - Self Check
 
 ### Aufbau eines Tests
@@ -183,6 +185,8 @@ Beispiele:
 - `installation_test.sh`
 - `network_metrics_test.sh`
 - `package_manager_test.sh`
+- `storage_metrics_test.sh`
+- `storage_analysis_test.sh`
 
 ## Installation und Deployment entwickeln
 
@@ -257,6 +261,34 @@ Bei späteren `.deb`-, `.rpm`- oder anderen Paketformaten soll diese `DESTDIR`-f
 Ein Funktionsmodul soll nicht direkt von einem anderen Funktionsmodul abhängen. Gemeinsam benötigte Logik gehört in die Core-Schicht.
 
 Neue Dateien unter `src/` werden durch die aktuelle Installation automatisch in den Runtime-Baum übernommen. Benötigt ein neues Modul zusätzliche Dateien außerhalb von `src/`, muss auch die Deployment-Schicht angepasst und getestet werden.
+
+## Storage Analysis weiterentwickeln
+
+Die Storage-Analyse besteht aus zwei getrennten Schichten:
+
+- `src/core/storage_metrics.sh` ermittelt und normalisiert die Dateisystemdaten.
+- `src/modules/storage_analysis/storage_analysis.sh` formatiert die Daten und bewertet Kapazitäts- sowie Inode-Druck.
+
+Der Core-Collector liefert pro Zeile genau elf durch `|` getrennte Felder:
+
+```text
+source|fstype|total_kib|used_kib|available_kib|capacity_pct|inode_total|inode_used|inode_available|inode_pct|mountpoint
+```
+
+Die sichtbare und getestete Sortierung erfolgt nach Einhängepunkt und Quelle mit `LC_ALL=C`. Änderungen am Datensatzformat müssen Collector, Modul und beide Storage-Testdateien gemeinsam aktualisieren.
+
+Für Erweiterungen gelten folgende Grenzen:
+
+- Die Ermittlung bleibt ohne `sudo` und verwendet ausschließlich lesende Befehle.
+- Kapazitäts- und Inode-Grenzen bleiben getrennt testbar; Änderungen an den Standardwerten 80% und 90% benötigen Grenzwerttests und Dokumentationsanpassungen.
+- Nicht anwendbare Inode-Werte sind kein Fehler und dürfen eine ansonsten vollständige Bewertung nicht verschlechtern.
+- Neue Ausschlüsse von Dateisystemtypen benötigen positive und negative Filtertests.
+- Das GNU-Coreutils-Spaltenschema von `df` muss auf Debian, Fedora, Arch Linux und openSUSE über den Portabilitätstest abgesichert bleiben.
+- Reale Quellen, Einhängepunkte oder Hardwaredaten eines Entwicklungsrechners dürfen nicht als Fixtures übernommen werden.
+- Verzeichnis-Hotspots oder Dateisuche benötigen eine eigene Messschicht und ein separates Feature-Design; sie dürfen nicht stillschweigend den aktuellen Dateisystembericht erweitern.
+- Mount-, Repair-, Trim-, Resize-, Lösch- oder andere Speicherwartungsaktionen gehören nicht in Storage Analysis. Eine spätere verändernde Funktion benötigt einen getrennten Funktionsbereich, eine eigene Sicherheitsbewertung, Vorschau, ausdrückliche Bestätigung und automatisierte Tests.
+
+`tests/storage_metrics_test.sh` deckt Collector-Aufruf, unterstützte Beispieldateisysteme, Filter, Sortierung und Fehlerzustände ab. `tests/storage_analysis_test.sh` deckt Grenzwerte, Statuspriorität, Größenformatierung und Berichtsausgabe ab. CLI, Menü, Self Check, Installation und Debian-Paket werden zusätzlich von ihren bestehenden Integrationstests geprüft.
 
 ## Paketmanager erweitern
 
