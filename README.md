@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.3.0-alpha1 (Storage Analysis)**
+Current development version: **1.3.0-alpha2 (Storage Analysis)**
 
 Latest stable release: **1.2.0 (Release Automation)**
 
-Version 1.3.0-alpha1 prepares the first validation release of Storage Analysis. It adds a strictly read-only report for capacity and inode pressure on mounted local persistent filesystems, integrates the report into the CLI and interactive menu, and extends runtime, installation, package and multi-distribution test coverage. Version 1.2.0 remains the latest stable release while Alpha1 completes the full release quality gates.
+Version 1.3.0-alpha2 prepares the follow-up validation release of Storage Analysis. It retains the strictly read-only capacity and inode-pressure report from Alpha1 and prevents inaccessible excluded mounts such as `fuse.portal` from invalidating otherwise usable filesystem data. Version 1.2.0 remains the latest stable release while Alpha2 completes the full release quality gates.
 
 ## Current features
 
@@ -170,13 +170,13 @@ Linux Admin Center 1.2.0 (Release Automation)
 
 The Self Check should identify the installation as `debian-package`.
 
-The current source tree prepares the `1.3.0-alpha1` validation package. A local Debian build uses the native package filename:
+The current source tree prepares the `1.3.0-alpha2` validation package. A local Debian build uses the native package filename:
 
 ```text
-linux-admin-center_1.3.0~alpha1-1_all.deb
+linux-admin-center_1.3.0~alpha2-1_all.deb
 ```
 
-Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha1-1_all.deb`; the internal Debian version remains `1.3.0~alpha1-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
+Release automation converts only the published asset name to `linux-admin-center_1.3.0-alpha2-1_all.deb`; the internal Debian version remains `1.3.0~alpha2-1`. Until that prerelease has passed publication and post-publication verification, version 1.2.0 remains the recommended stable package.
 
 See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
 
@@ -369,13 +369,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.3.0-alpha1
+bash scripts/validate_release_metadata.sh v1.3.0-alpha2
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.3.0-alpha1 release-notes.md
+bash scripts/generate_release_notes.sh v1.3.0-alpha2 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -439,6 +439,8 @@ Version `1.2.0-alpha2` fixes that end-to-end finding by preparing GitHub-safe as
 Version `1.2.0` promotes the validated release-automation baseline to stable without functional runtime changes.
 
 Version `1.3.0-alpha1` is the validation candidate for read-only capacity and inode analysis across local persistent filesystems.
+
+Version `1.3.0-alpha2` preserves that read-only baseline while preventing inaccessible excluded mounts from invalidating usable filesystem data.
 
 Planned next milestones:
 

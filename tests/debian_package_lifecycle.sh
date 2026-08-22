@@ -101,7 +101,7 @@ if [[ "$(dpkg-query -W -f='${Status}' linux-admin-center)" != "install ok instal
 fi
 pass "Package installs successfully through apt"
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha2 (Storage Analysis)" ]]; then
     fail "Installed package must expose the expected LAC version"
 fi
 pass "Installed lac command reports the packaged version"
@@ -131,7 +131,7 @@ pass "Package removal remains under apt/dpkg control"
 
 apt-get install --reinstall --yes /tmp/linux-admin-center.deb >/dev/null
 
-if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha1 (Storage Analysis)" ]]; then
+if [[ "$(lac --version)" != "Linux Admin Center 1.3.0-alpha2 (Storage Analysis)" ]]; then
     fail "Reinstalled package must remain executable"
 fi
 if [[ "$(cat /etc/lac/lac.conf)" != "DEBUG=true" ]]; then

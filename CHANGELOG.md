@@ -8,6 +8,28 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.3.0-alpha2] - 2026-08-22
+
+### Changed
+
+- Version and codename updated to `1.3.0-alpha2 (Storage Analysis)`
+- Debian package version updated to `1.3.0~alpha2-1`
+- Excluded filesystem types are passed directly to GNU `df` before collection while record-level filtering remains in place as defense in depth
+
+### Fixed
+
+- An inaccessible excluded mount such as `fuse.portal` no longer causes valid persistent-filesystem data to be discarded when GNU `df --all` reports a non-zero status
+
+### Validation
+
+- Automated regression coverage reproduces the inaccessible `fuse.portal` behavior and verifies that genuine `df` failures remain explicit and conservative
+- Real-system smoke testing verifies identical complete reports through the long and short Storage Analysis CLI options
+- Release metadata, package and multi-distribution quality gates target the `v1.3.0-alpha2` release contract
+
+### Security
+
+- The fix remains strictly read-only and only narrows which filesystem types GNU `df` accesses; it performs no mount or storage modification
+
 ## [1.3.0-alpha1] - 2026-08-22
 
 ### Added
