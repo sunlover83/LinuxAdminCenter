@@ -6,7 +6,14 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Storage Analysis now displays an in-report legend for `healthy`, `warning`, `critical` and `incomplete`
+- Status-dependent next steps distinguish capacity pressure from inode pressure, point to the read-only Cleanup Report and recommend backups before potentially modifying storage work
+
+### Security
+
+- Storage recommendations are informational only and never delete data, invoke cleanup, resize filesystems or otherwise modify storage
 
 ## [1.3.0-alpha2] - 2026-08-22
 

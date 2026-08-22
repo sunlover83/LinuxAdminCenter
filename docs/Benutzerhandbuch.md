@@ -137,15 +137,18 @@ Für jedes berücksichtigte Dateisystem zeigt LAC:
 - belegte und gesamte Inodes sowie deren prozentuale Belegung, sofern der Dateisystemtyp aussagekräftige Inode-Werte liefert
 - Einzelstatus des Dateisystems
 
-Kapazität und Inodes werden unabhängig mit denselben Standardgrenzen bewertet:
+Kapazität und Inodes werden unabhängig mit denselben Standardgrenzen bewertet. Der Bericht erklärt die Zustände direkt:
 
-| Belegung | Status |
-|---:|---|
-| unter 80% | `healthy` |
-| ab 80% | `warning` |
-| ab 90% | `critical` |
+| Status | Bedeutung |
+|---|---|
+| `healthy` | alle auswertbaren Kapazitäts- und Inode-Werte liegen unter 80% |
+| `warning` | mindestens ein Wert liegt zwischen 80% und 89%, kein Wert ist kritisch |
+| `critical` | mindestens ein Wert liegt bei 90% oder höher |
+| `incomplete` | die verfügbaren Daten reichen für die jeweilige Bewertung nicht aus |
 
 Der jeweils schwerwiegendere Kapazitäts- oder Inode-Status bestimmt den Status eines Dateisystems. Der schwerwiegendste Einzelstatus bestimmt anschließend die Gesamtbewertung. Nicht verfügbare Inode-Werte erscheinen als `not applicable` und verschlechtern die Bewertung allein nicht. Kann `df` nicht ausgeführt werden, können die Dateisystemdaten nicht gelesen werden oder existiert kein auswertbares lokales persistentes Dateisystem, lautet die Gesamtbewertung `incomplete`.
+
+Nach der Gesamtbewertung zeigt LAC sichere, statusabhängige Empfehlungen. Bei Kapazitätsdruck wird auf das Archivieren oder Entfernen ausschließlich geprüfter unnötiger Daten hingewiesen; bei Inode-Druck auf Verzeichnisse mit sehr vielen kleinen Dateien. `lac --cleanup-report` bietet dafür zunächst eine rein lesende Übersicht der unterstützten Cleanup-Kandidaten. Vor Bereinigung, Größenänderung oder Speichererweiterung bei einem kritischen Zustand empfiehlt LAC ausdrücklich eine Sicherung wichtiger Daten. Die Empfehlungen führen selbst keine Änderung aus.
 
 LAC berücksichtigt nur bereits eingehängte lokale Dateisysteme. Pseudo- und RAM-Dateisysteme wie `proc`, `sysfs` oder `tmpfs`, entfernte Dateisysteme, bekannte schreibgeschützte Image-Dateisysteme wie `squashfs` und ausgewählte virtuelle FUSE-Dateisysteme werden ausgefiltert. Die Ermittlung verwendet die GNU-Coreutils-Ausgabe von `df`, die auf den unterstützten Zielsystemen Debian, Fedora, Arch Linux und openSUSE verfügbar ist. Andere `df`-Implementierungen mit abweichenden Optionen gehören nicht zum zugesicherten Portabilitätsumfang.
 

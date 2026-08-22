@@ -154,6 +154,31 @@ assert_output_contains \
     "$analysis_output"
 
 assert_output_contains \
+    "The report includes a status legend" \
+    "Status meanings:" \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report explains healthy states" \
+    "All evaluated capacity and inode values are below 80%." \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report explains warning states" \
+    "At least one value is between 80% and 89%; none is critical." \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report explains critical states" \
+    "At least one value is 90% or higher." \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report explains incomplete states" \
+    "Available data is insufficient for a complete assessment." \
+    "$analysis_output"
+
+assert_output_contains \
     "The report displays filesystem mountpoints and types" \
     "/srv/data (xfs)" \
     "$analysis_output"
@@ -178,6 +203,44 @@ assert_output_contains \
     "At least one filesystem has reached a critical threshold." \
     "$analysis_output"
 
+assert_output_contains \
+    "Critical recommendations prioritize timely review" \
+    "Act promptly and identify the metric on filesystems marked critical." \
+    "$analysis_output"
+
+assert_output_contains \
+    "Critical recommendations require a backup before modifications" \
+    "Back up important data before cleanup, resizing or storage expansion." \
+    "$analysis_output"
+
+assert_output_contains \
+    "Critical recommendations distinguish capacity pressure" \
+    "For capacity pressure, archive or remove only verified unnecessary data." \
+    "$analysis_output"
+
+assert_output_contains \
+    "Critical recommendations distinguish inode pressure" \
+    "For inode pressure, investigate directories containing many small files." \
+    "$analysis_output"
+
+assert_output_contains \
+    "Critical recommendations start with a read-only cleanup report" \
+    "Run lac --cleanup-report for a read-only review of cleanup candidates." \
+    "$analysis_output"
+
+MOCK_STORAGE_RECORDS="$warning_records"
+warning_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Warning recommendations identify the triggering metric" \
+    "Review filesystems marked warning and identify the triggering metric." \
+    "$warning_output"
+
+assert_output_contains \
+    "Warning recommendations include the read-only cleanup report" \
+    "Run lac --cleanup-report for a read-only review of cleanup candidates." \
+    "$warning_output"
+
 MOCK_STORAGE_RECORDS='/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026'
 delimiter_output="$(print_storage_analysis)"
 
@@ -196,6 +259,11 @@ assert_output_contains \
     "Status:      healthy" \
     "$delimiter_output"
 
+assert_output_contains \
+    "Healthy recommendations require no immediate action" \
+    "No immediate action is required; continue monitoring." \
+    "$delimiter_output"
+
 MOCK_STORAGE_RECORDS="unknown"
 unknown_output="$(print_storage_analysis)"
 
@@ -207,6 +275,16 @@ assert_output_contains \
 assert_output_contains \
     "Collection failures produce an incomplete assessment" \
     "Status:      incomplete" \
+    "$unknown_output"
+
+assert_output_contains \
+    "Incomplete recommendations explain diagnostic checks" \
+    "Check df availability, filesystem access and expected mount state." \
+    "$unknown_output"
+
+assert_output_contains \
+    "Incomplete recommendations are not presented as healthy" \
+    "Do not treat an incomplete assessment as healthy." \
     "$unknown_output"
 
 printf '\n%s passed, %s failed.\n' "$passed" "$failed"
