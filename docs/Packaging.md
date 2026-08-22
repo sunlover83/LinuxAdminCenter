@@ -4,16 +4,16 @@
 
 Linux Admin Center 1.1 erweitert die bisherige manuelle Systeminstallation um ein Debian-Paket für Debian-, Ubuntu- und kompatible APT-basierte Systeme.
 
-Der aktuelle Alpha4-Validierungsstand ist:
+Der aktuelle stabile Stand ist:
 
 ```text
-LAC:            1.3.0-alpha4 (Storage Analysis)
-Debian-Paket:   1.3.0~alpha4-1
+LAC:            1.3.0 (Storage Analysis)
+Debian-Paket:   1.3.0-1
 Paketname:      linux-admin-center
 Architektur:    all
 ```
 
-Die neueste stabile Paketversion bleibt `1.2.0-1`, bis Alpha4 veröffentlicht und vollständig verifiziert wurde.
+Version `1.3.0` fördert die vollständig validierte Alpha4-Basis ohne funktionale Laufzeitänderungen zum stabilen Release.
 
 Das Paket ist architekturunabhängig, weil LAC aus Bash-Skripten und Dokumentation besteht und keine architekturspezifischen Binärdateien enthält.
 
@@ -95,18 +95,18 @@ Wenn `DEB_BUILD_OPTIONS=nocheck` gesetzt ist, überspringt der Debian-Build die 
 
 ## Paket installieren
 
-Ein lokaler Build des aktuellen Validierungsstands verwendet den nativen Debian-Paketnamen:
+Ein lokaler Build des aktuellen stabilen Stands verwendet den nativen Debian-Paketnamen:
 
 ```text
-linux-admin-center_1.3.0~alpha4-1_all.deb
+linux-admin-center_1.3.0-1_all.deb
 ```
 
-Für GitHub Releases wird nur der veröffentlichte Assetname in `linux-admin-center_1.3.0-alpha4-1_all.deb` umgewandelt. Die Paketmetadaten enthalten weiterhin `1.3.0~alpha4-1`.
+Für das stabile GitHub Release bleibt dieser Assetname unverändert. Die Paketmetadaten enthalten die Debian-Version `1.3.0-1`.
 
 Installation:
 
 ```bash
-sudo apt install ./linux-admin-center_1.3.0~alpha4-1_all.deb
+sudo apt install ./linux-admin-center_1.3.0-1_all.deb
 ```
 
 Danach prüfen:
@@ -118,14 +118,14 @@ lac --version
 lac --self-check
 ```
 
-Bei einer Paketinstallation sollte `command -v lac` auf `/usr/bin/lac` zeigen, `lac --version` `Linux Admin Center 1.3.0-alpha4 (Storage Analysis)` ausgeben und der Self Check den Installationstyp `debian-package` melden.
+Bei einer Paketinstallation sollte `command -v lac` auf `/usr/bin/lac` zeigen, `lac --version` `Linux Admin Center 1.3.0 (Storage Analysis)` ausgeben und der Self Check den Installationstyp `debian-package` melden.
 
 ## Paket erneut installieren oder aktualisieren
 
 Ein lokales Paket kann erneut installiert werden mit:
 
 ```bash
-sudo apt install --reinstall ./linux-admin-center_1.3.0~alpha4-1_all.deb
+sudo apt install --reinstall ./linux-admin-center_1.3.0-1_all.deb
 ```
 
 Ein späteres Paket mit höherer Debian-Version kann normal mit `apt install ./<paket>.deb` aktualisiert werden.
@@ -174,6 +174,8 @@ Der Paket-Lifecycle wurde zusätzlich auf einem realen APT-basierten Desktop-Sys
 5. Reinstallation des Pakets.
 6. Entfernung über `apt remove` bei Erhalt der Konfiguration.
 7. Erneute Paketinstallation und abschließender gesunder Self Check.
+
+Vor der Stable-Promotion wurde zusätzlich das veröffentlichte Paket `1.3.0~alpha4-1` heruntergeladen, mit `SHA256SUMS` geprüft und über APT auf Pop!_OS über Alpha3 installiert. Der installierte Self Check meldete `healthy`, `dpkg --verify` blieb sauber und die Benutzerkonfiguration unverändert. Die reale Storage Analysis zeigte `/recovery` bei 92 Prozent weiterhin messwertgetreu als `critical`, ergänzte aber den erwartbaren Recovery-Media-Kontext und ausschließlich die sicheren Recovery-spezifischen nächsten Schritte.
 
 Dabei wurde zusätzlich bestätigt, dass eine laufende Bash-Sitzung nach dem Entfernen der alten `/usr/local/bin/lac` gegebenenfalls `hash -r` benötigt, bevor die neue `/usr/bin/lac`-Installation über die normale Befehlsauflösung verwendet wird.
 

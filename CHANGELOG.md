@@ -8,6 +8,27 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 No changes yet.
 
+## [1.3.0] - 2026-08-22
+
+### Changed
+
+- Version and codename promoted to `1.3.0 (Storage Analysis)`
+- Debian package version promoted to `1.3.0-1`
+- Stable release promotes the validated `1.3.0-alpha4` Storage Analysis baseline without functional runtime changes
+- README, installation and packaging documentation now describe Storage Analysis as the current stable release
+
+### Validation
+
+- The real `v1.3.0-alpha4` release completed the full release workflow, including tests, Debian package build and lifecycle validation, Lintian, ShellCheck, asset preparation, publication and post-publication verification
+- The published `linux-admin-center_1.3.0-alpha4-1_all.deb` digest matched `SHA256SUMS`, while the package retained the internal Debian version `1.3.0~alpha4-1`
+- The published Alpha4 package was installed through APT over Alpha3 on Pop!_OS; its packaged Self Check completed with status `healthy`, `dpkg --verify` remained clean and the user configuration remained unchanged
+- Real-system Storage Analysis retained the measured `critical` status for `/recovery` at 92 percent usage while displaying the expected recovery-media context and only the safer recovery-specific next steps
+- Existing stable-release metadata, asset-name preservation and GitHub `Latest` behavior remain covered by the release test and workflow contracts
+
+### Security
+
+- Storage Analysis remains read-only; the stable promotion adds no storage modification, cleanup, recovery-file deletion or resizing behavior
+
 ## [1.3.0-alpha4] - 2026-08-22
 
 ### Added
