@@ -3,7 +3,7 @@
 # Variables in this file are intentionally shared across sourced modules.
 # shellcheck disable=SC2034
 
-readonly LAC_VERSION="1.3.0-alpha2"
+readonly LAC_VERSION="1.3.0-alpha3"
 readonly LAC_CODENAME="Storage Analysis"
 readonly LAC_MIN_BASH_MAJOR=4
 readonly LAC_MIN_BASH_MINOR=3

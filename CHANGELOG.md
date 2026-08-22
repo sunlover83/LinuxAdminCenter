@@ -6,10 +6,24 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.3.0-alpha3] - 2026-08-22
+
 ### Added
 
 - Storage Analysis now displays an in-report legend for `healthy`, `warning`, `critical` and `incomplete`
 - Status-dependent next steps distinguish capacity pressure from inode pressure, point to the read-only Cleanup Report and recommend backups before potentially modifying storage work
+
+### Changed
+
+- Version and codename updated to `1.3.0-alpha3 (Storage Analysis)`
+- Debian package version updated to `1.3.0~alpha3-1`
+
+### Validation
+
+- Automated Storage Analysis coverage verifies the complete status legend and the recommendations for healthy, warning, critical and incomplete assessments
+- Release metadata, package and multi-distribution quality gates target the `v1.3.0-alpha3` release contract
 
 ### Security
 
