@@ -178,6 +178,24 @@ assert_output_contains \
     "At least one filesystem has reached a critical threshold." \
     "$analysis_output"
 
+MOCK_STORAGE_RECORDS='/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026'
+delimiter_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "The report restores delimiters in filesystem mountpoints" \
+    "/srv/data|archive%2026 (ext4)" \
+    "$delimiter_output"
+
+assert_output_contains \
+    "The report restores delimiters in filesystem sources" \
+    "/dev/disk/by-label/data|archive%2026" \
+    "$delimiter_output"
+
+assert_output_contains \
+    "Encoded record fields preserve a healthy assessment" \
+    "Status:      healthy" \
+    "$delimiter_output"
+
 MOCK_STORAGE_RECORDS="unknown"
 unknown_output="$(print_storage_analysis)"
 

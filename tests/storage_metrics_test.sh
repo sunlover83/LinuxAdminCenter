@@ -99,6 +99,12 @@ tmpfs tmpfs 8192000 1024 8190976 1% 1000000 100 999900 1% /run
 /dev/loop0 squashfs 131072 131072 0 100% 0 0 0 - /snap/example
 OUTPUT
         ;;
+    delimiters)
+        cat <<'OUTPUT'
+Filesystem Type 1K-blocks Used Available Use% Inodes IUsed IFree IUse% Mounted on
+/dev/disk/by-label/data|archive%2026 ext4 104857600 41943040 62914560 40% 6553600 1310720 5242880 20% /srv/data|archive%2026
+OUTPUT
+        ;;
     failure)
         exit 1
         ;;
@@ -140,6 +146,16 @@ assert_equals \
     "not-applicable" \
     "$(normalize_storage_percentage "-")"
 
+assert_equals \
+    "Storage record fields encode delimiters and escape markers" \
+    "data%7Carchive%257C%2525" \
+    "$(encode_storage_record_field "data|archive%7C%25")"
+
+assert_equals \
+    "Storage record fields decode delimiters and escape markers" \
+    "data|archive%7C%25" \
+    "$(decode_storage_record_field "data%7Carchive%257C%2525")"
+
 expected_records="$({
     printf '%s\n' \
         '/dev/mapper/vg-root|ext4|104857600|81788928|23068672|78|6553600|1376256|5177344|21|/' \
@@ -154,6 +170,13 @@ export MOCK_DF_MODE=success
 assert_equals \
     "Persistent filesystem records are normalized, filtered and sorted" \
     "$expected_records" \
+    "$(get_storage_filesystem_records)"
+
+export MOCK_DF_MODE=delimiters
+
+assert_equals \
+    "Record delimiters in filesystem names cannot shift metric fields" \
+    "/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026" \
     "$(get_storage_filesystem_records)"
 
 export MOCK_DF_MODE=empty

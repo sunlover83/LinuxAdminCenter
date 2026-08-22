@@ -255,6 +255,12 @@ print_storage_analysis() {
 
                 [[ -n "$mountpoint" ]] || continue
 
+                source="$(decode_storage_record_field "$source")"
+                filesystem_type="$(
+                    decode_storage_record_field "$filesystem_type"
+                )"
+                mountpoint="$(decode_storage_record_field "$mountpoint")"
+
                 print_storage_filesystem_record \
                     "$source" \
                     "$filesystem_type" \

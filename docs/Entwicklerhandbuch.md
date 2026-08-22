@@ -275,7 +275,9 @@ Der Core-Collector liefert pro Zeile genau elf durch `|` getrennte Felder:
 source|fstype|total_kib|used_kib|available_kib|capacity_pct|inode_total|inode_used|inode_available|inode_pct|mountpoint
 ```
 
-Die sichtbare und getestete Sortierung erfolgt nach Einhängepunkt und Quelle mit `LC_ALL=C`. Änderungen am Datensatzformat müssen Collector, Modul und beide Storage-Testdateien gemeinsam aktualisieren.
+Damit ein zulässiges `|` in Quelle, Dateisystemtyp oder Einhängepunkt die Feldgrenzen nicht verschieben kann, werden diese drei Textfelder intern prozentkodiert. Dabei wird zuerst `%` zu `%25` und anschließend `|` zu `%7C`. Das Analysemodul zerlegt zunächst den Datensatz und dekodiert die Textfelder erst unmittelbar vor der sichtbaren Ausgabe. Die Reihenfolge der Dekodierung bleibt entsprechend `%7C` vor `%25`, damit bereits vorhandene Zeichenfolgen verlustfrei erhalten bleiben.
+
+Die sichtbare und getestete Sortierung erfolgt nach dem kodierten Einhängepunkt und der kodierten Quelle mit `LC_ALL=C`. Änderungen am Datensatzformat oder an der Kodierung müssen Collector, Modul und beide Storage-Testdateien gemeinsam aktualisieren.
 
 Für Erweiterungen gelten folgende Grenzen:
 

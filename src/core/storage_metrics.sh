@@ -33,6 +33,24 @@ normalize_storage_percentage() {
     fi
 }
 
+encode_storage_record_field() {
+    local value="$1"
+
+    value="${value//%/%25}"
+    value="${value//|/%7C}"
+
+    printf '%s' "$value"
+}
+
+decode_storage_record_field() {
+    local value="$1"
+
+    value="${value//%7C/|}"
+    value="${value//%25/%}"
+
+    printf '%s' "$value"
+}
+
 get_storage_filesystem_records() {
     local storage_output=""
     local source
@@ -115,6 +133,10 @@ get_storage_filesystem_records() {
             inode_available="not-applicable"
             inode_percentage="not-applicable"
         fi
+
+        source="$(encode_storage_record_field "$source")"
+        filesystem_type="$(encode_storage_record_field "$filesystem_type")"
+        mountpoint="$(encode_storage_record_field "$mountpoint")"
 
         records+=(
             "${source}|${filesystem_type}|${total_kib}|${used_kib}|${available_kib}|${capacity_percentage}|${inode_total}|${inode_used}|${inode_available}|${inode_percentage}|${mountpoint}"

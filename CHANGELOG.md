@@ -25,6 +25,10 @@ No changes yet.
 - Debian, Fedora, Arch Linux and openSUSE portability selection now includes the storage metric and assessment tests
 - README, user manual, architecture, developer guidance and `lac(1)` document Storage Analysis behavior, portability and interpretation
 
+### Fixed
+
+- Filesystem sources, types and mountpoints containing `|` or `%` are encoded inside storage records and restored before display, preventing delimiter collisions from shifting metrics or assessments
+
 ### Validation
 
 - Storage metrics use neutral mocked fixtures alongside installed-runtime checks against the local `df` implementation

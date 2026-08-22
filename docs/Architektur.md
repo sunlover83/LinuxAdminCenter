@@ -236,11 +236,11 @@ Storage Analysis trennt die Ermittlung lokaler Dateisystemdaten von Formatierung
 
 1. `src/core/storage_metrics.sh` prüft die Verfügbarkeit von `df`.
 2. `df` wird mit `LC_ALL=C`, lokaler Einschränkung, einer festen Blockgröße von 1024 Byte und einer expliziten GNU-Ausgabespaltenliste aufgerufen.
-3. Die Core-Schicht normalisiert jeden Datensatz in Quelle, Dateisystemtyp, gesamte, belegte und verfügbare KiB, Kapazitätsprozent, gesamte, belegte und verfügbare Inodes, Inode-Prozent und Einhängepunkt.
+3. Die Core-Schicht normalisiert jeden Datensatz in Quelle, Dateisystemtyp, gesamte, belegte und verfügbare KiB, Kapazitätsprozent, gesamte, belegte und verfügbare Inodes, Inode-Prozent und Einhängepunkt. Die drei Textfelder werden intern prozentkodiert, sodass die pipe-getrennten Feldgrenzen auch bei einem zulässigen `|` oder `%` im Dateisystemnamen erhalten bleiben.
 4. Kernel-, Pseudo-, RAM- und Steuerdateisysteme, bekannte schreibgeschützte Image-Dateisysteme sowie ausgewählte virtuelle FUSE-Dateisysteme werden anhand ihres Typs ausgeschlossen. `df --local` schließt zusätzlich entfernte Dateisysteme aus.
 5. Kapazitätsdatensätze ohne numerische oder sinnvolle Gesamtwerte werden verworfen. Liefert ein ansonsten gültiges Dateisystem keine aussagekräftigen Inode-Werte, werden nur seine Inode-Felder als `not-applicable` normalisiert.
 6. Die Datensätze werden mit `LC_ALL=C` deterministisch nach Einhängepunkt und Quelle sortiert.
-7. `src/modules/storage_analysis/storage_analysis.sh` formatiert Größen, bewertet Kapazität und Inodes getrennt und erzeugt den Gesamtbericht.
+7. `src/modules/storage_analysis/storage_analysis.sh` bewertet Kapazität und Inodes getrennt, dekodiert die Textfelder vor der Anzeige, formatiert Größen und erzeugt den Gesamtbericht.
 
 Die Bewertung verwendet feste Standardgrenzen:
 
