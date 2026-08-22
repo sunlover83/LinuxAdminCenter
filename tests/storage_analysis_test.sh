@@ -241,6 +241,11 @@ assert_output_contains \
     "Run lac --cleanup-report for a read-only review of cleanup candidates." \
     "$warning_output"
 
+assert_output_contains \
+    "Warning recommendations require a backup before modifications" \
+    "Back up important data before cleanup, resizing or storage expansion." \
+    "$warning_output"
+
 MOCK_STORAGE_RECORDS='/dev/disk/by-label/data%7Carchive%252026|ext4|104857600|41943040|62914560|40|6553600|1310720|5242880|20|/srv/data%7Carchive%252026'
 delimiter_output="$(print_storage_analysis)"
 

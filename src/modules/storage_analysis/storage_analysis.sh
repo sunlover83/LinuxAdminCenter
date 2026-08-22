@@ -191,23 +191,25 @@ print_storage_recommendations() {
             printf '%s\n' \
                 "  - Review filesystems marked warning and identify the triggering metric."
             printf '%s\n' \
-                "  - For capacity pressure, archive or remove only verified unnecessary data."
-            printf '%s\n' \
-                "  - For inode pressure, investigate directories containing many small files."
-            printf '%s\n' \
                 "  - Run lac --cleanup-report for a read-only review of cleanup candidates."
-            ;;
-        critical)
-            printf '%s\n' \
-                "  - Act promptly and identify the metric on filesystems marked critical."
             printf '%s\n' \
                 "  - Back up important data before cleanup, resizing or storage expansion."
             printf '%s\n' \
                 "  - For capacity pressure, archive or remove only verified unnecessary data."
             printf '%s\n' \
                 "  - For inode pressure, investigate directories containing many small files."
+            ;;
+        critical)
+            printf '%s\n' \
+                "  - Act promptly and identify the metric on filesystems marked critical."
             printf '%s\n' \
                 "  - Run lac --cleanup-report for a read-only review of cleanup candidates."
+            printf '%s\n' \
+                "  - Back up important data before cleanup, resizing or storage expansion."
+            printf '%s\n' \
+                "  - For capacity pressure, archive or remove only verified unnecessary data."
+            printf '%s\n' \
+                "  - For inode pressure, investigate directories containing many small files."
             ;;
         incomplete|*)
             printf '%s\n' \
