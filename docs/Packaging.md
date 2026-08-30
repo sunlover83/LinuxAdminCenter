@@ -177,6 +177,8 @@ Der Paket-Lifecycle wurde zusätzlich auf einem realen APT-basierten Desktop-Sys
 
 Vor der Stable-Promotion wurde zusätzlich das veröffentlichte Paket `1.3.0~alpha4-1` heruntergeladen, mit `SHA256SUMS` geprüft und über APT auf Pop!_OS über Alpha3 installiert. Der installierte Self Check meldete `healthy`, `dpkg --verify` blieb sauber und die Benutzerkonfiguration unverändert. Die reale Storage Analysis zeigte `/recovery` bei 92 Prozent weiterhin messwertgetreu als `critical`, ergänzte aber den erwartbaren Recovery-Media-Kontext und ausschließlich die sicheren Recovery-spezifischen nächsten Schritte.
 
+Der Release-Kandidat `1.3.1-1` wurde auf Ubuntu 26.04.1 ARM64 real über APT von `1.3.0-1` aktualisiert und anschließend erneut installiert. Die installierte System Information meldete `aarch64` statt eines CPU-Platzhalters. Storage Analysis ordnete `/` als `root` und `/boot/efi` als `system-managed` ein. Der Self Check blieb `healthy` und `dpkg --verify linux-admin-center` ohne Befund.
+
 Dabei wurde zusätzlich bestätigt, dass eine laufende Bash-Sitzung nach dem Entfernen der alten `/usr/local/bin/lac` gegebenenfalls `hash -r` benötigt, bevor die neue `/usr/bin/lac`-Installation über die normale Befehlsauflösung verwendet wird.
 
 ## Paketdateien im Repository

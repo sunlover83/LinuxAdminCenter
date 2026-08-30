@@ -24,6 +24,7 @@ No changes yet.
 
 - Neutral regression fixtures cover ARM64 CPU placeholders, missing model data, x86 model preservation, system-only storage pressure, mixed pressure and similarly named general mountpoints
 - The ARM64 fix passed the full Ubuntu 26.04.1 test runner, real APT installation and reinstallation, installed System Information and healthy packaged Self Check in the UTM test VM
+- The complete `1.3.0-1` to `1.3.1-1` APT upgrade and reinstall path passed on Ubuntu 26.04.1 ARM64; packaged System Information reported `aarch64`, Storage Analysis classified `/` as root and `/boot/efi` as system-managed, Self Check stayed healthy and `dpkg --verify` remained clean
 - Both fix pull requests passed the complete Ubuntu quality workflow and the Debian, Fedora, Arch Linux and openSUSE portability matrix
 
 ### Security
