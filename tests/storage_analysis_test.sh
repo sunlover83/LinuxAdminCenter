@@ -113,6 +113,31 @@ assert_equals \
     "$(get_storage_record_status 80 unknown)"
 
 assert_equals \
+    "The root filesystem has its own category" \
+    "root" \
+    "$(get_storage_filesystem_category /)"
+
+assert_equals \
+    "Boot filesystems are system-managed" \
+    "system-managed" \
+    "$(get_storage_filesystem_category /boot/efi)"
+
+assert_equals \
+    "EFI filesystems are system-managed" \
+    "system-managed" \
+    "$(get_storage_filesystem_category /efi)"
+
+assert_equals \
+    "Recovery filesystems are system-managed" \
+    "system-managed" \
+    "$(get_storage_filesystem_category /recovery)"
+
+assert_equals \
+    "Ordinary mountpoints remain general" \
+    "general" \
+    "$(get_storage_filesystem_category /srv/recovery)"
+
+assert_equals \
     "KiB values are formatted as MiB" \
     "1.0 MiB" \
     "$(format_storage_kib 1024)"
@@ -135,6 +160,8 @@ recovery_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3858759|33
 recovery_warning_records="${healthy_records}"$'\n''/dev/recovery|vfat|4194304|3439329|754975|82|not-applicable|not-applicable|not-applicable|not-applicable|/recovery'
 recovery_inode_records="${healthy_records}"$'\n''/dev/recovery|ext4|4194304|1677722|2516582|40|262144|241172|20972|92|/recovery'
 recovery_capacity_inode_records="${healthy_records}"$'\n''/dev/recovery|ext4|4194304|3858759|335545|92|262144|241172|20972|92|/recovery'
+boot_records="${healthy_records}"$'\n''/dev/boot|ext4|2097152|1992294|104858|95|131072|32768|98304|25|/boot'
+root_pressure_records='/dev/root|ext4|104857600|94371840|10485760|90|6553600|1310720|5242880|20|/'
 
 assert_equals \
     "Healthy records produce a healthy summary" \
@@ -162,8 +189,8 @@ assert_equals \
     "$(get_storage_analysis_summary unavailable)"
 
 assert_equals \
-    "Recovery-only capacity pressure is identified without changing its status" \
-    "recovery-only" \
+    "Recovery pressure is identified as system-only" \
+    "system-only" \
     "$(get_storage_pressure_scope "$recovery_records")"
 
 assert_equals \
@@ -177,14 +204,29 @@ assert_equals \
     "$(get_storage_pressure_scope '/dev/archive|ext4|4194304|3858759|335545|92|262144|131072|131072|50|/srv/recovery')"
 
 assert_equals \
-    "Recovery inode-only pressure retains general guidance" \
-    "general" \
+    "Recovery inode pressure remains system-only" \
+    "system-only" \
     "$(get_storage_pressure_scope "$recovery_inode_records")"
 
 assert_equals \
-    "Combined recovery capacity and inode pressure is mixed" \
-    "mixed" \
+    "Combined recovery pressure remains system-only" \
+    "system-only" \
     "$(get_storage_pressure_scope "$recovery_capacity_inode_records")"
+
+assert_equals \
+    "Boot pressure is identified as system-only" \
+    "system-only" \
+    "$(get_storage_pressure_scope "$boot_records")"
+
+assert_equals \
+    "System-only pressure retains its measured summary" \
+    "critical" \
+    "$(get_storage_analysis_summary "$boot_records")"
+
+assert_equals \
+    "Root pressure remains general pressure" \
+    "general" \
+    "$(get_storage_pressure_scope "$root_pressure_records")"
 
 MOCK_STORAGE_RECORDS="${healthy_records}"$'\n''/dev/efi|vfat|1048576|524288|524288|50|not-applicable|not-applicable|not-applicable|not-applicable|/boot/efi'$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
 
@@ -223,6 +265,21 @@ assert_output_contains \
 assert_output_contains \
     "The report displays filesystem mountpoints and types" \
     "/srv/data (xfs)" \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report marks the root filesystem" \
+    "Category:    root" \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report marks auxiliary system filesystems" \
+    "Category:    system-managed" \
+    "$analysis_output"
+
+assert_output_contains \
+    "The report marks other filesystems as general" \
+    "Category:    general" \
     "$analysis_output"
 
 assert_output_contains \
@@ -303,12 +360,12 @@ assert_output_contains \
 
 assert_output_contains \
     "Recovery-only recommendations use supported management tools" \
-    "Review the recovery filesystem marked critical with its supported management tools." \
+    "Review system-managed filesystems marked critical with their supported management tools." \
     "$recovery_output"
 
 assert_output_contains \
     "Recovery-only recommendations prohibit manual file deletion" \
-    "Do not manually delete recovery files; use the distribution's supported recovery or update tools." \
+    "Use the distribution's supported package, boot, firmware or recovery tools; do not delete files manually." \
     "$recovery_output"
 
 assert_output_not_contains \
@@ -326,24 +383,77 @@ recovery_warning_output="$(print_storage_analysis)"
 
 assert_output_contains \
     "Recovery-only warning recommendations use supported management tools" \
-    "Review the recovery filesystem marked warning with its supported management tools." \
+    "Review system-managed filesystems marked warning with their supported management tools." \
     "$recovery_warning_output"
 
 MOCK_STORAGE_RECORDS="$recovery_inode_records"
 recovery_inode_output="$(print_storage_analysis)"
 
 assert_output_contains \
-    "Recovery inode-only pressure retains inode investigation guidance" \
-    "For inode pressure, investigate directories containing many small files." \
+    "Recovery inode-only pressure uses system guidance" \
+    "System-managed filesystems can be intentionally small" \
     "$recovery_inode_output"
 
 assert_output_not_contains \
-    "Recovery inode-only pressure does not display capacity context" \
+    "Recovery inode-only pressure does not display installation-media context" \
     "High usage can be expected" \
     "$recovery_inode_output"
 
+assert_output_not_contains \
+    "Recovery inode-only pressure omits generic inode advice" \
+    "investigate directories containing many small files" \
+    "$recovery_inode_output"
+
+MOCK_STORAGE_RECORDS="$boot_records"
+boot_output="$(print_storage_analysis)"
+
+assert_output_contains \
+    "Boot pressure remains visible as critical" \
+    "Status:      critical" \
+    "$boot_output"
+
+assert_output_contains \
+    "Boot-only pressure is explicitly scoped" \
+    "Scope:       system-managed filesystems only" \
+    "$boot_output"
+
+assert_output_contains \
+    "Boot-only details distinguish system filesystems" \
+    "Only system-managed filesystems have reached a critical threshold." \
+    "$boot_output"
+
+assert_output_contains \
+    "Boot pressure displays safe context" \
+    "Context:     Use supported system tools before changing this filesystem." \
+    "$boot_output"
+
+assert_output_not_contains \
+    "Boot-only recommendations omit the cleanup report" \
+    "Run lac --cleanup-report" \
+    "$boot_output"
+
+assert_output_not_contains \
+    "Boot-only recommendations omit archival advice" \
+    "archive or remove" \
+    "$boot_output"
+
+assert_output_not_contains \
+    "Boot-only recommendations omit recovery-media context" \
+    "recovery filesystem stores installation media" \
+    "$boot_output"
+
 MOCK_STORAGE_RECORDS="${recovery_records}"$'\n''/dev/data|xfs|209715200|188743680|20971520|90|104857600|62914560|41943040|60|/srv/data'
 mixed_output="$(print_storage_analysis)"
+
+assert_equals \
+    "System and general pressure are identified as mixed" \
+    "mixed" \
+    "$(get_storage_pressure_scope "$MOCK_STORAGE_RECORDS")"
+
+assert_output_contains \
+    "Mixed pressure is explicitly scoped" \
+    "Scope:       system-managed and root/general filesystems" \
+    "$mixed_output"
 
 assert_output_contains \
     "Mixed pressure retains general cleanup guidance" \

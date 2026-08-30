@@ -132,6 +132,7 @@ lac --storage-analysis
 Für jedes berücksichtigte Dateisystem zeigt LAC:
 
 - Einhängepunkt, Dateisystemtyp und Quelle
+- Kategorie als `root`, `system-managed` oder `general`
 - belegte und gesamte Kapazität
 - prozentuale Belegung und noch verfügbare Kapazität
 - belegte und gesamte Inodes sowie deren prozentuale Belegung, sofern der Dateisystemtyp aussagekräftige Inode-Werte liefert
@@ -148,9 +149,13 @@ Kapazität und Inodes werden unabhängig mit denselben Standardgrenzen bewertet.
 
 Der jeweils schwerwiegendere Kapazitäts- oder Inode-Status bestimmt den Status eines Dateisystems. Der schwerwiegendste Einzelstatus bestimmt anschließend die Gesamtbewertung. Nicht verfügbare Inode-Werte erscheinen als `not applicable` und verschlechtern die Bewertung allein nicht. Kann `df` nicht ausgeführt werden, können die Dateisystemdaten nicht gelesen werden oder existiert kein auswertbares lokales persistentes Dateisystem, lautet die Gesamtbewertung `incomplete`.
 
+`/` wird als Root-Dateisystem gekennzeichnet. Die exakten Einhängepunktbäume `/boot`, `/efi` und `/recovery` gelten als systemverwaltet; andere Einhängepunkte sind allgemein. Diese Kategorie verändert weder Messwert noch Status. Bei erhöhten Werten zeigt die Gesamtbewertung zusätzlich, ob nur systemverwaltete Dateisysteme, nur Root- oder allgemeine Dateisysteme oder beide Gruppen betroffen sind.
+
 Nach der Gesamtbewertung zeigt LAC sichere, statusabhängige Empfehlungen. Bei Kapazitätsdruck wird auf das Archivieren oder Entfernen ausschließlich geprüfter unnötiger Daten hingewiesen; bei Inode-Druck auf Verzeichnisse mit sehr vielen kleinen Dateien. `lac --cleanup-report` bietet dafür zunächst eine rein lesende Übersicht der unterstützten Cleanup-Kandidaten. Bei `warning` und `critical` empfiehlt LAC vor Bereinigung, Größenänderung oder Speichererweiterung ausdrücklich eine Sicherung wichtiger Daten. Die Empfehlungen führen selbst keine Änderung aus.
 
-Ein hoch belegtes Dateisystem am Einhängepunkt `/recovery` behält seinen gemessenen Status. LAC erklärt jedoch direkt am Datensatz, dass eine hohe Kapazitätsbelegung normal sein kann, wenn die Partition ein Recovery-Installationsmedium enthält. Löst ausschließlich die Kapazitätsbelegung von `/recovery` einen erhöhten Status aus, entfallen die dafür ungeeigneten Cleanup- und Archivierungshinweise. Stattdessen verweist der Bericht auf die unterstützten Recovery- oder Update-Werkzeuge der jeweiligen Distribution und warnt ausdrücklich davor, Recovery-Dateien manuell zu löschen. Inode-Druck auf `/recovery`, Druck auf anderen Dateisystemen oder eine Kombination dieser Werte behält die passenden allgemeinen Hinweise.
+Sind ausschließlich systemverwaltete Dateisysteme erhöht, entfallen dafür ungeeignete Cleanup- und Archivierungshinweise. Stattdessen verweist der Bericht auf unterstützte Paket-, Boot-, Firmware- oder Recovery-Werkzeuge der Distribution und warnt ausdrücklich davor, Dateien manuell zu löschen. Bei gleichzeitigem Druck auf Root- oder allgemeinen Dateisystemen erscheinen beide Hinweisgruppen.
+
+Ein hoch belegtes Dateisystem am Einhängepunkt `/recovery` behält seinen gemessenen Status. LAC erklärt zusätzlich direkt am Datensatz, dass eine hohe Kapazitätsbelegung normal sein kann, wenn die Partition ein Recovery-Installationsmedium enthält.
 
 LAC berücksichtigt nur bereits eingehängte lokale Dateisysteme. Pseudo- und RAM-Dateisysteme wie `proc`, `sysfs` oder `tmpfs`, entfernte Dateisysteme, bekannte schreibgeschützte Image-Dateisysteme wie `squashfs` und ausgewählte virtuelle FUSE-Dateisysteme werden ausgefiltert. Die Ermittlung verwendet die GNU-Coreutils-Ausgabe von `df`, die auf den unterstützten Zielsystemen Debian, Fedora, Arch Linux und openSUSE verfügbar ist. Andere `df`-Implementierungen mit abweichenden Optionen gehören nicht zum zugesicherten Portabilitätsumfang.
 
