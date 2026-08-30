@@ -7,11 +7,14 @@ LAC_SCRIPT="${PROJECT_ROOT}/src/lac.sh"
 
 TEST_TMP_DIR="$(mktemp -d)"
 MOCK_BIN="${TEST_TMP_DIR}/bin"
+LSCPU_FIXTURE="${TEST_TMP_DIR}/lscpu.txt"
+CPUINFO_FIXTURE="${TEST_TMP_DIR}/cpuinfo.txt"
 
 mkdir -p "$MOCK_BIN"
 trap 'rm -rf "$TEST_TMP_DIR"' EXIT
 
 export PATH="${MOCK_BIN}:${PATH}"
+export LSCPU_FIXTURE
 
 passed=0
 failed=0
@@ -93,14 +96,35 @@ assert_equals() {
 cat > "${MOCK_BIN}/lscpu" <<'EOF'
 #!/usr/bin/env bash
 
-cat <<'OUTPUT'
+cat "$LSCPU_FIXTURE"
+EOF
+
+cat > "${MOCK_BIN}/uname" <<'EOF'
+#!/usr/bin/env bash
+
+case "${1:-}" in
+    -p)
+        printf '%s\n' "unknown"
+        ;;
+    -m)
+        printf '%s\n' "aarch64"
+        ;;
+    -r)
+        printf '%s\n' "6.8.0-test"
+        ;;
+    *)
+        printf '%s\n' "test-system"
+        ;;
+esac
+EOF
+
+cat > "$LSCPU_FIXTURE" <<'EOF'
 Architecture:                         x86_64
 CPU(s):                               32
 Model name:                           Test Processor 9000
-OUTPUT
 EOF
 
-chmod +x "${MOCK_BIN}/lscpu"
+chmod +x "${MOCK_BIN}/lscpu" "${MOCK_BIN}/uname"
 
 # shellcheck source=../src/core/system_metrics.sh
 source "${PROJECT_ROOT}/src/core/system_metrics.sh"
@@ -114,6 +138,38 @@ assert_equals \
     "CPU model is read from lscpu" \
     "Test Processor 9000" \
     "$(get_cpu_model)"
+
+cat > "$LSCPU_FIXTURE" <<'EOF'
+Architecture:                         aarch64
+CPU(s):                               4
+Model name:                           -
+EOF
+
+cat > "$CPUINFO_FIXTURE" <<'EOF'
+processor       : 0
+Processor       : -
+CPU implementer : 0x41
+CPU architecture: 8
+Hardware        : Example ARM64 Platform
+EOF
+
+assert_equals \
+    "ARM64 placeholder falls back to cpuinfo hardware" \
+    "Example ARM64 Platform" \
+    "$(get_cpu_model "$CPUINFO_FIXTURE")"
+
+: > "$CPUINFO_FIXTURE"
+
+assert_equals \
+    "Missing ARM64 model data falls back to the architecture" \
+    "aarch64" \
+    "$(get_cpu_model "$CPUINFO_FIXTURE")"
+
+cat > "$LSCPU_FIXTURE" <<'EOF'
+Architecture:                         x86_64
+CPU(s):                               32
+Model name:                           Test Processor 9000
+EOF
 
 assert_output_contains \
     "System information includes the hostname" \
