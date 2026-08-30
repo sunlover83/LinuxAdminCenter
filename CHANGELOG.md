@@ -6,7 +6,19 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ## [Unreleased]
 
-No changes yet.
+### Fixed
+
+- ARM64 systems no longer display an unusable `CPU: -` placeholder when `lscpu` omits the model; neutral fallbacks preserve existing x86 model detection
+- Storage Analysis now distinguishes root, system-managed and general filesystems so elevated `/boot`, `/efi` or `/recovery` usage remains visible without producing unrelated cleanup or archival advice
+
+### Validation
+
+- Neutral regression fixtures cover ARM64 CPU placeholders, missing model data, x86 model preservation, system-only storage pressure, mixed pressure and similarly named general mountpoints
+- The ARM64 fix passed the full Ubuntu 26.04.1 test runner, real APT installation and reinstallation, installed System Information and healthy packaged Self Check in the UTM test VM
+
+### Security
+
+- System-filesystem guidance remains read-only, preserves measured warning and critical states, and directs users to distribution-supported tools instead of manual file deletion
 
 ## [1.3.0] - 2026-08-22
 

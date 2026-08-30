@@ -73,6 +73,16 @@ filesystem data, or no analyzable persistent local filesystem, produces an
 .B incomplete
 assessment.
 .PP
+Each filesystem is categorized as root, system-managed or general. The exact
+.IR /boot ,
+.I /efi
+and
+.I /recovery
+trees are system-managed. Categories do not hide measurements or reduce an
+assessment. For elevated usage, the overall report also identifies whether
+pressure affects system-managed filesystems, root or general filesystems, or
+both groups.
+.PP
 The report explains every assessment state and displays state-specific next
 steps. Recommendations distinguish capacity pressure from inode pressure,
 refer to the read-only
@@ -80,14 +90,14 @@ refer to the read-only
 output where applicable, and advise creating a backup before cleanup, resizing
 or storage expansion. Recommendations do not perform any modifying action.
 .PP
+If only system-managed filesystems are elevated, generic cleanup and archival
+guidance is replaced with advice to use the distribution's supported package,
+boot, firmware or recovery tools and never delete files manually. Mixed
+pressure retains general guidance and adds the system-specific safety advice.
 An elevated
 .I /recovery
-filesystem retains its measured assessment, but the report explains that high
-usage can be expected when recovery installation media is stored there. If
-elevated capacity on this filesystem is the only pressure, generic cleanup and
-archival guidance is replaced with advice to use the distribution's supported
-recovery or update tools and never delete recovery files manually. Inode
-pressure retains the general recommendations.
+filesystem also explains that high usage can be expected when recovery
+installation media is stored there.
 .PP
 Pseudo-filesystems, remote mounts, known read-only image filesystems and
 selected virtual FUSE filesystems are excluded. The implementation relies on
