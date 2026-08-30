@@ -6,6 +6,15 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.3.1] - 2026-08-30
+
+### Changed
+
+- Version and codename updated to `1.3.1 (Storage Analysis)`
+- Debian package version updated to `1.3.1-1`
+
 ### Fixed
 
 - ARM64 systems no longer display an unusable `CPU: -` placeholder when `lscpu` omits the model; neutral fallbacks preserve existing x86 model detection
@@ -15,6 +24,8 @@ The format is based on Keep a Changelog. Release candidates use semantic pre-rel
 
 - Neutral regression fixtures cover ARM64 CPU placeholders, missing model data, x86 model preservation, system-only storage pressure, mixed pressure and similarly named general mountpoints
 - The ARM64 fix passed the full Ubuntu 26.04.1 test runner, real APT installation and reinstallation, installed System Information and healthy packaged Self Check in the UTM test VM
+- The complete `1.3.0-1` to `1.3.1-1` APT upgrade and reinstall path passed on Ubuntu 26.04.1 ARM64; packaged System Information reported `aarch64`, Storage Analysis classified `/` as root and `/boot/efi` as system-managed, Self Check stayed healthy and `dpkg --verify` remained clean
+- Both fix pull requests passed the complete Ubuntu quality workflow and the Debian, Fedora, Arch Linux and openSUSE portability matrix
 
 ### Security
 

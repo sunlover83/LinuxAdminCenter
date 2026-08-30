@@ -7,7 +7,7 @@ Linux Admin Center kann systemweit installiert, aktualisiert und wieder entfernt
 - Debian-/Ubuntu-Paket über APT/dpkg nach `/usr`
 - manuelle Installation über `install.sh` standardmäßig nach `/usr/local`
 
-Der aktuelle Entwicklungsstand und die neueste stabile Version sind `1.3.0 (Storage Analysis)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
+Der aktuelle Entwicklungsstand und die neueste stabile Version sind `1.3.1 (Storage Analysis)`. Für Debian-, Ubuntu- und kompatible APT-basierte Systeme steht ein architekturunabhängiges `.deb`-Paket zur Verfügung. Die bisherige manuelle Installation bleibt weiterhin unterstützt.
 
 ## Voraussetzungen
 
@@ -75,16 +75,16 @@ sudo apt install lm-sensors smartmontools nvme-cli
 
 ## Installation als Debian-/Ubuntu-Paket
 
-Das neueste stabile Paket für Version 1.3.0 heißt:
+Das neueste stabile Paket für Version 1.3.1 heißt:
 
 ```text
-linux-admin-center_1.3.0-1_all.deb
+linux-admin-center_1.3.1-1_all.deb
 ```
 
 Installation über APT:
 
 ```bash
-sudo apt install ./linux-admin-center_1.3.0-1_all.deb
+sudo apt install ./linux-admin-center_1.3.1-1_all.deb
 ```
 
 APT übernimmt dabei Registrierung, Abhängigkeiten und spätere Entfernung des Pakets.
@@ -92,10 +92,10 @@ APT übernimmt dabei Registrierung, Abhängigkeiten und spätere Entfernung des 
 Der aktuelle Quellstand erzeugt lokal denselben stabilen Paketnamen:
 
 ```text
-linux-admin-center_1.3.0-1_all.deb
+linux-admin-center_1.3.1-1_all.deb
 ```
 
-Beim stabilen GitHub Release bleibt dieser Assetname unverändert. Die internen Paketmetadaten enthalten ebenfalls die Debian-Version `1.3.0-1`.
+Beim stabilen GitHub Release bleibt dieser Assetname unverändert. Die internen Paketmetadaten enthalten ebenfalls die Debian-Version `1.3.1-1`.
 
 ### Paketpfade
 
@@ -136,7 +136,7 @@ Alternativ kann eine neue Shell geöffnet werden.
 Danach das Paket installieren:
 
 ```bash
-sudo apt install ./linux-admin-center_1.3.0-1_all.deb
+sudo apt install ./linux-admin-center_1.3.1-1_all.deb
 ```
 
 Anschließend sollte gelten:
@@ -151,7 +151,7 @@ Erwartet:
 
 ```text
 /usr/bin/lac
-Linux Admin Center 1.3.0 (Storage Analysis)
+Linux Admin Center 1.3.1 (Storage Analysis)
 ```
 
 Der Self Check muss den Installationstyp `debian-package` erkennen. Auf einem vollständig verfügbaren System sollte der Gesamtstatus `healthy` sein.
@@ -159,7 +159,7 @@ Der Self Check muss den Installationstyp `debian-package` erkennen. Auf einem vo
 ### Paket erneut installieren
 
 ```bash
-sudo apt install --reinstall ./linux-admin-center_1.3.0-1_all.deb
+sudo apt install --reinstall ./linux-admin-center_1.3.1-1_all.deb
 ```
 
 Vorhandene aktive LAC-Konfiguration wird dabei nicht überschrieben.
@@ -251,7 +251,7 @@ lac --version
 Erwartete Ausgabe für den aktuellen stabilen Stand:
 
 ```text
-Linux Admin Center 1.3.0 (Storage Analysis)
+Linux Admin Center 1.3.1 (Storage Analysis)
 ```
 
 LAC selbst prüfen:

@@ -4,11 +4,11 @@
 
 Linux Admin Center is a modular Bash application for common Linux desktop administration tasks. It provides an interactive terminal interface as well as command-line options while keeping all system actions transparent.
 
-Current development version: **1.3.0 (Storage Analysis)**
+Current development version: **1.3.1 (Storage Analysis)**
 
-Latest stable release: **1.3.0 (Storage Analysis)**
+Latest stable release: **1.3.1 (Storage Analysis)**
 
-Version 1.3.0 promotes the fully validated Alpha4 Storage Analysis baseline to stable without functional runtime changes. It provides read-only capacity and inode analysis for local persistent filesystems, keeps measured recovery-filesystem pressure visible and replaces unrelated cleanup advice with distribution-supported recovery guidance when elevated `/recovery` capacity is the only pressure.
+Version 1.3.1 is a compatible patch release for Storage Analysis. It improves ARM64 CPU fallback behavior and distinguishes root, system-managed and general filesystems so elevated system-partition usage remains visible without producing unrelated cleanup advice.
 
 ## Current features
 
@@ -117,16 +117,16 @@ The multi-distribution CI verifies this mapping on Debian stable, Fedora, Arch L
 
 ### Debian / Ubuntu package
 
-The latest stable release, version 1.3.0, provides an architecture-independent Debian package:
+The latest stable release, version 1.3.1, provides an architecture-independent Debian package:
 
 ```text
-linux-admin-center_1.3.0-1_all.deb
+linux-admin-center_1.3.1-1_all.deb
 ```
 
 Install it with APT:
 
 ```bash
-sudo apt install ./linux-admin-center_1.3.0-1_all.deb
+sudo apt install ./linux-admin-center_1.3.1-1_all.deb
 ```
 
 A package-managed installation uses:
@@ -149,7 +149,7 @@ If a previous manual LAC installation exists under `/usr/local`, the package ins
 ```bash
 sudo /usr/local/bin/lac-uninstall
 hash -r
-sudo apt install ./linux-admin-center_1.3.0-1_all.deb
+sudo apt install ./linux-admin-center_1.3.1-1_all.deb
 ```
 
 `hash -r` clears a possible cached `/usr/local/bin/lac` path in an already-running Bash session. Opening a new shell has the same effect. Existing configuration under `/etc/lac` and user configuration under `$HOME/.config/lac` are preserved during migration, reinstall and package removal.
@@ -162,21 +162,21 @@ lac --version
 lac --self-check
 ```
 
-Expected version output for the published 1.3.0 package:
+Expected version output for the published 1.3.1 package:
 
 ```text
-Linux Admin Center 1.3.0 (Storage Analysis)
+Linux Admin Center 1.3.1 (Storage Analysis)
 ```
 
 The Self Check should identify the installation as `debian-package`.
 
-The current source tree prepares the stable `1.3.0` package. A local Debian build uses the native package filename:
+The current source tree prepares the stable `1.3.1` package. A local Debian build uses the native package filename:
 
 ```text
-linux-admin-center_1.3.0-1_all.deb
+linux-admin-center_1.3.1-1_all.deb
 ```
 
-Stable release automation keeps this filename unchanged, and the package metadata contains the Debian version `1.3.0-1`.
+Stable release automation keeps this filename unchanged, and the package metadata contains the Debian version `1.3.1-1`.
 
 See [Debian and Ubuntu packaging](docs/Packaging.md) for build, migration and lifecycle details.
 
@@ -375,13 +375,13 @@ bash scripts/build_debian_package.sh
 Validate the current release metadata contract:
 
 ```bash
-bash scripts/validate_release_metadata.sh v1.3.0
+bash scripts/validate_release_metadata.sh v1.3.1
 ```
 
 Generate local release notes from the changelog:
 
 ```bash
-bash scripts/generate_release_notes.sh v1.3.0 release-notes.md
+bash scripts/generate_release_notes.sh v1.3.1 release-notes.md
 ```
 
 Prepare the final GitHub-safe package name and checksum locally after building into `dist/`:
@@ -453,6 +453,8 @@ Version `1.3.0-alpha3` explains the assessment states in the report and adds saf
 Version `1.3.0-alpha4` retains measured recovery-filesystem pressure while replacing unrelated cleanup advice with safe, distribution-supported recovery guidance.
 
 Version `1.3.0` promotes the fully validated Storage Analysis baseline to stable without functional runtime changes.
+
+Version `1.3.1` fixes ARM64 CPU fallback behavior and clarifies storage pressure on system-managed filesystems without changing the read-only assessment thresholds.
 
 Planned next milestones:
 
