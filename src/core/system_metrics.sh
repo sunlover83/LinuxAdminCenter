@@ -22,6 +22,7 @@ get_system_architecture() {
 
 get_cpu_model() {
     local cpu_model=""
+    local cpuinfo_file="${1:-/proc/cpuinfo}"
 
     if command -v lscpu >/dev/null 2>&1; then
         cpu_model="$(
@@ -36,9 +37,15 @@ get_cpu_model() {
                     }
                 '
         )"
+
+        case "${cpu_model,,}" in
+            "" | - | unknown | n/a)
+                cpu_model=""
+                ;;
+        esac
     fi
 
-    if [[ -z "$cpu_model" && -r /proc/cpuinfo ]]; then
+    if [[ -z "$cpu_model" && -r "$cpuinfo_file" ]]; then
         cpu_model="$(
             awk -F ':' '
                 /^(model name|Hardware|Processor)[[:space:]]*:/ {
@@ -46,12 +53,15 @@ get_cpu_model() {
                     sub(/^[[:space:]]+/, "", value)
                     sub(/[[:space:]]+$/, "", value)
 
-                    if (value != "") {
+                    normalized = tolower(value)
+
+                    if (value != "" && value != "-" &&
+                        normalized != "unknown" && normalized != "n/a") {
                         print value
                         exit
                     }
                 }
-            ' /proc/cpuinfo 2>/dev/null
+            ' "$cpuinfo_file" 2>/dev/null
         )"
     fi
 
@@ -61,11 +71,20 @@ get_cpu_model() {
     fi
 
     if cpu_model="$(uname -p 2>/dev/null)" &&
-        [[ -n "$cpu_model" && "$cpu_model" != "unknown" ]]; then
+        [[ -n "$cpu_model" && "$cpu_model" != "-" &&
+            "${cpu_model,,}" != "unknown" ]]; then
         printf '%s\n' "$cpu_model"
-    else
-        printf '%s\n' "unknown"
+        return
     fi
+
+    if cpu_model="$(uname -m 2>/dev/null)" &&
+        [[ -n "$cpu_model" && "$cpu_model" != "-" &&
+            "${cpu_model,,}" != "unknown" ]]; then
+        printf '%s\n' "$cpu_model"
+        return
+    fi
+
+    printf '%s\n' "unknown"
 }
 
 get_logical_cpu_count() {
